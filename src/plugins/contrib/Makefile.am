@@ -38,6 +38,10 @@ if BUILD_DRAGSCROLL
 MAYBE_DRAGSCROLL=dragscroll
 endif
 
+if BUILD_EDITORCONFIG
+MAYBE_EDITORCONFIG=EditorConfig
+endif
+
 if BUILD_EDITORTWEAKS
 MAYBE_EDITORTWEAKS=EditorTweaks
 endif
@@ -154,6 +158,7 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_CSCOPE) \
 		$(MAYBE_DOXYBLOCKS) \
 		$(MAYBE_DRAGSCROLL) \
+		$(MAYBE_EDITORCONFIG) \
 		$(MAYBE_EDITORTWEAKS) \
 		$(MAYBE_ENVVARS) \
 		$(MAYBE_FILEMANAGER) \
@@ -192,6 +197,7 @@ DIST_SUBDIRS = AutoVersioning \
 		devpak_plugin \
 		DoxyBlocks \
 		dragscroll \
+		EditorConfig \
 		EditorTweaks \
 		envvars \
 		FileManager \

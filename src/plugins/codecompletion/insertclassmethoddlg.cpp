@@ -32,17 +32,17 @@ namespace InsertClassMethodDlgHelper
     {
         if (!parentToken)
             return;
-        TokensTree* tree = parentToken->GetTree();
+        TokenTree* tree = parentToken->GetTree();
         if (!tree)
             return;
 
         // loop ascending the inheritance tree
         tree->RecalcInheritanceChain(parentToken);
 
-        for (TokenIdxSet::iterator it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); ++it)
+        for (TokenIdxSet::const_iterator it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); ++it)
         {
             int idx = *it;
-            Token* token = tree->at(idx);
+            const Token* token = tree->at(idx);
             if (!token)
                 continue;
 
@@ -61,7 +61,7 @@ namespace InsertClassMethodDlgHelper
         }
 
         // inheritance
-        for (TokenIdxSet::iterator it = parentToken->m_DirectAncestors.begin();
+        for (TokenIdxSet::const_iterator it = parentToken->m_DirectAncestors.begin();
              it != parentToken->m_DirectAncestors.end();
              ++it)
         {
@@ -134,7 +134,7 @@ void InsertClassMethodDlg::FillClasses()
     lb->Freeze();
     lb->Clear();
 
-    TokensTree* tree = m_Parser->GetTokensTree();
+    TokenTree* tree = m_Parser->GetTokenTree();
     for (size_t i = 0; i < tree->size(); ++i)
     {
         Token* token = tree->at(i);

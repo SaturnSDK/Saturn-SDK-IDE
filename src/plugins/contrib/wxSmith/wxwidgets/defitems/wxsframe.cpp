@@ -20,7 +20,7 @@
 * $HeadURL$
 */
 
-#include <wx/app.h>		// wxTheApp
+#include <wx/app.h>        // wxTheApp
 #include <wx/frame.h>
 #include <wx/settings.h> // wxSystemSettings, wxSYS_COLOUR_APPWORKSPACE
 #include "wxsframe.h"
@@ -76,11 +76,7 @@ void wxsFrame::OnBuildCreatingCode()
         case wxsCPP:
         {
             AddHeader(_T("<wx/frame.h>"),GetInfo().ClassName,hfInPCH);
-            #if wxCHECK_VERSION(2, 9, 0)
             Codef(_T("%C(%W, %I, %t, wxDefaultPosition, wxDefaultSize, %T, %N);\n"),Title.wx_str());
-            #else
-            Codef(_T("%C(%W, %I, %t, wxDefaultPosition, wxDefaultSize, %T, %N);\n"),Title.c_str());
-            #endif
             if ( !GetBaseProps()->m_Size.IsDefault || (GetPropertiesFlags()&flSource && IsRootItem() && GetBaseProps()->m_SizeFromArg) )
             {
                 Codef(_T("%ASetClientSize(%S);\n"));

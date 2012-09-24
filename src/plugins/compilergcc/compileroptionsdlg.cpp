@@ -99,10 +99,8 @@ BEGIN_EVENT_TABLE(CompilerOptionsDlg, wxPanel)
     EVT_UPDATE_UI(            XRCID("btnIgnoreAdd"),                    CompilerOptionsDlg::OnUpdateUI)
     EVT_UPDATE_UI(            XRCID("btnIgnoreRemove"),                 CompilerOptionsDlg::OnUpdateUI)
     //
-#ifndef CB_FOR_CONSOLE
     EVT_TREE_SEL_CHANGED(      XRCID("tcScope"),                        CompilerOptionsDlg::OnTreeSelectionChange)
     EVT_TREE_SEL_CHANGING(     XRCID("tcScope"),                        CompilerOptionsDlg::OnTreeSelectionChanging)
-#endif // #ifndef CB_FOR_CONSOLE
     EVT_CHOICE(                XRCID("cmbCategory"),                    CompilerOptionsDlg::OnCategoryChanged)
     EVT_CHOICE(                XRCID("cmbCompiler"),                    CompilerOptionsDlg::OnCompilerChanged)
     EVT_LISTBOX_DCLICK(        XRCID("lstVars"),                        CompilerOptionsDlg::OnEditVarClick)
@@ -302,11 +300,7 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
         msg.Printf(_("The defined compiler cannot be located (ID: %s).\n"
                     "Please choose the compiler you want to use instead and click \"OK\".\n"
                     "If you click \"Cancel\", the project/target will remain configured for that compiler and consequently can not be configured and will not be built."),
-                    #if wxCHECK_VERSION(2, 9, 0)
                     CompilerId.wx_str());
-                    #else
-                    CompilerId.c_str());
-                    #endif
         Compiler* compiler = 0;
         if ((m_pTarget && m_pTarget->SupportsCurrentPlatform()) || (!m_pTarget && m_pProject))
         {
@@ -475,6 +469,7 @@ void CompilerOptionsDlg::DoFillCompilerPrograms()
             }
         }
     }
+
     XRCCTRL(*this, "txtResComp", wxTextCtrl)->SetValue(progs.WINDRES);
     XRCCTRL(*this, "txtMake", wxTextCtrl)->SetValue(progs.MAKE);
 
@@ -1127,7 +1122,6 @@ void CompilerOptionsDlg::ProjectTargetCompilerAdjust()
     m_NewProjectOrTargetCompilerId = wxEmptyString;
 } // ProjectTargetCompilerAdjust
 
-#ifndef CB_FOR_CONSOLE
 void CompilerOptionsDlg::OnTreeSelectionChange(wxTreeEvent& event)
 {
     if (m_BuildingTree)
@@ -1182,11 +1176,7 @@ void CompilerOptionsDlg::OnTreeSelectionChange(wxTreeEvent& event)
         msg.Printf(_("The defined compiler cannot be located (ID: %s).\n"
                     "Please choose the compiler you want to use instead and click \"OK\".\n"
                     "If you click \"Cancel\", the project/target will remain configured for that compiler and consequently can not be configured and will not be built."),
-                    #if wxCHECK_VERSION(2, 9, 0)
                     CompilerId.wx_str());
-                    #else
-                    CompilerId.c_str());
-                    #endif
         Compiler* compiler = 0;
         if (m_pTarget && m_pTarget->SupportsCurrentPlatform())
         {
@@ -1248,7 +1238,6 @@ void CompilerOptionsDlg::OnTreeSelectionChanging(wxTreeEvent& event)
         } // end switch
     }
 } // OnTreeSelectionChanging
-#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerOptionsDlg::OnCompilerChanged(wxCommandEvent& /*event*/)
 {
@@ -1356,11 +1345,7 @@ void CompilerOptionsDlg::AutoDetectCompiler()
             wxString msg;
             msg.Printf(_("Could not auto-detect installation path of \"%s\"...\n"
                         "Do you want to use this compiler's default installation directory?"),
-                        #if wxCHECK_VERSION(2, 9, 0)
                         compiler->GetName().wx_str());
-                        #else
-                        compiler->GetName().c_str());
-                        #endif
             if (cbMessageBox(msg, _("Confirmation"), wxICON_QUESTION | wxYES_NO) == wxID_NO)
             {
                 compiler->SetMasterPath(backup);
@@ -1414,6 +1399,24 @@ void CompilerOptionsDlg::OnOptionToggled(wxCommandEvent& event)
     if (copt)
     {
         copt->enabled = list->IsChecked(sel);
+        if (copt->doChecks && copt->enabled)
+        {
+            wxArrayString check = GetArrayFromString(copt->checkAgainst, _T(" "));
+            for (size_t i = 0; i < check.Count(); i++)
+            {
+                CompOption* against = m_Options.GetOptionByOption(check[i]);
+                if (against && against->enabled)
+                {
+                    AnnoyingDialog dlg(_("Compiler options conflict"),
+                                       copt->checkMessage,
+                                       wxART_INFORMATION,
+                                       AnnoyingDialog::OK,
+                                       wxID_OK);
+                    dlg.ShowModal();
+                    break;
+                }
+            }
+        }
     }
     m_bDirty = true;
 } // OnOptionToggled
@@ -2395,7 +2398,7 @@ void CompilerOptionsDlg::OnMyCharHook(wxKeyEvent& event)
         return;
     }
     int keycode = event.GetKeyCode();
-    int id = focused->GetId();
+    int id      = focused->GetId();
 
     int myid = 0;
     unsigned int myidx = 0;
@@ -2406,11 +2409,11 @@ void CompilerOptionsDlg::OnMyCharHook(wxKeyEvent& event)
     const wxChar* str_xtra[4] = { _T("btnExtraEdit"),_T("btnExtraAdd"),_T("btnExtraDelete"),_T("btnExtraClear") };
 
     if (keycode == WXK_RETURN || keycode == WXK_NUMPAD_ENTER)
-        { myidx = 0; } // Edit
+    { myidx = 0; } // Edit
     else if (keycode == WXK_INSERT || keycode == WXK_NUMPAD_INSERT)
-        { myidx = 1; } // Add
+    { myidx = 1; } // Add
     else if (keycode == WXK_DELETE || keycode == WXK_NUMPAD_DELETE)
-        { myidx = 2; } // Delete
+    { myidx = 2; } // Delete
     else
     {
         event.Skip();

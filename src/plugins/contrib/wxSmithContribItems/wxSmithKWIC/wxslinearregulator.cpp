@@ -101,7 +101,7 @@ void wxsLinearRegulator::OnBuildCreatingCode()
 
 			// Default range is 0-100.
 			if(m_iRangeMin != 0 || m_iRangeMax != 100){
-				Codef(_T("%ASetRangeVal(%d, %d);\n"), m_iRangeMin, m_iRangeMax);
+				Codef(_T("%ASetRangeVal(%d, %d);\n"), static_cast<int>(m_iRangeMin), static_cast<int>(m_iRangeMax));
 			}
 			if(!m_bHorizontal){
 				Codef(_T("%ASetOrizDirection(false);\n"));
@@ -113,41 +113,17 @@ void wxsLinearRegulator::OnBuildCreatingCode()
 				Codef(_T("%AShowLimits(false);\n"));
 			}
 			wxString ss = m_cdActiveBarColour.BuildCode(GetCoderContext());
-#if wxCHECK_VERSION(2, 9, 0)
 			if(!ss.IsEmpty()) Codef(_T("%ASetActiveBarColour(%s);\n"), ss.wx_str());
-#else
-			if(!ss.IsEmpty()) Codef(_T("%ASetActiveBarColour(%s);\n"), ss.c_str());
-#endif
 			ss = m_cdPassiveBarColour.BuildCode(GetCoderContext());
-#if wxCHECK_VERSION(2, 9, 0)
 			if(!ss.IsEmpty()) Codef(_T("%ASetPassiveBarColour(%s);\n"), ss.wx_str());
-#else
-			if(!ss.IsEmpty()) Codef(_T("%ASetPassiveBarColour(%s);\n"), ss.c_str());
-#endif
 			ss = m_cdBorderColour.BuildCode(GetCoderContext());
-#if wxCHECK_VERSION(2, 9, 0)
 			if(!ss.IsEmpty()) Codef(_T("%ASetBorderColour(%s);\n"), ss.wx_str());
-#else
-			if(!ss.IsEmpty()) Codef(_T("%ASetBorderColour(%s);\n"), ss.c_str());
-#endif
 			ss = m_cdLimitTextColour.BuildCode(GetCoderContext());
-#if wxCHECK_VERSION(2, 9, 0)
 			if(!ss.IsEmpty()) Codef(_T("%ASetTxtLimitColour(%s);\n"), ss.wx_str());
-#else
-			if(!ss.IsEmpty()) Codef(_T("%ASetTxtLimitColour(%s);\n"), ss.c_str());
-#endif
 			ss = m_cdValueTextColour.BuildCode(GetCoderContext());
-#if wxCHECK_VERSION(2, 9, 0)
 			if(!ss.IsEmpty()) Codef(_T("%ASetTxtValueColour(%s);\n"), ss.wx_str());
-#else
-			if(!ss.IsEmpty()) Codef(_T("%ASetTxtValueColour(%s);\n"), ss.c_str());
-#endif
 			ss = m_cdTagColour.BuildCode(GetCoderContext());
-#if wxCHECK_VERSION(2, 9, 0)
 			if(!ss.IsEmpty()) Codef(_T("%ASetTagsColour(%s);\n"), ss.wx_str());
-#else
-			if(!ss.IsEmpty()) Codef(_T("%ASetTagsColour(%s);\n"), ss.c_str());
-#endif
 			for(size_t i = 0; i < m_arrTags.Count(); i++){
 				TagDesc *Desc = m_arrTags[i];
 				Codef(_T("\t%AAddTag(%d);\n"), Desc->val);
@@ -156,17 +132,12 @@ void wxsLinearRegulator::OnBuildCreatingCode()
 			wxString sFnt = m_fnt.BuildFontCode(ss, GetCoderContext());
 			if(sFnt.Len() > 0)
 			{
-#if wxCHECK_VERSION(2, 9, 0)
 				Codef(_T("%s"), sFnt.wx_str());
 				Codef(_T("%ASetTxtFont(%s);\n"), ss.wx_str());
-#else
-				Codef(_T("%s"), sFnt.c_str());
-				Codef(_T("%ASetTxtFont(%s);\n"), ss.c_str());
-#endif
 			}
 			// Value needs to be set after other params for correct display.
 			if(m_iValue){
-				Codef(_T("%ASetValue(%d);\n"), m_iValue);
+				Codef(_T("%ASetValue(%d);\n"), static_cast<int>(m_iValue));
 			}
 
 			BuildSetupWindowCode();
@@ -388,7 +359,7 @@ bool wxsLinearRegulator::OnXmlWrite(TiXmlElement *Element, bool IsXRC, bool IsEx
 {
     for(size_t i = 0;i < m_arrTags.Count();i++){
         TagDesc *Desc = m_arrTags[i];
-        wxString s = wxString::Format(wxT("tag_%d_value"), i + 1);
+        wxString s = wxString::Format(wxT("tag_%lu_value"), static_cast<unsigned long>(i + 1));
         TiXmlElement *msg = new TiXmlElement(s.mb_str());
         msg->LinkEndChild(new TiXmlText(wxString::Format(wxT("%d"), Desc->val).mb_str()));
 		Element->LinkEndChild(msg);

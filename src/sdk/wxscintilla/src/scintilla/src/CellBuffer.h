@@ -8,6 +8,10 @@
 #ifndef CELLBUFFER_H
 #define CELLBUFFER_H
 
+/* C::B begin */
+#include "RunStyles.h"
+/* C::B end */
+
 #ifdef SCI_NAMESPACE
 namespace Scintilla {
 #endif
@@ -221,6 +225,8 @@ public:
 	char StyleAt(int position) const;
 	void GetStyleRange(unsigned char *buffer, int position, int lengthRetrieve) const;
 	const char *BufferPointer();
+	const char *RangePointer(int position, int rangeLength);
+	int GapPosition() const;
 
 	int Length() const;
 	void Allocate(int newSize);

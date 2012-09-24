@@ -116,10 +116,12 @@ void CompilerMINGW::Reset()
     m_Options.AddOption(_("Inhibit all warning messages"), _T("-w"), category);
     m_Options.AddOption(_("Have g++ follow the 1998 ISO C++ language standard"), _T("-std=c++98"), category);
     m_Options.AddOption(_("Have g++ follow the coming C++0x ISO C++ language standard"), _T("-std=c++0x"), category);
+    m_Options.AddOption(_("Have g++ follow the C++11 ISO C++ language standard"), _T("-std=c++11"), category);
     m_Options.AddOption(_("Enable warnings demanded by strict ISO C and ISO C++"), _T("-pedantic"), category);
     m_Options.AddOption(_("Treat as errors the warnings demanded by strict ISO C and ISO C++"), _T("-pedantic-errors"), category);
     m_Options.AddOption(_("Warn if main() is not conformant"), _T("-Wmain"), category);
     m_Options.AddOption(_("Enable Effective-C++ warnings (thanks Scott Meyers)"), _T("-Weffc++"), category);
+    m_Options.AddOption(_("zero as null pointer constant"), _T("-Wzero-as-null-pointer-constant"), category);
     m_Options.AddOption(_("Warn whenever a switch statement does not have a default case"), _T("-Wswitch-default"), category);
     m_Options.AddOption(_("Warn whenever a switch statement has an index of enumerated type and lacks a case for one or more of the named codes of that enumeration"), _T("-Wswitch-enum"), category);
     m_Options.AddOption(_("Warn if a user supplied include directory does not exist"), _T("-Wmissing-include-dirs"), category);
@@ -205,8 +207,10 @@ void CompilerMINGW::LoadDefaultRegExArray()
     m_RegExes.Add(RegExStruct(_("'In function...' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):[ \t]+") + _T("([iI]n ([cC]lass|[cC]onstructor|[dD]estructor|[fF]unction|[mM]ember [fF]unction).*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("'Skipping N instantiation contexts' info (2)"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]+(\\[[ \t]+[Ss]kipping [0-9]+ instantiation contexts[ \t]+\\])"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("'Skipping N instantiation contexts' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]+(\\[[ \t]+[Ss]kipping [0-9]+ instantiation contexts[ \t]+\\])"), 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("'Instantiated from' info (2)"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]+([iI]nstantiated from .*)"), 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("'Instantiated from' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]+([iI]nstantiated from .*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("'In instantiation' warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):[ \t]+([Ii]n [Ii]nstantiation.*)"), 2, 1));
+    m_RegExes.Add(RegExStruct(_("'Required from' warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]+([Rr]equired from.*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("'Instantiated from' info (2)"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]+([Ii]nstantiated from .*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("'Instantiated from' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]+([Ii]nstantiated from .*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Resource compiler error"), cltError, _T("windres.exe:[ \t](") + FilePathWithSpaces + _T("):([0-9]+):[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Resource compiler error (2)"), cltError, _T("windres.exe:[ \t](.*)"), 1));
     m_RegExes.Add(RegExStruct(_("Preprocessor warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 4, 1, 2));

@@ -27,21 +27,21 @@
 #include <wx/splitter.h>
 #include <wx/event.h>
 
-/** \brief This class extends behaviour of standard splitter window
+/** \brief This class extends behavior of standard splitter window
  *         fixing some bugs with them when using docking systems
  */
 class wxsStoringSplitterWindow : public wxPanel
 {
-	public:
+    public:
 
         /** \brief Ctor */
-		wxsStoringSplitterWindow(wxWindow* Parent);
+        wxsStoringSplitterWindow(wxWindow* Parent);
 
-		/** \brief Function splitting window */
-		void Split(wxWindow* Top,wxWindow* Bottom,int SashPosition = 0);
+        /** \brief Function splitting window */
+        void Split(wxWindow* Top,wxWindow* Bottom,int SashPosition = 0);
 
-		/** \brief Getting splitter window associated with this object */
-		inline wxSplitterWindow* GetSplitter() { return Splitter; }
+        /** \brief Getting splitter window associated with this object */
+        inline wxSplitterWindow* GetSplitter() { return Splitter; }
 
     private:
 

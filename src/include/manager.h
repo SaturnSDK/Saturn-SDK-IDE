@@ -22,27 +22,19 @@
 #include "cbfunctor.h"
 
 // forward decls
-#ifndef CB_FOR_CONSOLE
 class wxFrame;
 class wxWindow;
-#endif // #ifndef CB_FOR_CONSOLE
 class ProjectManager;
-#ifndef CB_FOR_CONSOLE
 class EditorManager;
 class DebuggerManager;
-#endif // #ifndef CB_FOR_CONSOLE
 class LogManager;
 class PluginManager;
-#ifndef CB_FOR_CONSOLE
 class ToolsManager;
-#endif // #ifndef CB_FOR_CONSOLE
 class MacrosManager;
 class PersonalityManager;
-#ifndef CB_FOR_CONSOLE
 class wxMenu;
 class wxMenuBar;
 class wxToolBar;
-#endif // #ifndef CB_FOR_CONSOLE
 class UserVariableManager;
 class ScriptingManager;
 class ConfigManager;
@@ -51,10 +43,11 @@ class FileManager;
 
 class DLLIMPORT Manager
 {
-    wxFrame* m_pAppWindow;
-    static bool appShuttingDown;
-    static bool blockYields;
-    static bool isBatch;
+    wxFrame*               m_pAppWindow;
+    static bool            m_AppShuttingDown;
+    static bool            m_AppStartedUp;
+    static bool            m_BlockYields;
+    static bool            m_IsBatch;
     static wxCmdLineParser m_CmdLineParser;
 
      Manager();
@@ -63,8 +56,10 @@ class DLLIMPORT Manager
     void OnMenu(wxCommandEvent& event);
 
 public:
+    static void SetAppStartedUp(bool app_started_up);
+    static void SetAppShuttingDown(bool app_shutting_down);
     static void SetBatchBuild(bool is_batch);
-    static bool IsBatchBuild(){ return isBatch; }
+    static bool IsBatchBuild() { return m_IsBatch; }
     /// Blocks/unblocks Manager::Yield(). Be careful when using it. Actually, do *not* use it ;)
     static void BlockYields(bool block);
     /// Whenever you need to call wxYield(), call Manager::Yield(). It's safer.
@@ -86,13 +81,11 @@ public:
     /** Never, EVER, call this function! It is the last function called on shutdown.... */
     static void Free();
 
-#ifndef CB_FOR_CONSOLE
     wxFrame*  GetAppFrame()  const;
     wxWindow* GetAppWindow() const;
-#endif // #ifndef CB_FOR_CONSOLE
 
     static bool IsAppShuttingDown();
-    static bool isappShuttingDown(){return Manager::IsAppShuttingDown();};
+    static bool IsAppStartedUp();
 
     /** Functions returning pointers to the respective sub-manager instances.
      * During application startup as well as during runtime, these functions will always return a valid pointer.
@@ -107,41 +100,35 @@ public:
      *   ScriptingManager,   ProjectManager,  EditorManager,
      *   PersonalityManager, MacrosManager,   UserVariableManager,
      *   LogManager
-     *   The ConfigManager is destroyed immediately before the applicaton terminates, so it can be
+     *   The ConfigManager is destroyed immediately before the application terminates, so it can be
      *   considered being omnipresent.
      *
      * For plugin developers, this means that most managers (except for the ones you probably don't use anyway)
      * will be available throughout the entire lifetime of your plugins.
      */
 
-    ProjectManager*      GetProjectManager() const;
-#ifndef CB_FOR_CONSOLE
-    EditorManager*       GetEditorManager() const;
-#endif // #ifndef CB_FOR_CONSOLE
-    LogManager*          GetLogManager() const;
-    PluginManager*       GetPluginManager() const;
-#ifndef CB_FOR_CONSOLE
-    ToolsManager*        GetToolsManager() const;
-#endif // #ifndef CB_FOR_CONSOLE
-    MacrosManager*       GetMacrosManager() const;
-    PersonalityManager*  GetPersonalityManager() const;
-    UserVariableManager* GetUserVariableManager() const;
-    ScriptingManager*    GetScriptingManager() const;
+    ProjectManager*      GetProjectManager()                          const;
+    EditorManager*       GetEditorManager()                           const;
+    LogManager*          GetLogManager()                              const;
+    PluginManager*       GetPluginManager()                           const;
+    ToolsManager*        GetToolsManager()                            const;
+    MacrosManager*       GetMacrosManager()                           const;
+    PersonalityManager*  GetPersonalityManager()                      const;
+    UserVariableManager* GetUserVariableManager()                     const;
+    ScriptingManager*    GetScriptingManager()                        const;
     ConfigManager*       GetConfigManager(const wxString& name_space) const;
-    FileManager*         GetFileManager() const;
-#ifndef CB_FOR_CONSOLE
-    DebuggerManager*     GetDebuggerManager() const;
-#endif // #ifndef CB_FOR_CONSOLE
+    FileManager*         GetFileManager()                             const;
+    DebuggerManager*     GetDebuggerManager()                         const;
+
 
 
     /////// XML Resource functions ///////
     /// Inits XML Resource system
-    static void Initxrc(bool force=false);
+    static void InitXRC(bool force=false);
     /// Loads XRC file(s) using data_path
-    static void Loadxrc(wxString relpath);
+    static void LoadXRC(wxString relpath);
     static bool LoadResource(const wxString& file);
 
-#ifndef CB_FOR_CONSOLE
     /// Loads Menubar from XRC
     static wxMenuBar* LoadMenuBar(wxString resid, bool createonfailure = false);
     /// Loads Menu from XRC
@@ -155,7 +142,6 @@ public:
     wxToolBar* CreateEmptyToolbar();
     static void AddonToolBar(wxToolBar* toolBar,wxString resid);
     static bool isToolBar16x16(wxToolBar* toolBar);
-#endif // #ifndef CB_FOR_CONSOLE
 
     static wxCmdLineParser* GetCmdLineParser();
 
@@ -216,4 +202,3 @@ public:
 };
 
 #endif // MANAGER_H
-

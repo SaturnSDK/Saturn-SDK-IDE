@@ -373,7 +373,7 @@
 
 //
 // wxPGVariantAndBool
-//	
+//
 // Helper class that wraps wxVariant and bool. Need to use this class
 // instead of writeback arguments in some virtual methods of custom
 // property classes.
@@ -440,7 +440,25 @@ public:
 #endif
 
 // -----------------------------------------------------------------------
+// C::B patch: define DLLIMPORT to be used to define WXDLLIMPEXP_PG later.
+#if defined(__WXMSW__)
+    #ifndef DLLIMPORT
+        #if EXPORT_LIB
+            #define DLLIMPORT __declspec (dllexport)
+        #else
+            #define DLLIMPORT __declspec (dllimport)
+        #endif // EXPORT_LIB
+    #endif // DLLIMPORT
+#else
+    #define DLLIMPORT
+#endif
 
+#define WXDLLIMPEXP_PG DLLIMPORT
+// C::B patch: Add define of WXDLLIMPEXP_PG_FWD to reduce warnings
+#define WXDLLIMPEXP_PG_FWD
+
+// C::B patch: Disable the orignal way to define WXDLLIMPEXP_PG
+/*
 #ifdef WXMAKINGLIB_PROPGRID
     #define WXDLLIMPEXP_PG
 #elif defined(WXMAKINGDLL_PROPGRID)
@@ -450,6 +468,7 @@ public:
 #else // not making nor using DLL
     #define WXDLLIMPEXP_PG wxEMPTY_PARAMETER_VALUE
 #endif
+*/
 
 // -----------------------------------------------------------------------
 
@@ -500,7 +519,7 @@ struct wxPGPaintData
     int                     m_drawnWidth;
 
     /** In a measure item call, set this to the height of item at m_choiceItem index. */
-    int                     m_drawnHeight;   
+    int                     m_drawnHeight;
 };
 
 
@@ -587,7 +606,7 @@ public:
         m_refCount++;
     }
 
-    void DecRef() 
+    void DecRef()
     {
         m_refCount--;
         if ( !m_refCount )
@@ -3176,7 +3195,7 @@ public:
 
     /** Returns height of children, recursively, and
         by taking expanded/collapsed status into account.
-        
+
         iMax is used when finding property y-positions.
     */
     int GetChildrenHeight( int lh, int iMax = -1 ) const;
@@ -3852,7 +3871,7 @@ public:
     }
 
 #if wxPG_COMPATIBILITY_1_2_0
-    /** 
+    /**
         Used to return true if choices in general were likely to have values.
         Now always returns true since if value was not specified for choice,
         index is used.
@@ -3862,7 +3881,7 @@ public:
     */
     wxDEPRECATED( bool HasValues() const );
 
-    /** 
+    /**
         Used to return true if given choice has valid value. Now always returns
         since if value was not specified for choice, index is used.
 
@@ -4327,7 +4346,7 @@ wxPG_VFB_BEEP                       = 0x02,
 */
 wxPG_VFB_MARK_CELL                  = 0x04,
 
-/** Display a customizable text message explaining the situation. 
+/** Display a customizable text message explaining the situation.
 
     To customize the way the message is displayed, you need to
     reimplement wxPropertyGrid::DoShowPropertyError() in a
@@ -6050,7 +6069,7 @@ public:
 #endif
 
     /** Sets value (wxVariant&) of a property.
-    
+
         @remarks
         Use wxPropertyGrid::ChangePropertyValue() instead if you need to run through
         validation process and send property change event.
@@ -6676,7 +6695,7 @@ public:
 
     /**
         Centers the splitter.
-        
+
         @param enableAutoResizing
             If @true, automatic column resizing is enabled (only applicapple
             if window style wxPG_SPLITTER_AUTO_CENTER is used).
@@ -8216,9 +8235,9 @@ protected:
     void DestroyEditorWnd( wxWindow* wnd );
     void FreeEditors();
 
-    virtual bool DoExpand( wxPGProperty* p, bool sendEvent /* CB modification = false*/);
+    virtual bool DoExpand( wxPGProperty* p, bool sendEvent /* C::B patch: = false*/);
 
-    virtual bool DoCollapse( wxPGProperty* p, bool sendEvent /* CB modification = false*/);
+    virtual bool DoCollapse( wxPGProperty* p, bool sendEvent /* C::B patch:  = false*/);
 
     // Returns nearest paint visible property (such that will be painted unless
     // window is scrolled or resized). If given property is paint visible, then

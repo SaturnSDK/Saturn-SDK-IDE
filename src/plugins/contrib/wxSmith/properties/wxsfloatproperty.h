@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 7603 $
-* $Id: wxsfloatproperty.h 7603 2011-11-20 15:49:42Z mortenmacfly $
-* $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/branches/wxsmith_addons/src/plugins/contrib/wxSmith/properties/wxsfloatproperty.h $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #ifndef WXSFLOATPROPERTY_H
@@ -28,7 +28,7 @@
 /** \brief Base float property */
 class wxsFloatProperty: public wxsProperty
 {
-	public:
+    public:
 
         /** \brief Ctor
          *  \param PGName   name of property in Property Grid
@@ -37,10 +37,10 @@ class wxsFloatProperty: public wxsProperty
          *  \param Default  default value applied on read errors
          *  \param Priority priority of this property
          */
-		wxsFloatProperty(const wxString& PGName,const wxString& DataName,long Offset,double Default=0.0f,int Priority=100);
+        wxsFloatProperty(const wxString& PGName,const wxString& DataName,long Offset,double Default=0.0f,int Priority=100);
 
-		/** \brief Returning type name */
-		virtual const wxString GetTypeName() { return _T("float"); }
+        /** \brief Returning type name */
+        virtual const wxString GetTypeName() { return _T("float"); }
 
     protected:
 
@@ -52,7 +52,7 @@ class wxsFloatProperty: public wxsProperty
         virtual bool PropStreamRead(wxsPropertyContainer* Object,wxsPropertyStream* Stream);
         virtual bool PropStreamWrite(wxsPropertyContainer* Object,wxsPropertyStream* Stream);
 
-	private:
+    private:
         long Offset;
         double Default;
 };

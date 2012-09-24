@@ -6,8 +6,6 @@
 #ifndef TEMPLATEMANAGER_H
 #define TEMPLATEMANAGER_H
 
-#ifndef CB_FOR_CONSOLE
-
 #include "settings.h"
 #include "manager.h"
 #include <wx/event.h>
@@ -43,6 +41,5 @@ class DLLIMPORT TemplateManager : public Mgr<TemplateManager>, public wxEvtHandl
 		TemplateManager();
 		virtual ~TemplateManager();
 };
-#endif // #ifndef CB_FOR_CONSOLE
 
 #endif // TEMPLATEMANAGER_H

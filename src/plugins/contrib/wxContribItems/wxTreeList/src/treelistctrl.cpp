@@ -4,7 +4,7 @@
 // Created:     01/02/97
 // Author:      Robert Roebling
 // Maintainer:  Ronan Chartois (pgriddev)
-// Version:     $Id: treelistctrl.cpp 2693 2011-04-03 19:48:06Z pgriddev $
+// Version:     $Id$
 // Copyright:   (c) 2004-2011 Robert Roebling, Julian Smart, Alberto Griggio,
 //              Vadim Zeitlin, Otto Wyss, Ronan Chartois
 // Licence:     wxWindows
@@ -1155,7 +1155,11 @@ void wxEditTextCtrl::EndEdit(bool isCancelled) {
 
 bool wxEditTextCtrl::Destroy() {
     Hide();
+#if wxCHECK_VERSION(2, 9, 0)
+    wxTheApp->ScheduleForDestruction(this);
+#else
     wxTheApp->GetTraits()->ScheduleForDestroy(this);
+#endif
     return true;
 }
 
@@ -3952,7 +3956,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
         default:
             if (event.GetKeyCode() >= (int)' ') {
                 if (!m_findTimer->IsRunning()) m_findStr.Clear();
-                m_findStr.Append (event.GetKeyCode());
+                m_findStr << event.GetKeyCode();
                 m_findTimer->Start (FIND_TIMER_TICKS, wxTIMER_ONE_SHOT);
                 wxTreeItemId prev = m_curItem? (wxTreeItemId*)m_curItem: (wxTreeItemId*)NULL;
                 while (true) {
@@ -4417,8 +4421,7 @@ void wxTreeListMainWindow::OnScroll (wxScrollWinEvent& event) {
     // send event to wxTreeListCtrl (for user code)
     if (m_owner->GetEventHandler()->ProcessEvent(event)) return; // handled (and not skipped) in user code
 
-    // TODO
-#if defined(__WXGTK__) && !defined(__WXUNIVERSAL__)
+#if !wxCHECK_VERSION(2, 9, 0) && defined(__WXGTK__) && !defined(__WXUNIVERSAL__)
     wxScrolledWindow::OnScroll(event);
 #else
     HandleOnScroll( event );

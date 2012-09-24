@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chartctrl.h 7559 2011-11-04 10:19:48Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -151,7 +151,7 @@ private:
 	wxBitmap GetZoomInBitmap();
 	wxBitmap GetZoomOutBitmap();
 
-    DECLARE_CLASS(wxChartCtrl)
+    DECLARE_DYNAMIC_CLASS(wxChartCtrl)
     DECLARE_EVENT_TABLE()
 };
 

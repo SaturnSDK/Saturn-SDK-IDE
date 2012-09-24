@@ -21,7 +21,7 @@
 #include "cclogger.h"
 #include "expression.h"
 #include "tokenizer.h"
-#include "tokenstree.h"
+#include "tokentree.h"
 
 #define CC_TOKENIZER_DEBUG_OUTPUT 0
 
@@ -84,8 +84,8 @@ namespace TokenizerConsts
 wxStringHashMap     Tokenizer::s_Replacements;
 static const size_t s_MaxRepeatReplaceCount = 50;
 
-Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
-    m_TokensTree(tokensTree),
+Tokenizer::Tokenizer(TokenTree* tokenTree, const wxString& filename) :
+    m_TokenTree(tokenTree),
     m_Filename(filename),
     m_BufferLen(0),
     m_TokenIndex(0),
@@ -107,6 +107,7 @@ Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_RepeatReplaceCount(0)
 {
     m_TokenizerOptions.wantPreprocessor = true;
+
     if (!m_Filename.IsEmpty())
         Init(m_Filename);
 }
@@ -119,7 +120,7 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
 {
     m_Loader = loader;
     BaseInit();
-    if (filename.IsEmpty())
+    if ( filename.IsEmpty() )
     {
         if (m_Filename.IsEmpty())
         {
@@ -137,13 +138,13 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
 #endif
     }
 
-    if (!wxFileExists(m_Filename))
+    if ( !wxFileExists(m_Filename) )
     {
         TRACE(_T("Init() : File '%s' does not exist."), m_Filename.wx_str());
         return false;
     }
 
-    if (!ReadFile())
+    if ( !ReadFile() )
     {
         TRACE(_T("Init() : File '%s' could not be read."), m_Filename.wx_str());
         return false;
@@ -154,6 +155,8 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
         TRACE(_T("Init() : File '%s' is empty."), m_Filename.wx_str());
         return false;
     }
+
+    while (m_Filename.Replace(_T("\\"),_T("/"))) { ; }
 
     m_IsOK = true;
     return true;
@@ -168,6 +171,8 @@ bool Tokenizer::InitFromBuffer(const wxString& buffer, const wxString& fileOfBuf
     m_IsOK       = true;
     m_Filename   = fileOfBuffer;
     m_LineNumber = initLineNumber;
+
+    while (m_Filename.Replace(_T("\\"),_T("/"))) { ; }
 
     return true;
 }
@@ -198,7 +203,7 @@ bool Tokenizer::ReadFile()
     wxString fileName = wxEmptyString;
     if (m_Loader)
     {
-        fileName = m_Loader->FileName();
+        fileName    = m_Loader->FileName();
         char* data  = m_Loader->GetData();
         m_BufferLen = m_Loader->GetLength();
 
@@ -222,17 +227,16 @@ bool Tokenizer::ReadFile()
     }
     else
     {
-        if (!wxFileExists(m_Filename))
+        if ( !wxFileExists(m_Filename) )
             return false;
 
         // open file
         wxFile file(m_Filename);
-
-        if (!cbRead(file, m_Buffer))
+        if ( !cbRead(file, m_Buffer) )
             return false;
 
         fileName = m_Filename;
-        success = true;
+        success  = true;
     }
 
     m_BufferLen = m_Buffer.Length();
@@ -414,7 +418,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
 {
     if (stripUnneeded)
     {
-        TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
+        TRACE(_T("%s : line=%u, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
               wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
               PreviousChar(), NextChar(), nestBraces ? 1 : 0);
 
@@ -476,7 +480,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
         if (p > buffer)
             str.Append(buffer, p - buffer);
 
-        TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+        TRACE(_T("ReadToEOL(): (END) We are now at line %u, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
               m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
         TRACE(_T("ReadToEOL(): %s"), str.wx_str());
 
@@ -638,7 +642,7 @@ void Tokenizer::ReadParentheses(wxString& str)
                 {
                     if (writeLen > maxBufferLen)
                     {
-                        TRACE(_T("ReadParentheses(): Catched exception 1: %d"), writeLen);
+                        TRACE(_T("ReadParentheses(): Catched exception 1: %lu"), static_cast<unsigned long>(writeLen));
                         return;
                     }
 
@@ -773,14 +777,14 @@ void Tokenizer::ReadParentheses(wxString& str)
 
     if (p > realBuffer)
         str.Append(realBuffer, p - realBuffer);
-    TRACE(_T("ReadParentheses(): %s, line=%d"), str.wx_str(), m_LineNumber);
+    TRACE(_T("ReadParentheses(): %s, line=%u"), str.wx_str(), m_LineNumber);
     if (str.Len() > 512)
-        TRACE(_T("ReadParentheses(): Catched exception 2: %d"), str.Len());
+        TRACE(_T("ReadParentheses(): Catched exception 2: %lu"), static_cast<unsigned long>(str.Len()));
 }
 
 bool Tokenizer::SkipToEOL(bool nestBraces)
 {
-    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
+    TRACE(_T("%s : line=%u, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
           wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
           PreviousChar(), NextChar(), nestBraces ? 1 : 0);
 
@@ -810,7 +814,7 @@ bool Tokenizer::SkipToEOL(bool nestBraces)
             MoveToNextChar();
     }
 
-    TRACE(_T("SkipToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+    TRACE(_T("SkipToEOL(): (END) We are now at line %u, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
           m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
 
     return NotEOF();
@@ -818,7 +822,7 @@ bool Tokenizer::SkipToEOL(bool nestBraces)
 
 bool Tokenizer::SkipToInlineCommentEnd()
 {
-    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+    TRACE(_T("%s : line=%u, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
           wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
           PreviousChar(), NextChar());
 
@@ -832,7 +836,7 @@ bool Tokenizer::SkipToInlineCommentEnd()
             MoveToNextChar();
     }
 
-    TRACE(_T("SkipToInlineCommentEnd(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c',")
+    TRACE(_T("SkipToInlineCommentEnd(): (END) We are now at line %u, CurrentChar='%c', PreviousChar='%c',")
           _T(" NextChar='%c'"), m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
 
     return NotEOF();
@@ -894,7 +898,7 @@ bool Tokenizer::SkipComment()
     else
         return false;     // Not a comment, return false;
 
-    TRACE(_T("SkipComment() : Start from line = %d"), m_LineNumber);
+    TRACE(_T("SkipComment() : Start from line = %u"), m_LineNumber);
     MoveToNextChar(2);    // Skip the comment prompt
 
     // Here, we are in the comment body
@@ -913,7 +917,7 @@ bool Tokenizer::SkipComment()
         }
         else             // C++ style comment
         {
-            TRACE(_T("SkipComment() : Need to call SkipToEOL() here at line = %d"), m_LineNumber);
+            TRACE(_T("SkipComment() : Need to call SkipToInlineCommentEnd() here at line = %u"), m_LineNumber);
             SkipToInlineCommentEnd();
             break;
         }
@@ -1164,18 +1168,18 @@ void Tokenizer::MacroReplace(wxString& str)
 {
     if (m_IsReplaceParsing)
     {
-        const int id = m_TokensTree->TokenExists(str, -1, tkPreprocessor);
+        const int id = m_TokenTree->TokenExists(str, -1, tkPreprocessor);
         if (id != -1)
         {
-            Token* tk = m_TokensTree->at(id);
-            if (tk)
+            const Token* token = m_TokenTree->at(id);
+            if (token)
             {
                 bool replaced = false;
-                if (!tk->m_Args.IsEmpty())
-                    replaced = ReplaceMacroActualContext(tk, false);
-                else if (tk->m_FullType != tk->m_Name)
-                    replaced = ReplaceBufferForReparse(tk->m_FullType, false);
-                if (replaced || tk->m_FullType.IsEmpty())
+                if (!token->m_Args.IsEmpty())
+                    replaced = ReplaceMacroActualContext(token, false);
+                else if (token->m_FullType != token->m_Name)
+                    replaced = ReplaceBufferForReparse(token->m_FullType, false);
+                if (replaced || token->m_FullType.IsEmpty())
                 {
                     SkipUnwanted();
                     str = DoGetToken();
@@ -1188,7 +1192,7 @@ void Tokenizer::MacroReplace(wxString& str)
     if (it == s_Replacements.end())
         return;
 
-    TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s', line='%d')."), it->first.wx_str(),
+    TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s', line='%u')."), it->first.wx_str(),
           it->second.wx_str(), m_Filename.wx_str(), m_LineNumber);
 
     if (it->second.IsEmpty())
@@ -1270,10 +1274,10 @@ bool Tokenizer::CalcConditionExpression()
 
         if (token.Len() > 1 && !wxIsdigit(token[0])) // handle macro
         {
-            const int id = m_TokensTree->TokenExists(token, -1, tkPreprocessor);
+            const int id = m_TokenTree->TokenExists(token, -1, tkPreprocessor);
             if (id != -1)
             {
-                Token* tk = m_TokensTree->at(id);
+                const Token* tk = m_TokenTree->at(id);
                 if (tk)
                 {
                     if (tk->m_FullType.IsEmpty() || tk->m_FullType == token)
@@ -1330,7 +1334,7 @@ bool Tokenizer::CalcConditionExpression()
     if (exp.CalcPostfix())
     {
         TRACE(_T("CalcConditionExpression() : exp.GetStatus() : %d, exp.GetResult() : %d"),
-              exp.GetStatus(), exp.GetResult());
+              exp.GetStatus()?1:0, exp.GetResult()?1:0);
         return exp.GetStatus() && exp.GetResult();
     }
 
@@ -1341,7 +1345,7 @@ bool Tokenizer::IsMacroDefined()
 {
     while (SkipWhiteSpace() || SkipComment())
         ;
-    int id = m_TokensTree->TokenExists(DoGetToken(), -1, tkPreprocessor);
+    int id = m_TokenTree->TokenExists(DoGetToken(), -1, tkPreprocessor);
     SkipToEOL(false);
     return (id != -1);
 }
@@ -1481,7 +1485,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
     {
     case ptIf:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #if at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #if at line = %u"), m_LineNumber);
             bool result;
             if (m_TokenizerOptions.wantPreprocessor)
                 result = CalcConditionExpression();
@@ -1499,7 +1503,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptIfdef:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #ifdef at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #ifdef at line = %u"), m_LineNumber);
             bool result;
             if (m_TokenizerOptions.wantPreprocessor)
                 result = IsMacroDefined();
@@ -1517,7 +1521,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptIfndef:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #ifndef at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #ifndef at line = %u"), m_LineNumber);
             bool result;
             if (m_TokenizerOptions.wantPreprocessor)
                 result = !IsMacroDefined();
@@ -1535,7 +1539,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptElif:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #elif at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #elif at line = %u"), m_LineNumber);
             bool result = false;
             if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
                 result = CalcConditionExpression();
@@ -1548,7 +1552,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptElifdef:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #elifdef at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #elifdef at line = %u"), m_LineNumber);
             bool result = false;
             if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
                 result = IsMacroDefined();
@@ -1561,7 +1565,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptElifndef:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #elifndef at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #elifndef at line = %u"), m_LineNumber);
             bool result = false;
             if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
                 result = !IsMacroDefined();
@@ -1574,7 +1578,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptElse:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #else at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #else at line = %u"), m_LineNumber);
             if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
                 SkipToEOL(false);
             else
@@ -1584,7 +1588,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 
     case ptEndif:
         {
-            TRACE(_T("HandleConditionPreprocessor() : #endif at line = %d"), m_LineNumber);
+            TRACE(_T("HandleConditionPreprocessor() : #endif at line = %u"), m_LineNumber);
             SkipToEOL(false);
             if (!m_ExpressionResult.empty())
                 m_ExpressionResult.pop();
@@ -1703,10 +1707,10 @@ bool Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekT
     return true;
 }
 
-bool Tokenizer::ReplaceMacroActualContext(Token* tk, bool updatePeekToken)
+bool Tokenizer::ReplaceMacroActualContext(const Token* tk, bool updatePeekToken)
 {
     wxString actualContext;
-    if (GetActualContextForMacro(tk, actualContext))
+    if ( GetActualContextForMacro(tk, actualContext) )
         return ReplaceBufferForReparse(actualContext, updatePeekToken);
     return false;
 }
@@ -1777,7 +1781,7 @@ int Tokenizer::KMP_Find(const wxChar* text, const wxChar* pattern, const int pat
         return -1;
 }
 
-bool Tokenizer::GetActualContextForMacro(Token* tk, wxString& actualContext)
+bool Tokenizer::GetActualContextForMacro(const Token* tk, wxString& actualContext)
 {
     // e.g. "#define AAA AAA" and usage "AAA(x)"
     if (!tk || tk->m_Name == tk->m_FullType)

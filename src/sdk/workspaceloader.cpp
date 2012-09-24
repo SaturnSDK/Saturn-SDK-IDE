@@ -43,6 +43,8 @@ WorkspaceLoader::~WorkspaceLoader()
 inline ProjectManager* GetpMan() { return Manager::Get()->GetProjectManager(); }
 inline LogManager* GetpMsg() { return Manager::Get()->GetLogManager(); }
 
+#include <wx/intl.h>
+
 bool WorkspaceLoader::Open(const wxString& filename, wxString& Title)
 {
     TiXmlDocument doc;
@@ -93,7 +95,7 @@ bool WorkspaceLoader::Open(const wxString& filename, wxString& Title)
     // first loop to load projects
     while (proj)
     {
-        if(Manager::isappShuttingDown() || !GetpMan() || !GetpMsg())
+        if (Manager::IsAppShuttingDown() || !GetpMan() || !GetpMsg())
             return false;
         wxString projectFilename = UnixFilename(cbC2U(proj->Attribute("filename")));
         if (projectFilename.IsEmpty())
@@ -203,7 +205,6 @@ bool WorkspaceLoader::Save(const wxString& title, const wxString& filename)
     return cbSaveTinyXMLDocument(&doc, filename);
 }
 
-
 bool WorkspaceLoader::SaveLayout(const wxString& filename)
 {
     const char* ROOT_TAG = "CodeBlocks_workspace_layout_file";
@@ -213,16 +214,12 @@ bool WorkspaceLoader::SaveLayout(const wxString& filename)
     doc.InsertEndChild(TiXmlDeclaration("1.0", "UTF-8", "yes"));
     TiXmlElement* rootnode = static_cast<TiXmlElement*>(doc.InsertEndChild(TiXmlElement(ROOT_TAG)));
     if (!rootnode)
-    {
         return false; // Failed creating the root node of the workspace layout XML file?!
-    }
 
     // active project
     ProjectManager *pm = Manager::Get()->GetProjectManager();
     if (!pm)
-    {
         return false; // Could not access ProjectManager?!
-    }
 
     if (const cbProject *project = pm->GetActiveProject())
     {
@@ -239,7 +236,7 @@ bool WorkspaceLoader::SaveLayout(const wxString& filename)
     // preferred build target
     if (const cbWorkspace* wsp = pm->GetWorkspace() )
     {
-        const wxString preferredTarget = wsp->PreferredTarget();
+        const wxString preferredTarget = wsp->GetPreferredTarget();
         if ( ! preferredTarget.IsEmpty() )
         {
             TiXmlElement* el =
@@ -258,14 +255,10 @@ bool WorkspaceLoader::LoadLayout(const wxString& filename)
 {
     TiXmlDocument doc;
     if ( ! TinyXML::LoadDocument(filename, &doc) )
-    {
         return false; // Can't load XML file?!
-    }
 
     if ( ! GetpMan() || ! GetpMsg() )
-    {
         return false; // GetpMan or GetpMsg returns NULL?!
-    }
 
     TiXmlElement* root = doc.FirstChildElement("CodeBlocks_workspace_layout_file");
     if (!root)
@@ -289,6 +282,7 @@ bool WorkspaceLoader::LoadLayout(const wxString& filename)
         else
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Could not activate project: %s"), fname.GetFullPath().wx_str()));
     }
+    // else XML element 'ActiveProject' not found?!
 
     // preferred build target
     if (TiXmlElement* el = root->FirstChildElement("PreferredTarget"))
@@ -296,10 +290,9 @@ bool WorkspaceLoader::LoadLayout(const wxString& filename)
         const wxString name = cbC2U(el->Attribute("name"));
         cbWorkspace *wsp = GetpMan()->GetWorkspace();
         if (wsp)
-        {
-            wsp->PreferredTarget(name);
-        }
+            wsp->SetPreferredTarget(name);
     }
+    // else XML element 'PreferredTarget' not found?!
 
     return true;
 }

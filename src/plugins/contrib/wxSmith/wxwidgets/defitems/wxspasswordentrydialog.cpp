@@ -26,39 +26,39 @@
 namespace
 {
     wxsRegisterItem<wxsPasswordEntryDialog> Reg(
-        _T("PasswordEntryDialog"),    	// Class base name
-        wxsTTool,                       				// Item type
-        _T("Dialogs"),                  			// Category in palette
-        120,                             					// Priority in palette
-        false);                         					// We do not allow this item inside XRC files
+        _T("PasswordEntryDialog"),        // Class base name
+        wxsTTool,                                       // Item type
+        _T("Dialogs"),                              // Category in palette
+        120,                                                 // Priority in palette
+        false);                                             // We do not allow this item inside XRC files
 
 
     WXS_ST_BEGIN(wxsPasswordEntryDialogStyles, wxT("wxOK | wxCANCEL | wxCENTRE | wxWS_EX_VALIDATE_RECURSIVELY | wxTE_PASSWORD"));
-		WXS_ST_CATEGORY("wxPasswordEntryDialog")
-		WXS_ST(wxCANCEL)
-		WXS_ST(wxCENTRE)
-		WXS_ST(wxOK)
-		WXS_ST(wxTE_CENTRE)
-		WXS_ST(wxTE_NOHIDESEL)
-		WXS_ST(wxTE_RIGHT)
-		WXS_EXST(wxWS_EX_VALIDATE_RECURSIVELY)
+        WXS_ST_CATEGORY("wxPasswordEntryDialog")
+        WXS_ST(wxCANCEL)
+        WXS_ST(wxCENTRE)
+        WXS_ST(wxOK)
+        WXS_ST(wxTE_CENTRE)
+        WXS_ST(wxTE_NOHIDESEL)
+        WXS_ST(wxTE_RIGHT)
+        WXS_EXST(wxWS_EX_VALIDATE_RECURSIVELY)
     WXS_ST_END()
 }
 
 /*! \brief Ctor
  *
- * \param Data wxsItemResData*	The control's resource data.
+ * \param Data wxsItemResData*    The control's resource data.
  *
  */
 wxsPasswordEntryDialog::wxsPasswordEntryDialog(wxsItemResData *Data):
     wxsTool(Data,
-			&Reg.Info,
-			NULL,
-			wxsPasswordEntryDialogStyles,
-			(flVariable | flId | flSubclass | flExtraCode)),
-			m_sCaption(wxGetPasswordFromUserPromptStr),
-			m_sMessage(wxEmptyString),
-			m_sDefaultValue(wxEmptyString)
+            &Reg.Info,
+            NULL,
+            wxsPasswordEntryDialogStyles,
+            (flVariable | flId | flSubclass | flExtraCode)),
+            m_sCaption(wxGetPasswordFromUserPromptStr),
+            m_sMessage(wxEmptyString),
+            m_sDefaultValue(wxEmptyString)
 {
 }
 
@@ -73,13 +73,7 @@ void wxsPasswordEntryDialog::OnBuildCreatingCode()
     {
         case wxsCPP:
             AddHeader(_T("<wx/textdlg.h>"), GetInfo().ClassName, 0);
-
-            #if wxCHECK_VERSION(2, 9, 0)
             Codef(_T("%C(%W, %t, %t, %t, %T, %P);\n"), m_sMessage.wx_str(), m_sCaption.wx_str(), m_sDefaultValue.wx_str());
-            #else
-            Codef(_T("%C(%W, %t, %t, %t, %T, %P);\n"), m_sMessage.c_str(), m_sCaption.c_str(), m_sDefaultValue.c_str());
-            #endif
-
             BuildSetupWindowCode();
             break;
 
@@ -90,7 +84,7 @@ void wxsPasswordEntryDialog::OnBuildCreatingCode()
 
 /*! \brief Enumerate the dialogue's properties.
  *
- * \param flags long	The control flags.
+ * \param flags long    The control flags.
  * \return void
  *
  */

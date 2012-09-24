@@ -34,7 +34,6 @@
 #include <wx/dnd.h>
 #include <wx/fileconf.h>
 #include <wx/filename.h>
-#include <wx/gauge.h>
 #include <wx/printdlg.h>
 #include <wx/sstream.h>
 #include <wx/tipdlg.h>
@@ -226,6 +225,8 @@ int idEditLineDuplicate           = XRCID("idEditLineDuplicate");
 int idEditLineTranspose           = XRCID("idEditLineTranspose");
 int idEditLineCopy                = XRCID("idEditLineCopy");
 int idEditLinePaste               = XRCID("idEditLinePaste");
+int idEditLineUp                  = XRCID("idEditLineUp");
+int idEditLineDown                = XRCID("idEditLineDown");
 int idEditSpecialCommandsCase     = XRCID("idEditSpecialCommandsCase");
 int idEditUpperCase               = XRCID("idEditUpperCase");
 int idEditLowerCase               = XRCID("idEditLowerCase");
@@ -246,8 +247,10 @@ int idViewToolMain           = XRCID("idViewToolMain");
 int idViewToolDebugger       = XRCID("idViewToolDebugger");
 int idViewManager            = XRCID("idViewManager");
 int idViewLogManager         = XRCID("idViewLogManager");
+int idViewStartPage          = XRCID("idViewStartPage");
 int idViewStatusbar          = XRCID("idViewStatusbar");
 int idViewScriptConsole      = XRCID("idViewScriptConsole");
+int idViewHideEditorTabs     = XRCID("idViewHideEditorTabs");
 int idViewFocusEditor        = XRCID("idViewFocusEditor");
 int idViewFocusManagement    = XRCID("idViewFocusManagement");
 int idViewFocusLogsAndOthers = XRCID("idViewFocusLogsAndOthers");
@@ -350,9 +353,11 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_UPDATE_UI(idViewToolMain,           MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewLogManager,         MainFrame::OnViewMenuUpdateUI)
+    EVT_UPDATE_UI(idViewStartPage,          MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewManager,            MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewStatusbar,          MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewScriptConsole,      MainFrame::OnViewMenuUpdateUI)
+    EVT_UPDATE_UI(idViewHideEditorTabs,     MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewFocusEditor,        MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewFocusManagement,    MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewFocusLogsAndOthers, MainFrame::OnViewMenuUpdateUI)
@@ -444,6 +449,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idEditLineTranspose,         MainFrame::OnEditLineTranspose)
     EVT_MENU(idEditLineCopy,              MainFrame::OnEditLineCopy)
     EVT_MENU(idEditLinePaste,             MainFrame::OnEditLinePaste)
+    EVT_MENU(idEditLineUp,                MainFrame::OnEditLineMove)
+    EVT_MENU(idEditLineDown,              MainFrame::OnEditLineMove)
     EVT_MENU(idEditUpperCase,             MainFrame::OnEditUpperCase)
     EVT_MENU(idEditLowerCase,             MainFrame::OnEditLowerCase)
     EVT_MENU(idEditInsertNewLine,         MainFrame::OnEditInsertNewLine)
@@ -471,16 +478,18 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idViewLayoutSave,            MainFrame::OnViewLayoutSave)
     EVT_MENU(idViewLayoutDelete,          MainFrame::OnViewLayoutDelete)
     EVT_MENU(idViewToolMain,              MainFrame::OnToggleBar)
-    EVT_MENU(XRCID("idViewToolDebugger"), MainFrame::OnToggleBar)
+    EVT_MENU(idViewToolDebugger,          MainFrame::OnToggleBar)
     EVT_MENU(idViewLogManager,            MainFrame::OnToggleBar)
     EVT_MENU(idViewManager,               MainFrame::OnToggleBar)
     EVT_MENU(idViewStatusbar,             MainFrame::OnToggleStatusBar)
     EVT_MENU(idViewScriptConsole,         MainFrame::OnViewScriptConsole)
+    EVT_MENU(idViewHideEditorTabs,        MainFrame::OnViewHideEditorTabs)
     EVT_MENU(idViewFocusEditor,           MainFrame::OnFocusEditor)
     EVT_MENU(idViewFocusManagement,       MainFrame::OnFocusManagement)
     EVT_MENU(idViewFocusLogsAndOthers,    MainFrame::OnFocusLogsAndOthers)
     EVT_MENU(idViewSwitchTabs,            MainFrame::OnSwitchTabs)
     EVT_MENU(idViewFullScreen,            MainFrame::OnToggleFullScreen)
+    EVT_MENU(idViewStartPage,             MainFrame::OnToggleStartPage)
 
     EVT_MENU(idSettingsEnvironment,    MainFrame::OnSettingsEnvironment)
     EVT_MENU(idSettingsGlobalUserVars, MainFrame::OnGlobalUserVars)
@@ -901,10 +910,11 @@ void MainFrame::CreateMenubar()
     wxMenu *hl=0L, *tools=0L, *plugs=0L, *pluginsM=0L;
     wxMenuItem *tmpitem=0L;
 
+    wxXmlResource* xml_res = wxXmlResource::Get();
     wxString resPath = ConfigManager::GetDataFolder();
-    wxXmlResource *myres = wxXmlResource::Get();
-    myres->Load(resPath + _T("/resources.zip#zip:main_menu.xrc"));
-    mbar = myres->LoadMenuBar(_T("main_menu_bar"));
+    xml_res->Load(resPath + _T("/resources.zip#zip:main_menu.xrc"));
+    Manager::Get()->GetLogManager()->DebugLog(_T("Loading menubar..."));
+    mbar = xml_res->LoadMenuBar(_T("main_menu_bar"));
     if (!mbar)
         mbar = new wxMenuBar(); // Some error happened.
     if (mbar)
@@ -1015,18 +1025,19 @@ void MainFrame::CreateMenubar()
 
 void MainFrame::CreateToolbars()
 {
-    wxXmlResource *myres = wxXmlResource::Get();
     if (m_pToolbar)
     {
         SetToolBar(0L);
         m_pToolbar = 0L;
     }
 
-    wxString resPath = ConfigManager::GetDataFolder();
-    wxString xrcToolbarName = _T("main_toolbar");
+    wxString xrcToolbarName(_T("main_toolbar"));
     if (m_SmallToolBar) // Insert logic here
         xrcToolbarName += _T("_16x16");
-    myres->Load(resPath + _T("/resources.zip#zip:*.xrc"));
+
+    wxXmlResource* xml_res = wxXmlResource::Get();
+    wxString resPath = ConfigManager::GetDataFolder();
+    xml_res->Load(resPath + _T("/resources.zip#zip:") + xrcToolbarName + _T("*.xrc"));
     Manager::Get()->GetLogManager()->DebugLog(_T("Loading toolbar..."));
 
     m_pToolbar = Manager::Get()->CreateEmptyToolbar();
@@ -1573,9 +1584,9 @@ ToolbarInfo MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
 {
     ToolbarInfo info;
     info.toolbar = Manager::Get()->CreateEmptyToolbar();
-    info.priority = 50;
-    if (plugin->BuildToolBar(info.toolbar, info.priority))
+    if (plugin->BuildToolBar(info.toolbar))
     {
+        info.priority = plugin->GetToolBarPriority();
         SetToolBar(0);
         InitToolbar(info.toolbar);
 
@@ -1958,6 +1969,8 @@ void MainFrame::DoUpdateEditorStyle()
     cbAuiNotebook* an = Manager::Get()->GetEditorManager()->GetNotebook();
 
     DoUpdateEditorStyle(an, _T("editor"), style | wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/hide_editor_tabs"),false))
+        an->SetTabCtrlHeight(0);
 
     an = m_pInfoPane;
     DoUpdateEditorStyle(an, _T("infopane"), style);
@@ -2036,8 +2049,9 @@ void MainFrame::DoUpdateAppTitle()
     SetTitle(fulltitle);
 }
 
-void MainFrame::ShowHideStartPage(bool forceHasProject)
+void MainFrame::ShowHideStartPage(bool forceHasProject, int forceState)
 {
+//    Manager::Get()->GetLogManager()->LogWarning(_("Toggling start page"));
     if (Manager::IsBatchBuild())
         return;
 
@@ -2056,6 +2070,11 @@ void MainFrame::ShowHideStartPage(bool forceHasProject)
     bool show = !forceHasProject &&
                 Manager::Get()->GetProjectManager()->GetProjects()->GetCount() == 0 &&
                 Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/start_here_page"), true);
+
+    if(forceState<0)
+        show=false;
+    if(forceState>0)
+        show=true;
 
     EditorBase* sh = Manager::Get()->GetEditorManager()->GetEditor(g_StartHereTitle);
     if (show && !sh)
@@ -2649,14 +2668,21 @@ bool MainFrame::OnDropFiles(wxCoord /*x*/, wxCoord /*y*/, const wxArrayString& f
 
 void MainFrame::OnFileNew(wxCommandEvent& /*event*/)
 {
-    wxMenu* popup = 0;
+    wxMenu* popup = nullptr;
     wxMenuBar* bar = GetMenuBar();
     if (!bar)
         return;
 
     bar->FindItem(idFileNewProject, &popup);
     if (popup)
-        PopupMenu(popup); // this will lead us in OnFileNewWhat() - the meat is there ;)
+    {
+        popup = CopyMenu(popup);
+        if (popup)
+        {
+            PopupMenu(popup); // this will lead us in OnFileNewWhat() - the meat is there ;)
+            delete popup;
+        }
+    }
 }
 
 // in case we are opening a project (bProject == true) we do not want to interfere
@@ -2998,6 +3024,8 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
         return;
     }
 
+    Manager::SetAppShuttingDown(true);
+
     Manager::Get()->GetLogManager()->DebugLog(_T("Deinitializing plugins..."));
     CodeBlocksEvent evtShutdown(cbEVT_APP_START_SHUTDOWN);
     Manager::Get()->ProcessEvent(evtShutdown);
@@ -3237,6 +3265,49 @@ void MainFrame::OnEditLinePaste(wxCommandEvent& /*event*/)
 
         ed->GetControl()->EndUndoAction();
     }
+}
+
+void MainFrame::OnEditLineMove(wxCommandEvent& event)
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!ed)
+        return;
+
+    // TODO (mortenmacfly##): Exclude rectangle selection here or not? What behaviour the majority of users expect here???
+    cbStyledTextCtrl* ctrl = ed->GetControl();
+    if (!ctrl || /*ctrl->SelectionIsRectangle() ||*/ (ctrl->GetSelections() > 1))
+        return;
+
+    int startPos = ctrl->PositionFromLine(ctrl->LineFromPosition(ctrl->GetSelectionStart()));
+    int endPos   = ctrl->PositionFromLine(ctrl->LineFromPosition(ctrl->GetSelectionEnd()) + 1) - 1;
+    if (event.GetId() == idEditLineUp)
+    {
+        if (startPos < 2)
+            return;
+        ctrl->BeginUndoAction();
+        wxString line = ctrl->GetTextRange(ctrl->PositionFromLine(ctrl->LineFromPosition(startPos) - 1),
+                                           startPos);
+        ctrl->InsertText(endPos + 1, line);
+        ctrl->DeleteRange(startPos - line.Length(), line.Length());
+        startPos -= line.Length();
+        endPos   -= line.Length();
+        ctrl->EndUndoAction();
+    }
+    else
+    {
+        if (ctrl->LineFromPosition(ctrl->GetSelectionEnd()) == ctrl->GetLineCount())
+            return;
+        ctrl->BeginUndoAction();
+        wxString line = ctrl->GetTextRange(endPos + 1,
+                                           ctrl->PositionFromLine(ctrl->LineFromPosition(endPos + 1) + 1));
+        ctrl->DeleteRange(endPos + 1, line.Length());
+        ctrl->InsertText(startPos, line);
+        startPos += line.Length();
+        endPos   += line.Length();
+        ctrl->EndUndoAction();
+    }
+    ctrl->SetSelectionStart(startPos);
+    ctrl->SetSelectionEnd(endPos);
 }
 
 void MainFrame::OnEditUpperCase(wxCommandEvent& /*event*/)
@@ -3854,6 +3925,22 @@ void MainFrame::OnViewScriptConsole(wxCommandEvent& /*event*/)
     ShowHideScriptConsole();
 }
 
+void MainFrame::OnViewHideEditorTabs(wxCommandEvent& /*event*/)
+{
+	cbAuiNotebook* nb = Manager::Get()->GetEditorManager()->GetNotebook();
+	if (nb)
+	{
+		bool hide_editor_tabs = nb->GetTabCtrlHeight() > 0;
+
+		if (hide_editor_tabs)
+			nb->SetTabCtrlHeight(0);
+		else
+			nb->SetTabCtrlHeight(-1);
+
+		Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/hide_editor_tabs"), hide_editor_tabs);
+	}
+}
+
 void MainFrame::OnSearchFind(wxCommandEvent& event)
 {
     bool bDoMultipleFiles = (event.GetId() == idSearchFindInFiles);
@@ -3932,7 +4019,7 @@ void MainFrame::OnHelpTips(wxCommandEvent& /*event*/)
 
 void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
     {
         event.Skip();
         return;
@@ -3982,7 +4069,7 @@ void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
     {
         event.Skip();
         return;
@@ -3997,7 +4084,7 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
     bool canCut    = false;
     bool canSelAll = false;
 
-    if (Manager::Get()->GetEditorManager() && !Manager::isappShuttingDown())
+    if (Manager::Get()->GetEditorManager() && !Manager::IsAppShuttingDown())
     {
         ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
         eb = Manager::Get()->GetEditorManager()->GetActiveEditor();
@@ -4095,7 +4182,7 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
     {
         event.Skip();
         return;
@@ -4107,8 +4194,10 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
     mbar->Check(idViewManager,             manVis);
     mbar->Check(idViewLogManager,          m_LayoutManager.GetPane(m_pInfoPane).IsShown());
+    mbar->Check(idViewStartPage,           Manager::Get()->GetEditorManager()->GetEditor(g_StartHereTitle)!=NULL);
     mbar->Check(idViewStatusbar,           GetStatusBar() && GetStatusBar()->IsShown());
     mbar->Check(idViewScriptConsole,       m_LayoutManager.GetPane(m_pScriptConsole).IsShown());
+    mbar->Check(idViewHideEditorTabs,      Manager::Get()->GetEditorManager()->GetNotebook()->GetTabCtrlHeight() == 0);
     mbar->Check(idViewFullScreen,          IsFullScreen());
     mbar->Enable(idViewFocusEditor,        ed);
     mbar->Enable(idViewFocusManagement,    manVis);
@@ -4139,7 +4228,7 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
     {
         event.Skip();
         return;
@@ -4172,7 +4261,7 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnProjectMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
     {
         event.Skip();
         return;
@@ -4195,7 +4284,7 @@ void MainFrame::OnProjectMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnEditorUpdateUI(CodeBlocksEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
     {
         event.Skip();
         return;
@@ -4345,6 +4434,18 @@ void MainFrame::OnSwitchTabs(wxCommandEvent& /*event*/)
         }
     }
 }
+
+void MainFrame::OnToggleStartPage(wxCommandEvent& /*event*/)
+{
+
+    int toggle=-1;
+    if(Manager::Get()->GetEditorManager()->GetEditor(g_StartHereTitle)==NULL)
+    {
+        toggle=1;
+    }
+    ShowHideStartPage(false,toggle);
+}
+
 
 void MainFrame::OnToggleFullScreen(wxCommandEvent& /*event*/)
 {
@@ -4571,7 +4672,7 @@ void MainFrame::OnCtrlAltTab(wxCommandEvent& /*event*/)
 
 void MainFrame::OnRequestDockWindow(CodeBlocksDockEvent& event)
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
         return;
 
     wxAuiPaneInfo info;

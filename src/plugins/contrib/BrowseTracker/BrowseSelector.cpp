@@ -37,6 +37,8 @@ extern const char *signpost_xpm[];
 #include "editorbase.h"
 #include "editormanager.h"
 #include "cbeditor.h"
+#include "configmanager.h"
+
 #include "BrowseTracker.h"
 #include "BrowseSelector.h"
 #include "Version.h"
@@ -44,6 +46,11 @@ extern const char *signpost_xpm[];
 
 #include "BrowseXpms.h"
 wxBitmap BrowseSelector::m_bmp;
+namespace
+{
+  	static bool firstPaint = true;
+
+}
 
 // ----------------------------------------------------------------------------
 BrowseSelector::BrowseSelector(wxWindow* parent, BrowseTracker* pBrowseTracker, bool bDirection)
@@ -60,8 +67,21 @@ BrowseSelector::BrowseSelector(wxWindow* parent, BrowseTracker* pBrowseTracker, 
 	GetSizer()->SetSizeHints(this);
 	GetSizer()->Layout();
 	Centre();
-}
 
+	int maxFilenameWidth = PopulateListControl( static_cast<EditorBase*>( parent ) );
+    wxRect rect = this->GetClientRect();
+    int winWidth = Manager::Get()->GetAppWindow()->GetRect().GetWidth();
+    int textWidth = 0;
+    int textHeight = 0;
+	m_listBox->GetTextExtent( wxString(_T('M'), maxFilenameWidth+4), &textWidth, &textHeight);
+    rect.width = wxMin(textWidth, winWidth );
+    rect.width = wxMax(rect.width, 200);
+    this->SetSize(wxSize(rect.width+4,rect.height+4));
+    m_panel->SetSize(rect.width,24);
+    m_listBox->SetSize(wxSize(rect.width,rect.height));
+    firstPaint = true;
+
+}
 // ----------------------------------------------------------------------------
 BrowseSelector::BrowseSelector()
 // ----------------------------------------------------------------------------
@@ -95,10 +115,9 @@ void BrowseSelector::Create(wxWindow* parent, BrowseTracker* pBrowseTracker, boo
 	SetSizer( sz );
 
 	long flags = wxLB_SINGLE | wxNO_BORDER | wxWANTS_CHARS;
-	m_listBox = new wxListBox(this, wxID_ANY, wxDefaultPosition, wxSize(200, 150), 0, NULL, flags);
+	m_listBox = new wxListBox(this, wxID_ANY, wxDefaultPosition, wxSize(400, 150), 0, NULL, flags);
 
 	static int panelHeight = 0;
-	static int fontWidth = 0;
 	if( panelHeight == 0 )
 	{
 		wxMemoryDC mem_dc;
@@ -116,14 +135,14 @@ void BrowseSelector::Create(wxWindow* parent, BrowseTracker* pBrowseTracker, boo
 
 		font.SetWeight( wxNORMAL );
 		mem_dc.SetFont(font);
-        fontWidth = mem_dc.GetCharWidth();
 
 		// Out signpost bitmap is 24 pixels
 		if( panelHeight < 24 )
 			panelHeight = 24;
 	}
 
-	m_panel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize(200, panelHeight));
+	m_panel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize(800, panelHeight));
+    // above panel/banner with set to 800, to allow it to grow
 
 	sz->Add( m_panel );
 	sz->Add( m_listBox, 1, wxEXPAND );
@@ -142,13 +161,19 @@ void BrowseSelector::Create(wxWindow* parent, BrowseTracker* pBrowseTracker, boo
 
 	SetBackgroundColour( wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE) );
 	m_listBox->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE));
-
-	////PopulateListControl( static_cast<wxFlatNotebook*>( parent ) );
-	int maxFilenameWidth = PopulateListControl( static_cast<EditorBase*>( parent ) );
-    wxRect rect = m_panel->GetRect();
-    int textWidth = fontWidth * maxFilenameWidth;
-    rect.width = wxMax(textWidth, rect.width );
-    m_panel->SetSize(rect);
+    int logfontsize = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/log_font_size"), 10);
+    wxFont cbFont = Manager::Get()->GetAppWindow()->GetFont();
+    cbFont.SetPointSize( logfontsize);
+    //cbFont.SetWeight( wxFONTWEIGHT_BOLD );
+    // Try using font settings from user editor choices
+    wxString fontstring = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/font"), wxEmptyString);
+    if (!fontstring.IsEmpty())
+    {
+        wxNativeFontInfo nfi;
+        nfi.FromString(fontstring);
+        cbFont.SetNativeFontInfo(nfi);
+    }
+    m_listBox->SetFont(cbFont);
 
 	// Create the bitmap, only once
 	if( !m_bmp.Ok() )
@@ -183,7 +208,7 @@ void BrowseSelector::OnNavigationKey(wxKeyEvent &event)
 	long selected = m_listBox->GetSelection();
 	long maxItems = m_listBox->GetCount();
 	long itemToSelect;
-    LOGIT( _T("OnNavigationKey selected[%d]maxItems[%d]key[%d]"), selected, maxItems, event.GetKeyCode() );
+    LOGIT( _T("OnNavigationKey selected[%ld]maxItems[%ld]key[%d]"), selected, maxItems, event.GetKeyCode() );
 
 	if( (event.GetKeyCode() == WXK_RIGHT) || (event.GetKeyCode() == WXK_DOWN) )
 	{
@@ -203,7 +228,7 @@ void BrowseSelector::OnNavigationKey(wxKeyEvent &event)
 	}
 
 	m_listBox->SetSelection( itemToSelect );
-	LOGIT( _T("OnNavigationKey Selection[%d]"), itemToSelect );
+	LOGIT( _T("OnNavigationKey Selection[%ld]"), itemToSelect );
 }
 // ----------------------------------------------------------------------------
 int BrowseSelector::PopulateListControl(EditorBase* /*pEditor*/)
@@ -214,7 +239,7 @@ int BrowseSelector::PopulateListControl(EditorBase* /*pEditor*/)
     // memorize current selection
 	int selection = m_pBrowseTracker->GetCurrentEditorIndex();
 	int maxCount     = MaxEntries;
-	int maxWidth     = 40;
+	int maxWidth     = 0;
 
 
 	int itemIdx = 0;
@@ -262,7 +287,7 @@ void BrowseSelector::CloseDialog()
 
 	if ((m_selectedItem > -1) && (m_selectedItem < MaxEntries))
 	{   std::map<int, int>::iterator iter = m_indexMap.find(m_selectedItem);
-        LOGIT( _T("ListBox[%d] Map[%d]"), m_selectedItem, iter->second );
+        LOGIT( _T("ListBox[%ld] Map[%d]"), m_selectedItem, iter->second );
         // we have to end the dlg before activating the editor or else
         // the old editor get re-activated.
         //-m_pBrowseTracker->SetSelection( iter->second ); logic error
@@ -280,12 +305,12 @@ void BrowseSelector::OnPanelPaint(wxPaintEvent &event)
 	wxPaintDC dc(m_panel);
 	wxRect rect = m_panel->GetClientRect();
 
-	static bool first = true;
+	firstPaint = true;
 	static wxBitmap bmp( rect.width, rect.height );
 
-	if( first )
+	if( firstPaint )
 	{
-		first = false;
+		firstPaint = false;
 		wxMemoryDC mem_dc;
 		mem_dc.SelectObject( bmp );
 

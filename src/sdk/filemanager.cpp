@@ -16,11 +16,7 @@
     #include "editormanager.h"
     #include "infowindow.h"
 #endif
-#ifndef CB_FOR_CONSOLE
 #include "cbstyledtextctrl.h"
-#else // #ifndef CB_FOR_CONSOLE
-#include "infowindow_base.h"
-#endif // #ifndef CB_FOR_CONSOLE
 
 #include <wx/url.h>
 #include <wx/encconv.h>
@@ -101,15 +97,18 @@ void URLLoader::operator()()
         return;
     }
 
-    char tmp[8192];
+    char tmp[8192] = {};
     size_t chunk = 0;
 
     while ((chunk = stream->Read(tmp, sizeof(tmp)).LastRead()))
-        buffer.Append(tmp, chunk);
+    {
+        mBuffer.insert(mBuffer.end(), tmp, tmp + chunk);
+    }
 
-    data = buffer.Data();
-    len = buffer.Length();
-    buffer.Append("\0\0\0\0", 4);
+    data = mBuffer.data();
+    len = mBuffer.size();
+    const char Zeros4[] = "\0\0\0\0";
+    mBuffer.insert(mBuffer.end(), Zeros4, Zeros4 + 4);
     Ready();
 }
 
@@ -129,7 +128,6 @@ FileManager::~FileManager()
 //  urlLoaderThread.Die();
 }
 
-#ifndef CB_FOR_CONSOLE
 LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
 {
     if (reuseEditors)
@@ -172,7 +170,6 @@ LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
     fileLoaderThread.Queue(fl);
     return fl;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 bool FileManager::Save(const wxString& name, const char* data, size_t len)
 {
@@ -398,11 +395,7 @@ bool FileManager::WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEnc
         // should be long enough
         char* tmp = new char[2*inlen];
 
-        #if wxCHECK_VERSION(2, 9, 0)
         if (conv.Init(wxFONTENCODING_UNICODE, encoding) && conv.Convert(data.wx_str(), tmp))
-        #else
-        if (conv.Init(wxFONTENCODING_UNICODE, encoding) && conv.Convert(data.c_str(), tmp))
-        #endif
         {
             mbBuff = tmp;
             outlen = strlen(mbBuff); // should be correct, because Convert has returned true

@@ -31,9 +31,7 @@ class CompilerErrors
 
         void AddError(CompilerLineType lt, cbProject* project, const wxString& filename, long int line, const wxString& error);
 
-#ifndef CB_FOR_CONSOLE
         void GotoError(int nr);
-#endif // #ifndef CB_FOR_CONSOLE
         void Next();
         void Previous();
         void Clear();
@@ -48,10 +46,8 @@ class CompilerErrors
         int GetFocusedError() const { return m_ErrorIndex; }
     private:
         void DoAddError(const CompileError& error);
-#ifndef CB_FOR_CONSOLE
         void DoGotoError(const CompileError& error);
         void DoClearErrorMarkFromAllEditors();
-#endif // #ifndef CB_FOR_CONSOLE
         int ErrorLineHasMore(const wxString& filename, long int line) const; // returns the index in the array
         ErrorsArray m_Errors;
         int m_ErrorIndex;

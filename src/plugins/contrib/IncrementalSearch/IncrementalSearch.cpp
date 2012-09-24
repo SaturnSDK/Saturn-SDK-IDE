@@ -48,6 +48,9 @@ BEGIN_EVENT_TABLE(IncrementalSearch, cbPlugin)
     EVT_TOOL(XRCID("idIncSearchUseRegex"), IncrementalSearch::OnToggleUseRegex)
     EVT_TEXT(XRCID("idIncSearchText"), IncrementalSearch::OnTextChanged)
     EVT_TEXT_ENTER(XRCID("idIncSearchText"), IncrementalSearch::OnSearchNext)
+#ifndef __WXMSW__
+    EVT_MENU(XRCID("idEditPaste"), IncrementalSearch::OnMenuEditPaste)
+#endif
 END_EVENT_TABLE()
 
 // constructor
@@ -96,7 +99,8 @@ void IncrementalSearch::OnAttach()
     // (see: does not need) this plugin...
     m_pEditor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
-    mbar->Enable(idIncSearchFocus, m_pEditor && m_pEditor->GetControl());
+    if (mbar->FindItem(idIncSearchFocus)) // if BuildMenu is called afterwards this may not exist yet
+        mbar->Enable(idIncSearchFocus, m_pEditor && m_pEditor->GetControl());
 
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_ACTIVATED, new cbEventFunctor<IncrementalSearch, CodeBlocksEvent>(this, &IncrementalSearch::OnEditorEvent));
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_DEACTIVATED, new cbEventFunctor<IncrementalSearch, CodeBlocksEvent>(this, &IncrementalSearch::OnEditorEvent));
@@ -690,3 +694,27 @@ void IncrementalSearch::DoSearch(int fromPos, int startPos, int endPos)
     m_pTextCtrl->Update();
     #endif
 }
+
+#ifndef __WXMSW__
+void IncrementalSearch::OnMenuEditPaste(wxCommandEvent& event)
+{
+    // Process clipboard data only if we have the focus
+    if ( !IsAttached() )
+    {
+        event.Skip();
+        return;
+    }
+
+    wxWindow* pFocused = wxWindow::FindFocus();
+    if (!pFocused)
+    {
+        event.Skip();
+        return;
+    }
+
+    if (pFocused == m_pTextCtrl)
+        m_pTextCtrl->Paste();
+    else
+        event.Skip();
+}
+#endif

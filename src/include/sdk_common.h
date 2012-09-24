@@ -132,7 +132,6 @@
     #include "logmanager.h"
     #include "projectmanager.h"
     #include "menuitemsmanager.h"
-    #include "scriptingmanager_base.h"
     #include "scriptingmanager.h"
     #include "toolsmanager.h"
     #include "templatemanager.h"

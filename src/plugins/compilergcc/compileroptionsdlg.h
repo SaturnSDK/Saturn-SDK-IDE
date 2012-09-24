@@ -3,7 +3,6 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifndef CB_FOR_CONSOLE
 #ifndef COMPILEROPTIONSDLG_H
 #define COMPILEROPTIONSDLG_H
 
@@ -131,4 +130,3 @@ class CompilerOptionsDlg : public cbConfigurationPanel
 };
 
 #endif // COMPILEROPTIONSDLG_H
-#endif // #ifndef CB_FOR_CONSOLE

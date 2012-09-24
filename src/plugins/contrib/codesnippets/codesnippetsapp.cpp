@@ -588,7 +588,7 @@ void CodeSnippetsAppFrame::InitCodeSnippetsAppFrame(wxFrame *frame, const wxStri
 	InitializeDragScroll();
 
 	// Add TreeCtrl to DragScroll managed windows
-    DragScrollEvent dsevt(wxEVT_DRAGSCROLL_EVENT , idDragScrollAddWindow);
+    sDragScrollEvent dsevt(wxEVT_S_DRAGSCROLL_EVENT , idDragScrollAddWindow);
     dsevt.SetEventObject(GetConfig()->GetSnippetsTreeCtrl());
     dsevt.SetString( GetConfig()->GetSnippetsTreeCtrl()->GetName() );
     GetConfig()->GetDragScrollEvtHandler()->AddPendingEvent( dsevt );
@@ -940,7 +940,7 @@ void CodeSnippetsAppFrame::OnEventTest(wxCommandEvent &event)
     ////    ToolBox toolbox;
     ////    toolbox.ShowWindowsAndEvtHandlers();
 
-    DragScrollEvent dsEvt(wxEVT_DRAGSCROLL_EVENT, idDragScrollRescan);
+    sDragScrollEvent dsEvt(wxEVT_S_DRAGSCROLL_EVENT, idDragScrollRescan);
     dsEvt.SetEventObject( GetConfig()->GetSnippetsTreeCtrl());
     dsEvt.SetString( GetConfig()->GetSnippetsTreeCtrl()->GetName() );
     GetConfig()->GetDragScrollEvtHandler()->AddPendingEvent(dsEvt);
@@ -1420,7 +1420,11 @@ void CodeSnippetsAppFrame::ImportCBResources()
         //.ini must be in .exe folder to receive .conf
         if (appConfigFolder == appExeFolder)
         if (not wxFileExists(appExeFolder + _T("/default.conf")) )
-        {   bool copied = wxCopyFile( fileToCopy, appExeFolder+_T("/default.conf") );
+        {
+            #if defined(LOGGING)
+            bool copied =
+            #endif
+            wxCopyFile( fileToCopy, appExeFolder+_T("/default.conf") );
             #if defined(LOGGING)
             LOGIT( _T("Copy [%s][%s][%s]"), fileToCopy.c_str(), cbConfigFolder.c_str(), copied?_T("OK"):_T("FAILED"));
             #endif

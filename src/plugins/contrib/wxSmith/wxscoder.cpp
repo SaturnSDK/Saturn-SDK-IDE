@@ -129,8 +129,8 @@ wxString wxsCoder::GetCode(const wxString& FileName,const wxString& Header,const
     int TabSize = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/tab_size"), 4);
 
     // Checking if editor is opened
-	EditorManager* EM = Manager::Get()->GetEditorManager();
-	assert ( EM != 0 );
+    EditorManager* EM = Manager::Get()->GetEditorManager();
+    assert ( EM != 0 );
     cbEditor* Editor = EM->GetBuiltinEditor(FixedFileName);
 
     if ( Editor )
@@ -201,8 +201,8 @@ wxString wxsCoder::GetFullCode(const wxString& FileName,wxFontEncoding& Encoding
     FlushFile(FixedFileName);
 
     // Checking if editor is opened
-	EditorManager* EM = Manager::Get()->GetEditorManager();
-	assert ( EM != 0 );
+    EditorManager* EM = Manager::Get()->GetEditorManager();
+    assert ( EM != 0 );
     cbEditor* Editor = EM->GetBuiltinEditor(FixedFileName);
 
     if ( Editor )
@@ -239,8 +239,8 @@ void wxsCoder::PutFullCode(const wxString& FileName,const wxString& Code,wxFontE
     }
 
     // Searching for file in opened file list
-	EditorManager* EM = Manager::Get()->GetEditorManager();
-	assert ( EM != 0 );
+    EditorManager* EM = Manager::Get()->GetEditorManager();
+    assert ( EM != 0 );
     cbEditor* Editor = EM->GetBuiltinEditor(FixedFileName);
 
     if ( Editor )
@@ -251,11 +251,7 @@ void wxsCoder::PutFullCode(const wxString& FileName,const wxString& Code,wxFontE
     {
         if ( !cbSaveToFile(FixedFileName,Code,Encoding,UseBOM) )
         {
-            #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->Log(F(_("wxSmith: Couldn't write file '%s'"),FixedFileName.wx_str()));
-            #else
-            Manager::Get()->GetLogManager()->Log(F(_("wxSmith: Couldn't write file '%s'"),FixedFileName.c_str()));
-            #endif
         }
     }
 }
@@ -269,8 +265,8 @@ void wxsCoder::FlushFile(const wxString& FileName)
     if ( !Changes ) return;
 
     // Searching for file in opened file list
-	EditorManager* EM = Manager::Get()->GetEditorManager();
-	assert ( EM != 0 );
+    EditorManager* EM = Manager::Get()->GetEditorManager();
+    assert ( EM != 0 );
     cbEditor* Editor = EM->GetBuiltinEditor(FileName);
 
     if ( Editor )
@@ -294,11 +290,7 @@ void wxsCoder::FlushFile(const wxString& FileName)
         EncodingDetector Detector(FileName);
         if ( !Detector.IsOK() )
         {
-            #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->Log(F(_("wxSmith: Couldn't open and properly read file '%s'"),FileName.wx_str()));
-            #else
-            Manager::Get()->GetLogManager()->Log(F(_("wxSmith: Couldn't open and properly read file '%s'"),FileName.c_str()));
-            #endif
             return;
         }
         //Manager::Get()->GetLogManager()->DebugLog(F(_T("File read time: %d ms"),SW.Time()));
@@ -318,11 +310,7 @@ void wxsCoder::FlushFile(const wxString& FileName)
             //wxStopWatch SW;
             if ( !cbSaveToFile(FileName,Content,Detector.GetFontEncoding(),Detector.GetBOMSizeInBytes()>0) )
             {
-                #if wxCHECK_VERSION(2, 9, 0)
                 Manager::Get()->GetLogManager()->Log(F(_("wxSmith: Couldn't write data to file '%s'"),FileName.wx_str()));
-                #else
-                Manager::Get()->GetLogManager()->Log(F(_("wxSmith: Couldn't write data to file '%s'"),FileName.c_str()));
-                #endif
             }
             else
             {
@@ -339,8 +327,8 @@ void wxsCoder::FlushFile(const wxString& FileName)
 
 bool wxsCoder::ApplyChangesEditor(cbEditor* Editor,const wxString& Header,const wxString& End,wxString& Code,bool CodeHasHeader,bool CodeHasEnd,wxString& EOL)
 {
-	cbStyledTextCtrl* Ctrl = Editor->GetControl();
-	int FullLength = Ctrl->GetLength();
+    cbStyledTextCtrl* Ctrl = Editor->GetControl();
+    int FullLength = Ctrl->GetLength();
 
     if ( EOL.IsEmpty() )
     {
@@ -365,23 +353,18 @@ bool wxsCoder::ApplyChangesEditor(cbEditor* Editor,const wxString& Header,const 
     }
 
     // Searching for beginning of section to replace
-	Ctrl->SetSearchFlags(wxSCI_FIND_MATCHCASE);
-	Ctrl->SetTargetStart(0);
-	Ctrl->SetTargetEnd(FullLength);
-	int Position = Ctrl->SearchInTarget(Header);
+    Ctrl->SetSearchFlags(wxSCI_FIND_MATCHCASE);
+    Ctrl->SetTargetStart(0);
+    Ctrl->SetTargetEnd(FullLength);
+    int Position = Ctrl->SearchInTarget(Header);
 
-	if ( Position == -1 )
-	{
-	    Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Couldn't find code with header:\n\t\"%s\"\nin file '%s'"),
-			#if wxCHECK_VERSION(2, 9, 0)
-			Header.wx_str(),
-			Editor->GetFilename().wx_str()));
-			#else
-			Header.c_str(),
-			Editor->GetFilename().c_str()));
-			#endif
-		return false;
-	}
+    if ( Position == -1 )
+    {
+        Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Couldn't find code with header:\n\t\"%s\"\nin file '%s'"),
+                                                    Header.wx_str(),
+                                                    Editor->GetFilename().wx_str()));
+        return false;
+    }
 
     // Beginning of this code block is in Position, now searching for end
     Ctrl->SetTargetStart(Position);
@@ -390,13 +373,9 @@ bool wxsCoder::ApplyChangesEditor(cbEditor* Editor,const wxString& Header,const 
     if ( EndPosition == -1 )
     {
         Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Unfinished block of auto-generated code with header:\n\t\"%s\"\nin file '%s'"),
-            #if wxCHECK_VERSION(2, 9, 0)
-            Header.wx_str(),
-            Editor->GetFilename().wx_str()));
-            #else
-            Header.c_str(),
-            Editor->GetFilename().c_str()));
-            #endif
+                                                    Header.wx_str(),
+                                                    Editor->GetFilename().wx_str()));
+
         return false;
     }
 
@@ -474,12 +453,8 @@ bool wxsCoder::ApplyChangesString(wxString& BaseContent,const wxString& Header,c
 
     if ( Position == -1 )
     {
-    	#if wxCHECK_VERSION(2, 9, 0)
-    	Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Couldn't find code with header:\n\t\"%s\""),Header.wx_str()));
-    	#else
-    	Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Couldn't find code with header:\n\t\"%s\""),Header.c_str()));
-    	#endif
-		return false;
+        Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Couldn't find code with header:\n\t\"%s\""),Header.wx_str()));
+        return false;
     }
 
     // Skipping header if necessary
@@ -493,11 +468,7 @@ bool wxsCoder::ApplyChangesString(wxString& BaseContent,const wxString& Header,c
     int EndPosition = Content.First(End);
     if ( EndPosition == -1 )
     {
-        #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Unfinished block of auto-generated code with header:\n\t\"%s\""),Header.wx_str()));
-        #else
-        Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Unfinished block of auto-generated code with header:\n\t\"%s\""),Header.c_str()));
-        #endif
         return false;
     }
 
@@ -566,12 +537,14 @@ wxString wxsCoder::RebuildCode(wxString& BaseIndentation,const wxChar* Code,int 
         {
             case _T('\n'):
                 {
-                    while (Result.Last() == _T(' ') || Result.Last() == _T('\t'))
+                    while (!Result.IsEmpty() &&
+                           (Result.Last() == _T(' ') || Result.Last() == _T('\t')))
                         Result.RemoveLast();
                     Result << BaseIndentation;
                     break;
                 }
             case _T('\t'): if ( UseTab ) { Result << Tab; break; }
+
             default:       Result << *Code;
         }
         Code++;

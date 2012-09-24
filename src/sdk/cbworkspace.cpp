@@ -62,11 +62,7 @@ cbWorkspace::~cbWorkspace()
 void cbWorkspace::Load()
 {
     wxString fname = m_Filename.GetFullPath();
-    #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Loading workspace \"%s\""), fname.wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Loading workspace \"%s\""), fname.c_str()));
-    #endif
 
     if (!m_Filename.FileExists())
     {
@@ -95,16 +91,14 @@ void cbWorkspace::Load()
 
         delete pWsp;
     }
+
     // load workspace layout file
     LoadLayout();
 
     m_Filename.SetExt(FileFilters::WORKSPACE_EXT);
-#ifndef CB_FOR_CONSOLE
     SetModified(false);
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
-#ifndef CB_FOR_CONSOLE
 bool cbWorkspace::Save(bool force)
 {
     if (m_Filename.GetFullPath().IsEmpty())
@@ -112,14 +106,12 @@ bool cbWorkspace::Save(bool force)
 
     // always save the layout file
     SaveLayout();
+
+    // don't save workspace unless modified or forced
     if (!force && !m_Modified)
         return true;
 
-    #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Saving workspace \"%s\""), m_Filename.GetFullPath().wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Saving workspace \"%s\""), m_Filename.GetFullPath().c_str()));
-    #endif
     WorkspaceLoader wsp;
     bool ret = wsp.Save(m_Title, m_Filename.GetFullPath());
     SetModified(!ret);
@@ -151,32 +143,26 @@ bool cbWorkspace::SaveAs(const wxString& /*filename*/)
 
     return Save(true);
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void cbWorkspace::SetTitle(const wxString& title)
 {
     m_Title = title;
-#ifndef CB_FOR_CONSOLE
     SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
-#ifndef CB_FOR_CONSOLE
 void cbWorkspace::SetModified(bool modified)
 {
     m_Modified = modified;
     // Manager::Get()->GetLogManager()->DebugLog(F(_T("Setting workspace to modified = \"%s\""), modified ? _T("true") : _T("false")));
 }
-#endif // #ifndef CB_FOR_CONSOLE
-void cbWorkspace::PreferredTarget(const wxString &target)
+
+void cbWorkspace::SetPreferredTarget(const wxString &target)
 {
-    if ( ! target.IsEmpty() )
-    {
+    if ( !target.IsEmpty() )
         m_PreferredTargetName = target;
-    }
 }
 
-wxString cbWorkspace::PreferredTarget() const
+wxString cbWorkspace::GetPreferredTarget() const
 {
     return m_PreferredTargetName;
 }
@@ -192,19 +178,11 @@ bool cbWorkspace::SaveLayout()
     WorkspaceLoader wsl;
     wxFileName fn(m_Filename);
     fn.SetExt( _T("workspace.layout") );
-#if wxCHECK_VERSION(2, 9, 0)
     log->DebugLog(F(_T("Saving workspace layout \"%s\""), fn.GetFullPath().wx_str()));
-#else
-    log->DebugLog(F(_T("Saving workspace layout \"%s\""), fn.GetFullPath().c_str()));
-#endif
     const bool rc = wsl.SaveLayout( fn.GetFullPath() );
     if (!rc)
     {
-#if wxCHECK_VERSION(2, 9, 0)
         log->DebugLog(F(_T("Couldn't save workspace layout \"%s\""), fn.GetFullPath().wx_str()));
-#else
-        log->DebugLog(F(_T("Couldn't save workspace layout \"%s\""), fn.GetFullPath().c_str()));
-#endif
     }
     return rc;
 }
@@ -218,28 +196,16 @@ bool cbWorkspace::LoadLayout()
     bool rc = false;
     if ( fn.FileExists() )
     {
-#if wxCHECK_VERSION(2, 9, 0)
         log->DebugLog(F(_T("Loading workspace layout \"%s\""), fn.GetFullPath().wx_str()));
-#else
-        log->DebugLog(F(_T("Loading workspace layout \"%s\""), fn.GetFullPath().c_str()));
-#endif
         rc = wsl.LoadLayout( fn.GetFullPath() );
         if (!rc)
         {
-#if wxCHECK_VERSION(2, 9, 0)
             log->DebugLog(F(_T("Couldn't load workspace layout \"%s\""), fn.GetFullPath().wx_str()));
-#else
-            log->DebugLog(F(_T("Couldn't load workspace layout \"%s\""), fn.GetFullPath().c_str()));
-#endif
         }
     }
     else
     {
-#if wxCHECK_VERSION(2, 9, 0)
         log->DebugLog(F(_T("Workspace layout file doesn't exist \"%s\""), fn.GetFullPath().wx_str()));
-#else
-        log->DebugLog(F(_T("Workspace layout file doesn't exist \"%s\""), fn.GetFullPath().c_str()));
-#endif
     }
     return rc;
 }

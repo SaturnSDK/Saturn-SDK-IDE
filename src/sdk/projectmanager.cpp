@@ -41,345 +41,149 @@
 #include <wx/busyinfo.h>
 #include <wx/choicdlg.h>
 #include <wx/filedlg.h>
-#ifndef CB_FOR_CONSOLE
 #include <wx/progdlg.h>
 #include <wx/textdlg.h>
-#endif // #ifndef CB_FOR_CONSOLE
 #include <wx/tokenzr.h>
 #include <wx/utils.h>
 
-#ifndef CB_FOR_CONSOLE
 #include "incrementalselectlistdlg.h"
-#endif // #ifndef CB_FOR_CONSOLE
 #include "filegroupsandmasks.h"
-#ifndef CB_FOR_CONSOLE
 #include "projectsfilemasksdlg.h"
 #include "projectdepsdlg.h"
 #include "multiselectdlg.h"
-#endif // #ifndef CB_FOR_CONSOLE
 #include "filefilters.h"
-#ifndef CB_FOR_CONSOLE
 #include "confirmreplacedlg.h"
 #include "projectfileoptionsdlg.h"
-#endif // #ifndef CB_FOR_CONSOLE
 
 template<> ProjectManager* Mgr<ProjectManager>::instance = 0;
 template<> bool  Mgr<ProjectManager>::isShutdown = false;
 
-#ifndef CB_FOR_CONSOLE
 // maximum number of items in "Open with" context menu
 static const unsigned int MAX_OPEN_WITH_ITEMS = 20; // keep it in sync with below array!
 static const int idOpenWith[] =
 {
-    wxNewId(), wxNewId(), wxNewId(), wxNewId(), wxNewId(),
-    wxNewId(), wxNewId(), wxNewId(), wxNewId(), wxNewId(),
-    wxNewId(), wxNewId(), wxNewId(), wxNewId(), wxNewId(),
-    wxNewId(), wxNewId(), wxNewId(), wxNewId(), wxNewId(),
+    static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()),
+    static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()),
+    static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()),
+    static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()), static_cast<int>(wxNewId()),
 };
 // special entry: force open with internal editor
 static const int idOpenWithInternal = wxNewId();
-#endif // #ifndef CB_FOR_CONSOLE
 
 // static
 bool ProjectManager::s_CanShutdown = true;
 
-int ID_ProjectManager = wxNewId();
-int idMenuSetActiveProject = wxNewId();
-int idMenuOpenFile = wxNewId();
-int idMenuSaveProject = wxNewId();
-int idMenuSaveFile = wxNewId();
-int idMenuCloseProject = wxNewId();
-int idMenuCloseFile = wxNewId();
-int idMenuAddFilePopup = wxNewId();
+int ID_ProjectManager              = wxNewId();
+int idMenuSetActiveProject         = wxNewId();
+int idMenuOpenFile                 = wxNewId();
+int idMenuSaveProject              = wxNewId();
+int idMenuSaveFile                 = wxNewId();
+int idMenuCloseProject             = wxNewId();
+int idMenuCloseFile                = wxNewId();
+int idMenuAddFilePopup             = wxNewId();
 int idMenuAddFilesRecursivelyPopup = wxNewId();
-int idMenuAddFile = wxNewId();
-int idMenuAddFilesRecursively = wxNewId();
-int idMenuRemoveFolderFilesPopup = wxNewId();
-int idMenuOpenFolderFilesPopup = wxNewId();
-int idMenuRemoveFilePopup = wxNewId();
-int idMenuRemoveFile = wxNewId();
-int idMenuRenameFile = wxNewId();
-int idMenuProjectNotes = wxNewId();
-int idMenuProjectProperties = wxNewId();
-int idMenuFileProperties = wxNewId();
-int idMenuTreeProjectProperties = wxNewId();
-int idMenuTreeFileProperties = wxNewId();
-int idMenuGotoFile = wxNewId();
-int idMenuExecParams = wxNewId();
-int idMenuViewCategorize = wxNewId();
-int idMenuViewUseFolders = wxNewId();
-int idMenuViewHideFolderName = wxNewId();
-int idMenuViewFileMasks = wxNewId();
-int idMenuNextProject = wxNewId();
-int idMenuPriorProject = wxNewId();
-int idMenuProjectTreeProps = wxNewId();
-int idMenuProjectUp = wxNewId();
-int idMenuProjectDown = wxNewId();
-int idMenuViewCategorizePopup = wxNewId();
-int idMenuViewUseFoldersPopup = wxNewId();
-int idMenuViewHideFolderNamePopup = wxNewId();
-int idMenuTreeRenameWorkspace = wxNewId();
-int idMenuTreeSaveWorkspace = wxNewId();
-int idMenuTreeSaveAsWorkspace = wxNewId();
-int idMenuTreeCloseWorkspace = wxNewId();
-int idMenuAddVirtualFolder = wxNewId();
-int idMenuDeleteVirtualFolder = wxNewId();
+int idMenuAddFile                  = wxNewId();
+int idMenuAddFilesRecursively      = wxNewId();
+int idMenuRemoveFolderFilesPopup   = wxNewId();
+int idMenuOpenFolderFilesPopup     = wxNewId();
+int idMenuRemoveFilePopup          = wxNewId();
+int idMenuRemoveFile               = wxNewId();
+int idMenuRenameFile               = wxNewId();
+int idMenuProjectNotes             = wxNewId();
+int idMenuProjectProperties        = wxNewId();
+int idMenuFileProperties           = wxNewId();
+int idMenuTreeProjectProperties    = wxNewId();
+int idMenuTreeFileProperties       = wxNewId();
+int idMenuGotoFile                 = wxNewId();
+int idMenuExecParams               = wxNewId();
+int idMenuViewCategorize           = wxNewId();
+int idMenuViewUseFolders           = wxNewId();
+int idMenuViewHideFolderName       = wxNewId();
+int idMenuViewFileMasks            = wxNewId();
+int idMenuNextProject              = wxNewId();
+int idMenuPriorProject             = wxNewId();
+int idMenuProjectTreeProps         = wxNewId();
+int idMenuProjectUp                = wxNewId();
+int idMenuProjectDown              = wxNewId();
+int idMenuViewCategorizePopup      = wxNewId();
+int idMenuViewUseFoldersPopup      = wxNewId();
+int idMenuViewHideFolderNamePopup  = wxNewId();
+int idMenuTreeRenameWorkspace      = wxNewId();
+int idMenuTreeSaveWorkspace        = wxNewId();
+int idMenuTreeSaveAsWorkspace      = wxNewId();
+int idMenuTreeCloseWorkspace       = wxNewId();
+int idMenuAddVirtualFolder         = wxNewId();
+int idMenuDeleteVirtualFolder      = wxNewId();
 
-#ifndef CB_FOR_CONSOLE
 static const int idMenuFindFile = wxNewId();
-static const int idNB = wxNewId();
-static const int idNB_TabTop = wxNewId();
+static const int idNB           = wxNewId();
+static const int idNB_TabTop    = wxNewId();
 static const int idNB_TabBottom = wxNewId();
 
-cbTreeCtrl::cbTreeCtrl() : wxTreeCtrl()
-{
-    Compare = &filesSort;
-}
-
-cbTreeCtrl::cbTreeCtrl(wxWindow* parent, int id) :
-    wxTreeCtrl(parent, id, wxDefaultPosition, wxDefaultSize,
-               wxTR_EDIT_LABELS | wxTR_HAS_BUTTONS | wxTR_MULTIPLE | wxBORDER_NONE)
-{
-    Compare = &filesSort;
-}
-
-void cbTreeCtrl::SetCompareFunction(const int ptvs)
-{
-    // sort list of files
-    if ( !(ptvs & ptvsUseFolders) && (ptvs & ptvsHideFolderName) )
-        Compare = &filesSortNameOnly;
-    else
-        Compare = &filesSort;
-}
-
-#ifndef __WXMSW__
-/*
-    Under wxGTK, wxTreeCtrl is not sending an EVT_COMMAND_RIGHT_CLICK
-    event when right-clicking on the client area.
-*/
-void cbTreeCtrl::OnRightClick(wxMouseEvent& event)
-{
-    if (!this) return;
-
-    int flags;
-    HitTest(wxPoint(event.GetX(), event.GetY()), flags);
-    if (flags & (wxTREE_HITTEST_ABOVE | wxTREE_HITTEST_BELOW | wxTREE_HITTEST_NOWHERE))
-    {
-        // "proxy" the call
-        wxCommandEvent e(wxEVT_COMMAND_RIGHT_CLICK, ID_ProjectManager);
-        wxPostEvent(GetParent(), e);
-    }
-    else
-        event.Skip();
-}
-#endif // !__WXMSW__
-/*
-    Under all platforms there is no reaction when pressing "ENTER".
-    Expected would be e.g. to open the file in an editor.
-*/
-void cbTreeCtrl::OnKeyDown(wxKeyEvent& event)
-{
-    // Don't care about special key combinations
-    if ( !this || (event.GetModifiers()!=wxMOD_NONE) )
-    {
-        event.Skip();
-        return;
-    }
-
-    wxArrayTreeItemIds selections;
-    unsigned int num = GetSelections(selections);
-    // Don't care if no selection has been made
-    if ( GetSelections(selections)<1 )
-    {
-        event.Skip();
-        return;
-    }
-
-    long         keycode = event.GetKeyCode();
-    wxTreeItemId itemId  = selections[0];
-    // Don't care if item is invalid
-    if ( !itemId.IsOk() )
-    {
-        event.Skip();
-        return;
-    }
-
-    switch (keycode)
-    {
-        case WXK_RETURN:
-        {
-            wxTreeEvent te = wxTreeEvent(wxEVT_COMMAND_TREE_ITEM_ACTIVATED, this, itemId);
-            wxPostEvent(this, te);
-            break;
-        }
-#ifndef __WXMSW__
-/*
-        Under wxGTK, there is no navigation possible using cursor keys.
-*/
-        case WXK_UP:
-        {
-            // GetPrevVisible - not implemented... strange...
-            wxTreeItemId itemIdPrev = GetPrevSibling(itemId);
-            if (itemIdPrev.IsOk())
-            {
-                SelectItem(itemId, false);
-                SelectItem(itemIdPrev, true);
-            }
-            else
-            {
-                wxTreeItemId itemIdParent = GetItemParent(itemId);
-                if (itemIdParent.IsOk())
-                {
-                    SelectItem(itemId, false);
-                    SelectItem(itemIdParent, true);
-                }
-            }
-            break;
-        }
-        case WXK_DOWN:
-        {
-            wxTreeItemId itemIdNext = GetNextVisible(itemId);
-            if (itemIdNext.IsOk())
-            {
-                SelectItem(itemId, false);
-                SelectItem(itemIdNext, true);
-            }
-            break;
-        }
-        case WXK_LEFT:
-        {
-            if ( ItemHasChildren(itemId) && IsExpanded(itemId) )
-                Collapse(itemId);
-            else
-            {
-                wxTreeItemId itemIdParent = GetItemParent(itemId);
-                if (itemIdParent.IsOk())
-                {
-                    SelectItem(itemId, false);
-                    SelectItem(itemIdParent, true);
-                }
-            }
-            break;
-        }
-        case WXK_RIGHT:
-        {
-            if ( ItemHasChildren(itemId) && !IsExpanded(itemId) )
-                Expand(itemId);
-            else
-            {
-                wxTreeItemIdValue cookie;
-                wxTreeItemId itemIdChild = GetFirstChild(itemId, cookie);
-                if (itemIdChild.IsOk())
-                {
-                    SelectItem(itemId, false);
-                    SelectItem(itemIdChild, true);
-                }
-            }
-            break;
-        }
-#endif // !__WXMSW__
-        default:
-            event.Skip();
-    }
-}
-
-int cbTreeCtrl::filesSort(const ProjectFile* arg1, const ProjectFile* arg2)
-{
-    if (arg1 && arg2)
-        return wxStricmp(arg1->file.GetFullPath(), arg2->file.GetFullPath());
-    return 0;
-}
-
-int cbTreeCtrl::filesSortNameOnly(const ProjectFile* arg1, const ProjectFile* arg2)
-{
-    if (arg1 && arg2)
-        return wxStricmp(arg1->file.GetFullName(), arg2->file.GetFullName());
-    return 0;
-}
-
-int cbTreeCtrl::OnCompareItems(const wxTreeItemId& item1, const wxTreeItemId& item2)
-{
-    return Compare(((FileTreeData*)GetItemData(item1))->GetProjectFile(), ((FileTreeData*)GetItemData(item2))->GetProjectFile());
-}
-IMPLEMENT_DYNAMIC_CLASS(cbTreeCtrl, wxTreeCtrl)
-BEGIN_EVENT_TABLE(cbTreeCtrl, wxTreeCtrl)
-#ifndef __WXMSW__
-    EVT_RIGHT_DOWN(cbTreeCtrl::OnRightClick)
-#endif // !__WXMSW__
-    EVT_KEY_DOWN(cbTreeCtrl::OnKeyDown)
-END_EVENT_TABLE()
-#endif // #ifndef CB_FOR_CONSOLE
-
 BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
-#ifndef CB_FOR_CONSOLE
-    EVT_TREE_BEGIN_DRAG(ID_ProjectManager, ProjectManager::OnTreeBeginDrag)
-    EVT_TREE_END_DRAG(ID_ProjectManager, ProjectManager::OnTreeEndDrag)
+    EVT_TREE_BEGIN_DRAG(ID_ProjectManager,       ProjectManager::OnTreeBeginDrag)
+    EVT_TREE_END_DRAG(ID_ProjectManager,         ProjectManager::OnTreeEndDrag)
 
     EVT_TREE_BEGIN_LABEL_EDIT(ID_ProjectManager, ProjectManager::OnBeginEditNode)
-    EVT_TREE_END_LABEL_EDIT(ID_ProjectManager, ProjectManager::OnEndEditNode)
+    EVT_TREE_END_LABEL_EDIT(ID_ProjectManager,   ProjectManager::OnEndEditNode)
 
-    EVT_TREE_ITEM_ACTIVATED(ID_ProjectManager, ProjectManager::OnProjectFileActivated)
+    EVT_TREE_ITEM_ACTIVATED(ID_ProjectManager,   ProjectManager::OnProjectFileActivated)
     EVT_TREE_ITEM_RIGHT_CLICK(ID_ProjectManager, ProjectManager::OnTreeItemRightClick)
-    EVT_TREE_KEY_DOWN(ID_ProjectManager, ProjectManager::OnKeyDown)
-    EVT_COMMAND_RIGHT_CLICK(ID_ProjectManager, ProjectManager::OnRightClick)
+    EVT_TREE_KEY_DOWN(ID_ProjectManager,         ProjectManager::OnKeyDown)
+    EVT_COMMAND_RIGHT_CLICK(ID_ProjectManager,   ProjectManager::OnRightClick)
 
     EVT_AUINOTEBOOK_TAB_RIGHT_UP(idNB, ProjectManager::OnTabContextMenu)
 
     EVT_MENU_RANGE(idOpenWith[0], idOpenWith[MAX_OPEN_WITH_ITEMS - 1], ProjectManager::OnOpenWith)
-    EVT_MENU(idOpenWithInternal, ProjectManager::OnOpenWith)
-    EVT_MENU(idNB_TabTop, ProjectManager::OnTabPosition)
-    EVT_MENU(idNB_TabBottom, ProjectManager::OnTabPosition)
-    EVT_MENU(idMenuSetActiveProject, ProjectManager::OnSetActiveProject)
-    EVT_MENU(idMenuNextProject, ProjectManager::OnSetActiveProject)
-    EVT_MENU(idMenuPriorProject, ProjectManager::OnSetActiveProject)
-    EVT_MENU(idMenuProjectUp, ProjectManager::OnSetActiveProject)
-    EVT_MENU(idMenuProjectDown, ProjectManager::OnSetActiveProject)
-    EVT_MENU(idMenuTreeRenameWorkspace, ProjectManager::OnRenameWorkspace)
-    EVT_MENU(idMenuTreeSaveWorkspace, ProjectManager::OnSaveWorkspace)
-    EVT_MENU(idMenuTreeSaveAsWorkspace, ProjectManager::OnSaveAsWorkspace)
-    EVT_MENU(idMenuTreeCloseWorkspace, ProjectManager::OnCloseWorkspace)
-    EVT_MENU(idMenuAddVirtualFolder, ProjectManager::OnAddVirtualFolder)
-    EVT_MENU(idMenuDeleteVirtualFolder, ProjectManager::OnDeleteVirtualFolder)
-    EVT_MENU(idMenuAddFile, ProjectManager::OnAddFileToProject)
-    EVT_MENU(idMenuAddFilesRecursively, ProjectManager::OnAddFilesToProjectRecursively)
-    EVT_MENU(idMenuRemoveFile, ProjectManager::OnRemoveFileFromProject)
-    EVT_MENU(idMenuAddFilePopup, ProjectManager::OnAddFileToProject)
+    EVT_MENU(idOpenWithInternal,             ProjectManager::OnOpenWith)
+    EVT_MENU(idNB_TabTop,                    ProjectManager::OnTabPosition)
+    EVT_MENU(idNB_TabBottom,                 ProjectManager::OnTabPosition)
+    EVT_MENU(idMenuSetActiveProject,         ProjectManager::OnSetActiveProject)
+    EVT_MENU(idMenuNextProject,              ProjectManager::OnSetActiveProject)
+    EVT_MENU(idMenuPriorProject,             ProjectManager::OnSetActiveProject)
+    EVT_MENU(idMenuProjectUp,                ProjectManager::OnSetActiveProject)
+    EVT_MENU(idMenuProjectDown,              ProjectManager::OnSetActiveProject)
+    EVT_MENU(idMenuTreeRenameWorkspace,      ProjectManager::OnRenameWorkspace)
+    EVT_MENU(idMenuTreeSaveWorkspace,        ProjectManager::OnSaveWorkspace)
+    EVT_MENU(idMenuTreeSaveAsWorkspace,      ProjectManager::OnSaveAsWorkspace)
+    EVT_MENU(idMenuTreeCloseWorkspace,       ProjectManager::OnCloseWorkspace)
+    EVT_MENU(idMenuAddVirtualFolder,         ProjectManager::OnAddVirtualFolder)
+    EVT_MENU(idMenuDeleteVirtualFolder,      ProjectManager::OnDeleteVirtualFolder)
+    EVT_MENU(idMenuAddFile,                  ProjectManager::OnAddFileToProject)
+    EVT_MENU(idMenuAddFilesRecursively,      ProjectManager::OnAddFilesToProjectRecursively)
+    EVT_MENU(idMenuRemoveFile,               ProjectManager::OnRemoveFileFromProject)
+    EVT_MENU(idMenuAddFilePopup,             ProjectManager::OnAddFileToProject)
     EVT_MENU(idMenuAddFilesRecursivelyPopup, ProjectManager::OnAddFilesToProjectRecursively)
-    EVT_MENU(idMenuRemoveFolderFilesPopup, ProjectManager::OnRemoveFileFromProject)
-    EVT_MENU(idMenuOpenFolderFilesPopup, ProjectManager::OnOpenFolderFiles)
-    EVT_MENU(idMenuRemoveFilePopup, ProjectManager::OnRemoveFileFromProject)
-    EVT_MENU(idMenuRenameFile, ProjectManager::OnRenameFile)
-    EVT_MENU(idMenuSaveProject, ProjectManager::OnSaveProject)
-    EVT_MENU(idMenuSaveFile, ProjectManager::OnSaveFile)
-    EVT_MENU(idMenuCloseProject, ProjectManager::OnCloseProject)
-    EVT_MENU(idMenuCloseFile, ProjectManager::OnCloseFile)
-    EVT_MENU(idMenuOpenFile, ProjectManager::OnOpenFile)
-    EVT_MENU(idMenuProjectNotes, ProjectManager::OnNotes)
-    EVT_MENU(idMenuProjectProperties, ProjectManager::OnProperties)
-    EVT_MENU(idMenuFileProperties, ProjectManager::OnProperties)
-    EVT_MENU(idMenuTreeProjectProperties, ProjectManager::OnProperties)
-    EVT_MENU(idMenuTreeFileProperties, ProjectManager::OnProperties)
-    EVT_MENU(idMenuGotoFile, ProjectManager::OnGotoFile)
-    EVT_MENU(idMenuExecParams, ProjectManager::OnExecParameters)
-    EVT_MENU(idMenuViewCategorize, ProjectManager::OnViewCategorize)
-    EVT_MENU(idMenuViewUseFolders, ProjectManager::OnViewUseFolders)
-    EVT_MENU(idMenuViewHideFolderName, ProjectManager::OnViewHideFolderName)
-    EVT_MENU(idMenuViewCategorizePopup, ProjectManager::OnViewCategorize)
-    EVT_MENU(idMenuViewUseFoldersPopup, ProjectManager::OnViewUseFolders)
-    EVT_MENU(idMenuViewHideFolderNamePopup, ProjectManager::OnViewHideFolderName)
-    EVT_MENU(idMenuViewFileMasks, ProjectManager::OnViewFileMasks)
-    EVT_MENU(idMenuFindFile, ProjectManager::OnFindFile)
-    EVT_IDLE(ProjectManager::OnIdle)
-#endif // #ifndef CB_FOR_CONSOLE
+    EVT_MENU(idMenuRemoveFolderFilesPopup,   ProjectManager::OnRemoveFileFromProject)
+    EVT_MENU(idMenuOpenFolderFilesPopup,     ProjectManager::OnOpenFolderFiles)
+    EVT_MENU(idMenuRemoveFilePopup,          ProjectManager::OnRemoveFileFromProject)
+    EVT_MENU(idMenuRenameFile,               ProjectManager::OnRenameFile)
+    EVT_MENU(idMenuSaveProject,              ProjectManager::OnSaveProject)
+    EVT_MENU(idMenuSaveFile,                 ProjectManager::OnSaveFile)
+    EVT_MENU(idMenuCloseProject,             ProjectManager::OnCloseProject)
+    EVT_MENU(idMenuCloseFile,                ProjectManager::OnCloseFile)
+    EVT_MENU(idMenuOpenFile,                 ProjectManager::OnOpenFile)
+    EVT_MENU(idMenuProjectNotes,             ProjectManager::OnNotes)
+    EVT_MENU(idMenuProjectProperties,        ProjectManager::OnProperties)
+    EVT_MENU(idMenuFileProperties,           ProjectManager::OnProperties)
+    EVT_MENU(idMenuTreeProjectProperties,    ProjectManager::OnProperties)
+    EVT_MENU(idMenuTreeFileProperties,       ProjectManager::OnProperties)
+    EVT_MENU(idMenuGotoFile,                 ProjectManager::OnGotoFile)
+    EVT_MENU(idMenuExecParams,               ProjectManager::OnExecParameters)
+    EVT_MENU(idMenuViewCategorize,           ProjectManager::OnViewCategorize)
+    EVT_MENU(idMenuViewUseFolders,           ProjectManager::OnViewUseFolders)
+    EVT_MENU(idMenuViewHideFolderName,       ProjectManager::OnViewHideFolderName)
+    EVT_MENU(idMenuViewCategorizePopup,      ProjectManager::OnViewCategorize)
+    EVT_MENU(idMenuViewUseFoldersPopup,      ProjectManager::OnViewUseFolders)
+    EVT_MENU(idMenuViewHideFolderNamePopup,  ProjectManager::OnViewHideFolderName)
+    EVT_MENU(idMenuViewFileMasks,            ProjectManager::OnViewFileMasks)
+    EVT_MENU(idMenuFindFile,                 ProjectManager::OnFindFile)
+    EVT_IDLE(                                ProjectManager::OnIdle)
 END_EVENT_TABLE()
 
 // class constructor
 ProjectManager::ProjectManager()
-#ifndef CB_FOR_CONSOLE
     : m_pTree(0),
-#else // #ifndef CB_FOR_CONSOLE
-    :
-#endif // #ifndef CB_FOR_CONSOLE
     m_pWorkspace(0),
     m_TreeFreezeCounter(0),
     m_IsLoadingProject(false),
@@ -391,20 +195,16 @@ ProjectManager::ProjectManager()
     m_CanSendWorkspaceChanged(false),
     m_RunningPlugin(NULL)
 {
-#ifndef CB_FOR_CONSOLE
     m_pNotebook = new cbAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
     if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/project_tabs_bottom"), false))
         m_pNotebook->SetWindowStyleFlag(m_pNotebook->GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
-#endif // #ifndef CB_FOR_CONSOLE
 
     m_InitialDir = wxFileName::GetCwd();
     m_pActiveProject = 0L;
     m_pProjectToActivate = 0L;
     m_pProjects = new ProjectsArray;
     m_pProjects->Clear();
-#ifndef CB_FOR_CONSOLE
     InitPane();
-#endif // #ifndef CB_FOR_CONSOLE
 
     m_pFileGroups = new FilesGroupsAndMasks;
 
@@ -420,9 +220,7 @@ ProjectManager::ProjectManager()
         cfg->Write(_T("/hide_folder_name"), false);
     }
 
-#ifndef CB_FOR_CONSOLE
     RebuildTree();
-#endif // #ifndef CB_FOR_CONSOLE
 
     // register event sinks
     Manager::Get()->RegisterEventSink(cbEVT_APP_STARTUP_DONE, new cbEventFunctor<ProjectManager, CodeBlocksEvent>(this, &ProjectManager::OnAppDoneStartup));
@@ -430,10 +228,7 @@ ProjectManager::ProjectManager()
     // Event handling. This must be THE LAST THING activated on startup.
     // Constructors and destructors must always follow the LIFO rule:
     // Last in, first out.
-#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetAppWindow()->PushEventHandler(this);
-#endif // #ifndef CB_FOR_CONSOLE
-
 }
 
 // class destructor
@@ -456,20 +251,15 @@ ProjectManager::~ProjectManager()
     m_pProjects->Clear();
 
     delete m_pProjects;m_pProjects = 0;
-#ifndef CB_FOR_CONSOLE
     delete m_pImages;m_pImages = 0;
-#endif // #ifndef CB_FOR_CONSOLE
     delete m_pFileGroups;m_pFileGroups = 0;
 
-#ifndef CB_FOR_CONSOLE
     m_pNotebook->Destroy();
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::InitPane()
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::IsAppShuttingDown())
         return;
     if (m_pTree)
         return;
@@ -638,7 +428,6 @@ void ProjectManager::CreateMenuTreeProps(wxMenu* menu, bool popup)
 void ProjectManager::ReleaseMenu(wxMenuBar* /*menuBar*/)
 {
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 wxString ProjectManager::GetDefaultPath()
 {
@@ -669,24 +458,17 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
     bool activeProjectChanged = false;
     if (project != m_pActiveProject)
     {
-#ifndef CB_FOR_CONSOLE
         // Only set workspace as modified, if there was an active project before
         if (m_pWorkspace && m_pActiveProject)
-        {
             activeProjectChanged = true;
-        }
-#endif // #ifndef CB_FOR_CONSOLE
     }
     else
         return; // already active
 
-#ifndef CB_FOR_CONSOLE
     if (m_pActiveProject)
         m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), false);
-#endif // #ifndef CB_FOR_CONSOLE
 
     m_pActiveProject = project;
-#ifndef CB_FOR_CONSOLE
     if (m_pActiveProject)
     {
         wxTreeItemId tid = m_pActiveProject->GetProjectNode();
@@ -694,10 +476,9 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
             m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), true);
     }
 
-    if(activeProjectChanged)
-    {
+    if (activeProjectChanged)
         m_pWorkspace->ActiveProjectChanged();
-    }
+
     if (refresh)
         RebuildTree();
 
@@ -706,13 +487,11 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
 
     m_pTree->Refresh();
 
-#endif // #ifndef CB_FOR_CONSOLE
     CodeBlocksEvent event(cbEVT_PROJECT_ACTIVATE);
     event.SetProject(m_pActiveProject);
     Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::ShowMenu(wxTreeItemId id, const wxPoint& pt)
 {
     if ( !id.IsOk() )
@@ -907,7 +686,6 @@ void ProjectManager::ShowMenu(wxTreeItemId id, const wxPoint& pt)
     if (menu.GetMenuItemCount() != 0)
         m_pTree->PopupMenu(&menu, pt);
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 cbProject* ProjectManager::IsOpen(const wxString& filename)
 {
@@ -935,7 +713,6 @@ cbProject* ProjectManager::IsOpen(const wxString& filename)
     return 0L;
 }
 
-#ifndef CB_FOR_CONSOLE
 wxMenu* ProjectManager::GetProjectMenu()
 {
     wxMenu* result = 0L;
@@ -952,7 +729,6 @@ wxMenu* ProjectManager::GetProjectMenu()
     } while (false);
     return result;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 cbProject* ProjectManager::LoadProject(const wxString& filename, bool activateIt)
 {
@@ -1021,7 +797,6 @@ cbProject* ProjectManager::LoadProject(const wxString& filename, bool activateIt
     return result;
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::ReloadProject(cbProject *project)
 {
     FreezeTree();
@@ -1094,7 +869,6 @@ void ProjectManager::ReloadProject(cbProject *project)
 
     UnfreezeTree();
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 cbProject* ProjectManager::NewProject(const wxString& filename)
 {
@@ -1124,7 +898,6 @@ cbProject* ProjectManager::NewProject(const wxString& filename)
     return prj;
 }
 
-#ifndef CB_FOR_CONSOLE
 bool ProjectManager::QueryCloseAllProjects()
 {
     unsigned int i;
@@ -1167,11 +940,9 @@ bool ProjectManager::QueryCloseProject(cbProject *proj,bool dontsavefiles)
     }
     return true;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 bool ProjectManager::CloseAllProjects(bool dontsave)
 {
-#ifndef CB_FOR_CONSOLE
     if (!dontsave)
     {
         if (!QueryCloseAllProjects())
@@ -1179,7 +950,6 @@ bool ProjectManager::CloseAllProjects(bool dontsave)
     }
 
     FreezeTree();
-#endif // #ifndef CB_FOR_CONSOLE
     m_IsClosingProject = true;
     while (m_pProjects->GetCount() != 0)
     {
@@ -1187,26 +957,21 @@ bool ProjectManager::CloseAllProjects(bool dontsave)
 //        if (!CloseActiveProject(true))
         if (!CloseProject(m_pProjects->Item(0), true, false))
         {
-#ifndef CB_FOR_CONSOLE
             UnfreezeTree(true);
-#endif // #ifndef CB_FOR_CONSOLE
             m_IsClosingProject = false;
             return false;
         }
     }
 
-#ifndef CB_FOR_CONSOLE
     if (!Manager::IsAppShuttingDown())
         RebuildTree();
     UnfreezeTree(true);
-#endif // #ifndef CB_FOR_CONSOLE
 
     if (!m_InitialDir.IsEmpty())
         wxFileName::SetCwd(m_InitialDir);
     m_IsClosingProject = false;
-#ifndef CB_FOR_CONSOLE
     WorkspaceChanged();
-#endif // #ifndef CB_FOR_CONSOLE
+
     return true;
 }
 
@@ -1216,13 +981,11 @@ bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refres
         return true;
     if (project->GetCurrentlyCompilingTarget())
         return false;
-#ifndef CB_FOR_CONSOLE
     if (!dontsave)
     {
          if (!QueryCloseProject(project))
             return false;
     }
-#endif // #ifndef CB_FOR_CONSOLE
 
     bool wasActive = project == m_pActiveProject;
     if (wasActive)
@@ -1236,13 +999,11 @@ bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refres
     // the state of m_IsClosingProject.
     bool isClosingOtherProjects = m_IsClosingProject;
     m_IsClosingProject = true;
-#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetEditorManager()->UpdateProjectFiles(project);
     project->SaveLayout();
 
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
 
     RemoveProjectFromAllDependencies(project);
     m_pProjects->Remove(project);
@@ -1253,20 +1014,16 @@ bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refres
     event.SetProject(project);
     Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 
-#ifndef CB_FOR_CONSOLE
     project->CloseAllFiles(true);
     if (refresh)
         m_pTree->Delete(project->GetProjectNode());
-#endif // #ifndef CB_FOR_CONSOLE
     if (wasActive && m_pProjects->GetCount())
         SetProject(m_pProjects->Item(0), refresh);
     delete project;
     if (!m_InitialDir.IsEmpty()) // Restore the working directory
         wxFileName::SetCwd(m_InitialDir);
     m_IsClosingProject = isClosingOtherProjects;
-#ifndef CB_FOR_CONSOLE
     WorkspaceChanged();
-#endif // #ifndef CB_FOR_CONSOLE
     return true;
 }
 
@@ -1279,7 +1036,6 @@ bool ProjectManager::CloseActiveProject(bool dontsave)
     return true;
 }
 
-#ifndef CB_FOR_CONSOLE
 bool ProjectManager::SaveProject(cbProject* project)
 {
     if (!project)
@@ -1357,9 +1113,9 @@ void ProjectManager::MoveProjectUp(cbProject* project, bool warpAround)
         m_pWorkspace->SetModified(true);
 
     // re-select the project
-    wxTreeItemId node = project->GetProjectNode();
-    cbAssert(node.IsOk());
-    m_pTree->SelectItem(node, true);
+    wxTreeItemId itemId = project->GetProjectNode();
+    cbAssert(itemId.IsOk());
+    m_pTree->SelectItem(itemId);
 }
 
 void ProjectManager::MoveProjectDown(cbProject* project, bool warpAround)
@@ -1385,11 +1141,10 @@ void ProjectManager::MoveProjectDown(cbProject* project, bool warpAround)
         m_pWorkspace->SetModified(true);
 
     // re-select the project
-    wxTreeItemId node = project->GetProjectNode();
-    cbAssert(node.IsOk());
-    m_pTree->SelectItem(node, true);
+    wxTreeItemId itemId = project->GetProjectNode();
+    cbAssert(itemId.IsOk());
+    m_pTree->SelectItem(itemId);
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 cbWorkspace* ProjectManager::GetWorkspace()
 {
@@ -1397,9 +1152,7 @@ cbWorkspace* ProjectManager::GetWorkspace()
     {
         m_pWorkspace = new cbWorkspace(_T(""));
         m_pWorkspace->SetTitle(_("Workspace"));
-#ifndef CB_FOR_CONSOLE
         m_pWorkspace->SetModified(false);
-#endif // #ifndef CB_FOR_CONSOLE
     }
     return m_pWorkspace;
 }
@@ -1428,7 +1181,6 @@ bool ProjectManager::LoadWorkspace(const wxString& filename)
     return false;
 }
 
-#ifndef CB_FOR_CONSOLE
 bool ProjectManager::SaveWorkspace()
 {
     return GetWorkspace()->Save();
@@ -1501,7 +1253,6 @@ bool ProjectManager::CloseWorkspace()
     WorkspaceChanged();
     return result;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 // This function is static for your convenience :)
 bool ProjectManager::IsBusy()
@@ -1546,7 +1297,6 @@ bool ProjectManager::IsClosingWorkspace()
     return m_IsClosingWorkspace;
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::FreezeTree()
 {
     if (!m_pTree)
@@ -1570,7 +1320,7 @@ void ProjectManager::UnfreezeTree(bool /*force*/)
 
 void ProjectManager::RebuildTree()
 {
-    if (Manager::isappShuttingDown() || Manager::IsBatchBuild()) // saves a lot of time at startup for large projects
+    if (Manager::IsAppShuttingDown() || Manager::IsBatchBuild()) // saves a lot of time at startup for large projects
         return;
 
     FreezeTree();
@@ -1848,7 +1598,6 @@ void ProjectManager::DoOpenSelectedFile()
             DoOpenFile(f, f->file.GetFullPath());
     }
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 bool ProjectManager::CausesCircularDependency(cbProject* base, cbProject* dependsOn)
 {
@@ -1898,15 +1647,9 @@ bool ProjectManager::AddProjectDependency(cbProject* base, cbProject* dependsOn)
     if (arr && arr->Index(dependsOn) == wxNOT_FOUND)
     {
         arr->Add(dependsOn);
-#ifndef CB_FOR_CONSOLE
         if (m_pWorkspace)
             m_pWorkspace->SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
-        #if wxCHECK_VERSION(2, 9, 0)
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now depends on %s (%d deps)"), base->GetTitle().wx_str(), dependsOn->GetTitle().wx_str(), arr->GetCount()));
-        #else
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now depends on %s (%d deps)"), base->GetTitle().c_str(), dependsOn->GetTitle().c_str(), arr->GetCount()));
-        #endif
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now depends on %s (%lu deps)"), base->GetTitle().wx_str(), dependsOn->GetTitle().wx_str(), static_cast<unsigned long>(arr->GetCount())));
     }
     return true;
 }
@@ -1923,21 +1666,15 @@ void ProjectManager::RemoveProjectDependency(cbProject* base, cbProject* doesNot
     ProjectsArray* arr = it->second;
     arr->Remove(doesNotDependOn);
 
-    #if wxCHECK_VERSION(2, 9, 0)
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now does not depend on %s (%d deps)"), base->GetTitle().wx_str(), doesNotDependOn->GetTitle().wx_str(), arr->GetCount()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now does not depend on %s (%d deps)"), base->GetTitle().c_str(), doesNotDependOn->GetTitle().c_str(), arr->GetCount()));
-    #endif
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now does not depend on %s (%lu deps)"), base->GetTitle().wx_str(), doesNotDependOn->GetTitle().wx_str(), static_cast<unsigned long>(arr->GetCount())));
     // if it was the last dependency, delete the array
     if (!arr->GetCount())
     {
         m_ProjectDeps.erase(it);
         delete arr;
     }
-#ifndef CB_FOR_CONSOLE
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void ProjectManager::ClearProjectDependencies(cbProject* base)
@@ -1950,10 +1687,8 @@ void ProjectManager::ClearProjectDependencies(cbProject* base)
 
     delete it->second;
     m_ProjectDeps.erase(it);
-#ifndef CB_FOR_CONSOLE
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
 
     Manager::Get()->GetLogManager()->DebugLog(_T("Removed all deps from ") + base->GetTitle());
 }
@@ -1983,10 +1718,8 @@ void ProjectManager::RemoveProjectFromAllDependencies(cbProject* base)
         if (index != wxNOT_FOUND)
             arr->RemoveAt(index);
 
-#ifndef CB_FOR_CONSOLE
         if (m_pWorkspace)
             m_pWorkspace->SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
 
         // if it was the last dependency, delete the array
         if (!arr->GetCount())
@@ -1998,11 +1731,7 @@ void ProjectManager::RemoveProjectFromAllDependencies(cbProject* base)
         else
             ++it;
     }
-    #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Removed %s from all deps"), base->GetTitle().wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Removed %s from all deps"), base->GetTitle().c_str()));
-    #endif
 }
 
 const ProjectsArray* ProjectManager::GetDependenciesForProject(cbProject* base)
@@ -2013,7 +1742,6 @@ const ProjectsArray* ProjectManager::GetDependenciesForProject(cbProject* base)
     return 0;
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::ConfigureProjectDependencies(cbProject* base)
 {
     ProjectDepsDlg dlg(Manager::Get()->GetAppWindow(), base);
@@ -2026,12 +1754,10 @@ void ProjectManager::ConfigureProjectDependencies(cbProject* base)
 void ProjectManager::OnTabContextMenu(wxAuiNotebookEvent& /*event*/)
 {
     wxMenu* NBmenu = new wxMenu();
-    NBmenu->Append(idNB_TabTop, _("Tabs at top"));
-    NBmenu->Append(idNB_TabBottom, _("Tabs at bottom"));
     if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/project_tabs_bottom"), false))
-        NBmenu->FindItem(idNB_TabBottom)->Enable(false);
+        NBmenu->Append(idNB_TabTop, _("Tabs at top"));
     else
-        NBmenu->FindItem(idNB_TabTop)->Enable(false);
+        NBmenu->Append(idNB_TabBottom, _("Tabs at bottom"));
     m_pNotebook->PopupMenu(NBmenu);
     delete NBmenu;
 }
@@ -2761,11 +2487,11 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
                 wxString toolTip;
                 for (size_t i = 0; i < nb->GetPageCount(); ++i)
                 {
-                    toolTip = nb->GetPage(i)->GetName();
+                    toolTip = nb->GetPageToolTip(i);
                     if (toolTip.EndsWith(_("Project: ") + backupTitle))
                     {
                         toolTip.Replace(_("Project: ") + backupTitle,_("Project: ") + newTitle);
-                        nb->SetTabToolTip(nb->GetPage(i), toolTip);
+                        nb->SetPageToolTip(i, toolTip);
                     }
 
                 }
@@ -3009,12 +2735,11 @@ void ProjectManager::OnFindFile(wxCommandEvent& /*event*/)
         if (!sel.IsOk())
             return;
 
-        wxTreeItemId found = FindItem( sel, text );
-
-        if ( found.IsOk() )
+        wxTreeItemId itemId = FindItem( sel, text );
+        if ( itemId.IsOk() )
         {
             m_pTree->UnselectAll();
-            m_pTree->SelectItem( found );
+            m_pTree->SelectItem(itemId);
         }
         else
             cbMessageBox(_("The file couldn't be found!"), _(""), wxICON_INFORMATION);
@@ -3113,7 +2838,6 @@ void ProjectManager::OnIdle(wxIdleEvent& event)
 {
     event.Skip();
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void ProjectManager::OnAppDoneStartup(CodeBlocksEvent& event)
 {
@@ -3124,7 +2848,6 @@ void ProjectManager::OnAppDoneStartup(CodeBlocksEvent& event)
     event.Skip();
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::OnRenameFile(wxCommandEvent& /*event*/)
 {
     wxTreeItemId sel = GetTreeSelection();
@@ -3204,9 +2927,8 @@ void ProjectManager::CheckForExternallyModifiedProjects()
         // the hash (Projects) could change the order
         std::vector<cbProject*> ProjectPointers;
         for (unsigned int idxProject = 0; idxProject < Projects->Count(); ++idxProject)
-        {
             ProjectPointers.push_back(Projects->Item(idxProject));
-        }
+
         for (unsigned int idxProject = 0; idxProject < ProjectPointers.size(); ++idxProject)
         {
             cbProject* pProject = ProjectPointers[idxProject];
@@ -3290,7 +3012,7 @@ void ProjectManager::RemoveFilesRecursively(wxTreeItemId& sel_id)
                     ProjectFile* pf = data->GetProjectFile();
                     RemoveFileFromProject(pf, prj);
                 }
-                else if (data->GetKind() == FileTreeData::ftdkFolder
+                else if (  data->GetKind() == FileTreeData::ftdkFolder
                         || data->GetKind() == FileTreeData::ftdkVirtualFolder)
                 {
                     RemoveFilesRecursively(child);
@@ -3338,7 +3060,6 @@ void ProjectManager::OpenFilesRecursively(wxTreeItemId& sel_id)
             break;
     }
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 bool ProjectManager::BeginLoadingProject()
 {
@@ -3371,12 +3092,9 @@ void ProjectManager::EndLoadingProject(cbProject* project)
         if (newAddition)
         {
             m_pProjects->Add(project);
-#ifndef CB_FOR_CONSOLE
             project->LoadLayout();
-#endif // #ifndef CB_FOR_CONSOLE
         }
 
-#ifndef CB_FOR_CONSOLE
         if (!m_IsLoadingWorkspace)
         {
             if (newAddition)
@@ -3389,7 +3107,6 @@ void ProjectManager::EndLoadingProject(cbProject* project)
 
         if (m_pWorkspace)
             m_pWorkspace->SetModified(true);
-#endif // #ifndef CB_FOR_CONSOLE
 
         // if loading a workspace, avoid sending the event now
         // we 'll send them after all projects have been loaded
@@ -3403,11 +3120,9 @@ void ProjectManager::EndLoadingProject(cbProject* project)
             event.SetProject(project);
             Manager::Get()->ProcessEvent(event);
 
-#ifndef CB_FOR_CONSOLE
             // finally, display project notes (if appropriate)
             if (project->GetShowNotesOnLoad())
                 project->ShowNotes(true);
-#endif // #ifndef CB_FOR_CONSOLE
         }
     }
 
@@ -3419,9 +3134,8 @@ void ProjectManager::EndLoadingProject(cbProject* project)
     // but only if not loading workspace (else LoadWorkspace() will handle this)
     if (!m_IsLoadingWorkspace)
         Manager::Get()->GetUserVariableManager()->Arrogate();
-#ifndef CB_FOR_CONSOLE
+
     WorkspaceChanged();
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
 bool ProjectManager::BeginLoadingWorkspace()
@@ -3430,7 +3144,6 @@ bool ProjectManager::BeginLoadingWorkspace()
         return false;
 
     m_IsLoadingWorkspace = true;
-#ifndef CB_FOR_CONSOLE
     if (!CloseWorkspace())
     {
         m_IsLoadingWorkspace = false;
@@ -3441,7 +3154,6 @@ bool ProjectManager::BeginLoadingWorkspace()
     m_pTree->AppendItem(m_pTree->GetRootItem(), _("Loading workspace..."));
     m_pTree->Expand(m_pTree->GetRootItem());
     UnfreezeTree();
-#endif // #ifndef CB_FOR_CONSOLE
 
     return true;
 }
@@ -3457,7 +3169,6 @@ void ProjectManager::EndLoadingWorkspace()
 
     if (m_pWorkspace->IsOK())
     {
-#ifndef CB_FOR_CONSOLE
         RebuildTree();
         if (m_pActiveProject || m_pProjectToActivate)
         {
@@ -3472,13 +3183,10 @@ void ProjectManager::EndLoadingWorkspace()
         m_pTree->SetItemText(m_TreeRoot, m_pWorkspace->GetTitle());
 
         UnfreezeTree(true);
-#endif // #ifndef CB_FOR_CONSOLE
         // sort out any global user vars that need to be defined now (in a batch) :)
         Manager::Get()->GetUserVariableManager()->Arrogate();
 
-#ifndef CB_FOR_CONSOLE
         int numNotes = 0;
-#endif // #ifndef CB_FOR_CONSOLE
 
         // and now send the project loaded events
         // since we were loading a workspace, these events were not sent before
@@ -3493,14 +3201,11 @@ void ProjectManager::EndLoadingWorkspace()
             event.SetProject(project);
             Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 
-#ifndef CB_FOR_CONSOLE
             // since we 're iterating anyway, let's count the project notes that should be displayed
             if (project->GetShowNotesOnLoad() && !project->GetNotes().IsEmpty())
                 ++numNotes;
-#endif // #ifndef CB_FOR_CONSOLE
         }
 
-#ifndef CB_FOR_CONSOLE
         // finally, display projects notes (if appropriate)
         if (numNotes)
         {
@@ -3521,15 +3226,11 @@ void ProjectManager::EndLoadingWorkspace()
         }
 
         WorkspaceChanged();
-#endif // #ifndef CB_FOR_CONSOLE
     }
-#ifndef CB_FOR_CONSOLE
     else
         CloseWorkspace();
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
-#ifndef CB_FOR_CONSOLE
 void ProjectManager::OnKeyDown(wxTreeEvent& event)
 {
     const wxKeyEvent& key_event = event.GetKeyEvent();
@@ -3546,7 +3247,6 @@ void ProjectManager::OnKeyDown(wxTreeEvent& event)
     else
         event.Skip();
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void ProjectManager::SetIsRunning(cbPlugin *plugin)
 {

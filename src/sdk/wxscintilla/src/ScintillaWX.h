@@ -54,7 +54,6 @@
 
 //----------------------------------------------------------------------
 
-/* C::B begin */
 #ifdef WXMAKINGDLL_SCI
     #define WXDLLIMPEXP_SCI WXEXPORT
 #elif defined(WXUSINGDLL)
@@ -62,12 +61,22 @@
 #else // not making nor using DLL
     #define WXDLLIMPEXP_SCI
 #endif
-/* C::B end */
+
+
+#ifdef SCI_NAMESPACE
+	#ifndef SCI_NAMESPACE_PREFIX
+		#define SCI_NAMESPACE_PREFIX( x ) Scintilla::x
+	#endif
+#else
+	#ifndef SCI_NAMESPACE_PREFIX
+		#define SCI_NAMESPACE_PREFIX( x ) x
+	#endif
+#endif
 
 //----------------------------------------------------------------------
 
 
-class WXDLLIMPEXP_SCI wxScintilla;           // forward
+class wxScintilla;           // forward
 class ScintillaWX;
 
 
@@ -93,16 +102,13 @@ private:
 
 //----------------------------------------------------------------------
 
-class ScintillaWX : public ScintillaBase {
+/* C::B begin */
+class ScintillaWX : public SCI_NAMESPACE_PREFIX(ScintillaBase) {
+/* C::B end */
 public:
 
     ScintillaWX(wxScintilla* win);
     ~ScintillaWX();
-
-/* C::B begin */
-    static sptr_t DirectFunction( ScintillaWX *wxsci, unsigned int iMessage,
-                                  uptr_t wParam, sptr_t lParam);
-/* C::B end */
 
     // base class virtuals
     virtual void Initialise();
@@ -118,9 +124,11 @@ public:
     virtual bool ModifyScrollBars(int nMax, int nPage);
     virtual void Copy();
     virtual void Paste();
-    virtual void CopyToClipboard(const SelectionText &selectedText);
+/* C::B begin */
+    virtual void CopyToClipboard(const SCI_NAMESPACE_PREFIX(SelectionText) &selectedText);
 
-    virtual void CreateCallTipWindow(PRectangle rc);
+    virtual void CreateCallTipWindow(SCI_NAMESPACE_PREFIX(PRectangle) rc);
+/* C::B end */
     virtual void AddToPopUp(const char *label, int cmd = 0, bool enabled = true);
     virtual void ClaimSelection();
 
@@ -130,12 +138,18 @@ public:
     virtual sptr_t WndProc(unsigned int iMessage,
                            uptr_t wParam,
                            sptr_t lParam);
+/* C::B begin */
+    static sptr_t DirectFunction(ScintillaWX *wxsci,
+                                 unsigned int iMessage,
+                                 uptr_t wParam,
+                                 sptr_t lParam);
+/* C::B end */
 
+    virtual void NotifyChange();
+    virtual void NotifyParent(SCI_NAMESPACE_PREFIX(SCNotification) scn);
 /* C::B begin */
     virtual void NotifyFocus(bool focus);
 /* C::B end */
-    virtual void NotifyChange();
-    virtual void NotifyParent(SCNotification scn);
 
     virtual void CancelModes();
 
@@ -149,10 +163,12 @@ public:
     void DoLoseFocus();
     void DoGainFocus();
     void DoSysColourChange();
-    void DoLeftButtonDown(Point pt, unsigned int curTime, bool shift, bool ctrl, bool alt);
-    void DoLeftButtonUp(Point pt, unsigned int curTime, bool ctrl);
-    void DoLeftButtonMove(Point pt);
-    void DoMiddleButtonUp(Point pt);
+/* C::B begin */
+    void DoLeftButtonDown(SCI_NAMESPACE_PREFIX(Point) pt, unsigned int curTime, bool shift, bool ctrl, bool alt);
+    void DoLeftButtonUp(SCI_NAMESPACE_PREFIX(Point) pt, unsigned int curTime, bool ctrl);
+    void DoLeftButtonMove(SCI_NAMESPACE_PREFIX(Point) pt);
+    void DoMiddleButtonUp(SCI_NAMESPACE_PREFIX(Point) pt);
+/* C::B end */
     void DoMouseWheel(int rotation, int delta, int linesPerAction, int ctrlDown, bool isPageScroll);
     void DoAddChar(int key);
     int  DoKeyDown(const wxKeyEvent& event, bool* consumed);
@@ -167,17 +183,24 @@ public:
 #endif
 
     void DoCommand(int ID);
-    void DoContextMenu(Point pt);
+/* C::B begin */
+    void DoContextMenu(SCI_NAMESPACE_PREFIX(Point) pt);
+/* C::B ebd */
     void DoOnListBox();
 
 
     // helpers
     void FullPaint();
+    void FullPaintDC(wxDC* dc);
     bool CanPaste();
     bool GetHideSelection() { return hideSelection; }
     void DoScrollToLine(int line);
     void DoScrollToColumn(int column);
-    void ClipChildren(wxDC& dc, PRectangle rect);
+/* C::B begin */
+    void ClipChildren(wxDC& dc, SCI_NAMESPACE_PREFIX(PRectangle) rect);
+/* C::B end */
+    void SetUseAntiAliasing(bool useAA);
+    bool GetUseAntiAliasing();
 
 private:
     bool                capturedMouse;

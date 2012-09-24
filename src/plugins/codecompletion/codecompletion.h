@@ -76,14 +76,14 @@ public:
     virtual int GetConfigurationGroup() const { return cgEditor; }
     virtual cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
     virtual cbConfigurationPanel* GetProjectConfigurationPanel(wxWindow* parent, cbProject* project);
-    virtual int Configure();
+    virtual int Configure() { return 0; }
     /** offer for menu space by host */
     virtual void BuildMenu(wxMenuBar* menuBar);
     /** offer for Context menu */
     virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
     /** offer for the Toolbar */
     virtual bool BuildToolBar(wxToolBar* toolBar);
-    virtual bool BuildToolBar(wxToolBar* toolBar, int &priority) { priority = 10; return BuildToolBar(toolBar); }
+    virtual int GetToolBarPriority() { return 10; }
 
     // TODO unused, should be removed probably
     virtual wxArrayString GetCallTips() { return wxArrayString(); }
@@ -157,32 +157,34 @@ private:
     void OnCurrentProjectReparse(wxCommandEvent& event);
     void OnSelectedProjectReparse(wxCommandEvent& event);
     void OnSelectedFileReparse(wxCommandEvent& event);
-    void OnAppDoneStartup(CodeBlocksEvent& event);
 
-    /** event handlers for the standard events sent from sdk core*/
+    // event handlers for the standard events sent from sdk core
+    /** SDK event when application has started up */
+    void OnAppDoneStartup(CodeBlocksEvent& event);
+    /** SDK workspace related events */
     void OnWorkspaceChanged(CodeBlocksEvent& event);
+    /** SDK project related events */
     void OnProjectActivated(CodeBlocksEvent& event);
     void OnProjectClosed(CodeBlocksEvent& event);
     void OnProjectSaved(CodeBlocksEvent& event);
     void OnProjectFileAdded(CodeBlocksEvent& event);
     void OnProjectFileRemoved(CodeBlocksEvent& event);
     void OnProjectFileChanged(CodeBlocksEvent& event);
-    /** handle the save/modify event from the sdk*/
+    /** SDK editor related events */
     void OnEditorSaveOrModified(CodeBlocksEvent& event);
-    /** handle editor open event from sdk*/
     void OnEditorOpen(CodeBlocksEvent& event);
     void OnEditorActivated(CodeBlocksEvent& event);
     void OnEditorClosed(CodeBlocksEvent& event);
 
     /** CC's own logger, to handle event sent from other thread or itself*/
     void OnCCLogger(wxCommandEvent& event);
-    /** CC's own debug logger, to handle event sent from other thread ot itself*/
+    /** CC's own debug logger, to handle event sent from other thread or itself*/
     void OnCCDebugLogger(wxCommandEvent& event);
 
-    /** batch parsing end event*/
-    void OnParserEnd(wxCommandEvent& event);
     /** batch parsing start event*/
     void OnParserStart(wxCommandEvent& event);
+    /** batch parsing end event*/
+    void OnParserEnd(wxCommandEvent& event);
 
     /** mouse hover event*/
     void OnEditorTooltip(CodeBlocksEvent& event);
@@ -200,7 +202,7 @@ private:
     /** ContextMenu->Insert-> All class methods*/
     int DoAllMethodsImpl();
 
-    //CC's toolbar related functions
+    // CC's toolbar related functions
     /** help method in finding the function position in the vector for the function containing the current line*/
     void FunctionPosition(int &scopeItem, int &functionItem) const;
     /** navigate between function bodies*/
@@ -217,6 +219,7 @@ private:
     void FindFunctionAndUpdate(int currentLine);
     void UpdateFunctions(unsigned int scopeItem);
     void EnableToolbarTools(bool enable = true);
+    void DoParseOpenedProjectAndActiveEditor();
 
     /** delayed for code completion */
     void OnCodeCompleteTimer(wxTimerEvent& event);

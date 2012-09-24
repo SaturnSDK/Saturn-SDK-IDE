@@ -131,7 +131,11 @@ void ThreadSearchLoggerList::OnLoggerListClick(wxListEvent& event)
     // Gets file path and line from list control
 
     //Ignore the right mouse key //(pecan 2008/4/25)
+#if wxCHECK_VERSION(2,9,0)
+    if ( ::wxGetMouseState().RightIsDown() )
+#else
     if ( ::wxGetMouseState().RightDown() )
+#endif
     {
         // Ignore RightMouseSelect, put back last LeftMouseSelect
         wxListCtrl* pListCtrl = (wxListCtrl*)event.GetEventObject();
@@ -208,7 +212,7 @@ bool ThreadSearchLoggerList::GetFileLineFromListEvent(wxListEvent& /*event*/, wx
 	return success;
 }
 // ----------------------------------------------------------------------------
-void ThreadSearchLoggerList::OnThreadSearchEvent(const ThreadSearchEvent& event)
+void ThreadSearchLoggerList::OnThreadSearchEvent(const sThreadSearchEvent& event)
 // ----------------------------------------------------------------------------
 {
 	// A search event has been sent by the worker thread.

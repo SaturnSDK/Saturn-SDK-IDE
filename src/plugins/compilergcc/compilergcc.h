@@ -95,13 +95,11 @@ class CompilerGCC : public cbCompilerPlugin
         virtual void BuildMenu(wxMenuBar* menuBar); // offer for menu space by host
         virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0); // offer for menu space by a module
         virtual bool BuildToolBar(wxToolBar* toolBar);
-        virtual bool BuildToolBar(wxToolBar* toolBar, int &priority) { priority = 1; return BuildToolBar(toolBar); }
+        virtual int GetToolBarPriority() { return 1; }
 
         virtual int Run(ProjectBuildTarget* target = 0L);
         virtual int Run(const wxString& target);
-#ifndef CB_FOR_CONSOLE
         virtual int RunSingleFile(const wxString& filename);
-#endif // #ifndef CB_FOR_CONSOLE
         virtual int Clean(const wxString& target);
         virtual int Clean(ProjectBuildTarget* target = 0L);
         virtual int DistClean(ProjectBuildTarget* target = 0L);
@@ -123,9 +121,7 @@ class CompilerGCC : public cbCompilerPlugin
 
         int GetConfigurationPriority() const { return 0; }
         int GetConfigurationGroup() const { return cgCompiler; }
-#ifndef CB_FOR_CONSOLE
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
-#endif // #ifndef CB_FOR_CONSOLE
 
         bool IsValidTarget(const wxString& target) const;
 
@@ -137,9 +133,7 @@ class CompilerGCC : public cbCompilerPlugin
         void OnTimer(wxTimerEvent& event);
 
         void OnCompile(wxCommandEvent& event);
-#ifndef CB_FOR_CONSOLE
         void OnCompileFile(wxCommandEvent& event);
-#endif // #ifndef CB_FOR_CONSOLE
         void OnRebuild(wxCommandEvent& event);
         void OnCompileAll(wxCommandEvent& event);
         void OnRebuildAll(wxCommandEvent& event);
@@ -151,21 +145,15 @@ class CompilerGCC : public cbCompilerPlugin
         void OnCompileAndRun(wxCommandEvent& event);
         void OnKillProcess(wxCommandEvent& event);
         void OnSelectTarget(wxCommandEvent& event);
-#ifndef CB_FOR_CONSOLE
         void OnNextError(wxCommandEvent& event);
         void OnPreviousError(wxCommandEvent& event);
-#endif // #ifndef CB_FOR_CONSOLE
         void OnClearErrors(wxCommandEvent& event);
-#ifndef CB_FOR_CONSOLE
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnConfig(wxCommandEvent& event);
-#endif // #ifndef CB_FOR_CONSOLE
     private:
         friend class CompilerOptionsDlg;
 
-#ifndef CB_FOR_CONSOLE
         void Dispatcher(wxCommandEvent& event);
-#endif // #ifndef CB_FOR_CONSOLE
         void TextURL(wxTextUrlEvent& event);
 
         bool StopRunningDebugger();
@@ -196,23 +184,17 @@ class CompilerGCC : public cbCompilerPlugin
         void DoClearTargetMenu();
         void DoRecreateTargetMenu();
         void DoUpdateTargetMenu(int targetIndex);
-#ifndef CB_FOR_CONSOLE
         FileTreeData* DoSwitchProjectTemporarily();
-#endif // #ifndef CB_FOR_CONSOLE
         ProjectBuildTarget* DoAskForTarget();
         int DoGUIAskForTarget();
         void ClearLog();
         void PrepareCompileFile(wxFileName& file);
-#ifndef CB_FOR_CONSOLE
         void PrepareCompileFilePM(wxFileName& file);
-#endif // #ifndef CB_FOR_CONSOLE
         bool CheckProject();
         void AskForActiveProject();
         void StartCompileFile(wxFileName file);
-#ifndef CB_FOR_CONSOLE
         void DoGotoNextError();
         void DoGotoPreviousError();
-#endif // #ifndef CB_FOR_CONSOLE
         void DoClearErrors();
         wxString ProjectMakefile();
         void AddOutputLine(const wxString& output, bool forceErrorColour = false);
@@ -295,9 +277,7 @@ class CompilerGCC : public cbCompilerPlugin
         wxToolBar*          m_pTbar;
         wxTimer             m_timerIdleWakeUp;
         BuildLogger*        m_pLog;
-#ifndef CB_FOR_CONSOLE
         CompilerMessages*   m_pListLog;
-#endif // #ifndef CB_FOR_CONSOLE
         wxChoice*           m_pToolTarget;
         bool                m_RunAfterCompile;
         wxString            m_CdRun;
@@ -306,7 +286,7 @@ class CompilerGCC : public cbCompilerPlugin
         CompilerErrors      m_Errors;
         wxString            m_LastTargetName;
         bool                m_NotifiedMaxErrors;
-        wxLongLong          m_StartTimer;
+        wxLongLong          m_StartTime;
 
         // build state management
         cbProject*          m_pBuildingProject; // +

@@ -83,9 +83,10 @@ static wxRegEx reInferiorExited2(wxT("^\\[[Ii]nferior[ \\t].+[ \\t]exited[ \\t]w
 
 // scripting support
 DECLARE_INSTANCE_TYPE(GDB_driver);
+using SqPlus::Push;
 
-GDB_driver::GDB_driver(DebuggerGDB* plugin)
-    : DebuggerDriver(plugin),
+GDB_driver::GDB_driver(DebuggerGDB* plugin) :
+    DebuggerDriver(plugin),
     m_CygwinPresent(false),
     m_BreakOnEntry(false),
     m_ManualBreakOnEntry(false),
@@ -587,12 +588,15 @@ void GDB_driver::CPURegisters()
 void GDB_driver::SwitchToFrame(size_t number)
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("frame %d"), number)));
+    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("frame %lu"), static_cast<unsigned long>(number))));
 }
 
 void GDB_driver::SetVarValue(const wxString& var, const wxString& value)
 {
-    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("set variable %s=%s"), var.c_str(), value.c_str())));
+    wxString cleanValue=value;
+    while (cleanValue.EndsWith(wxT("\\")))
+        cleanValue.RemoveLast();
+    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("set variable %s=%s"), var.c_str(), cleanValue.c_str())));
 }
 
 void GDB_driver::MemoryDump()
@@ -648,12 +652,12 @@ void GDB_driver::EnableCatchingThrow(bool enable)
 void GDB_driver::SwitchThread(size_t threadIndex)
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("thread %d"), threadIndex)));
+    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("thread %lu"), static_cast<unsigned long>(threadIndex))));
     if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
         QueueCommand(new GdbCmd_Backtrace(this));
 }
 
-void GDB_driver::AddBreakpoint(DebuggerBreakpoint::Pointer bp)
+void GDB_driver::AddBreakpoint(cb::shared_ptr<DebuggerBreakpoint> bp)
 {
     if (bp->type == DebuggerBreakpoint::bptData)
     {
@@ -688,7 +692,7 @@ void GDB_driver::AddBreakpoint(DebuggerBreakpoint::Pointer bp)
     }
 }
 
-void GDB_driver::RemoveBreakpoint(DebuggerBreakpoint::Pointer bp)
+void GDB_driver::RemoveBreakpoint(cb::shared_ptr<DebuggerBreakpoint> bp)
 {
     if (bp && bp->index != -1)
         QueueCommand(new GdbCmd_RemoveBreakpoint(this, bp));
@@ -712,7 +716,7 @@ void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &wat
     QueueCommand(new DbgCmd_UpdateWatchesTree(this));
 }
 
-void GDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
+void GDB_driver::UpdateWatch(const cb::shared_ptr<GDBWatch> &watch)
 {
     QueueCommand(new GdbCmd_FindWatchType(this, watch));
     QueueCommand(new DbgCmd_UpdateWatchesTree(this));
@@ -745,7 +749,7 @@ void GDB_driver::ParseOutput(const wxString& output)
             long pid = 0;
             pidStr.ToLong(&pid);
             SetChildPID(pid);
-            m_pDBG->Log(wxString::Format(_("Child process PID: %d"), pid));
+            m_pDBG->Log(wxString::Format(_("Child process PID: %ld"), pid));
         }
     }
     else if (!platform::windows && m_ChildPID == 0)
@@ -756,13 +760,14 @@ void GDB_driver::ParseOutput(const wxString& output)
             long pid = 0;
             pidStr.ToLong(&pid);
             SetChildPID(pid);
-            m_pDBG->Log(wxString::Format(_("Child process PID: %d"), pid));
+            m_pDBG->Log(wxString::Format(_("Child process PID: %ld"), pid));
         }
     }
 
-    if (  output.StartsWith(_T("gdb: "))
-        ||output.StartsWith(_T("Warning: "))
-        ||output.StartsWith(_T("ContinueDebugEvent ")))
+    if (   output.StartsWith(_T("gdb: "))
+        || output.StartsWith(_T("warning: "))
+        || output.StartsWith(_T("Warning: "))
+        || output.StartsWith(_T("ContinueDebugEvent ")) )
     {
         return;
     }
@@ -841,7 +846,7 @@ void GDB_driver::ParseOutput(const wxString& output)
             wxString major = re.GetMatch(lines[i],0);
             wxString minor = major;
             major = major.BeforeFirst(_T('.')); // 6.3.2 -> 6
-            minor = minor.AfterFirst(_T('.')); // 6.3.2 -> 3.2
+            minor = minor.AfterFirst(_T('.'));  // 6.3.2 -> 3.2
             minor = minor.BeforeFirst(_T('.')); // 3.2 -> 3
             major.ToLong(&m_GDBVersionMajor);
             minor.ToLong(&m_GDBVersionMinor);
@@ -857,12 +862,13 @@ void GDB_driver::ParseOutput(const wxString& output)
         }
 
         // Is the program exited?
-        else if (lines[i].StartsWith(_T("Program exited")) ||
-                 lines[i].Contains(_T("The program is not being run")) ||
-                 lines[i].Contains(_T("Target detached")) ||
-                 lines[i].StartsWith(wxT("Program terminated with signal")) ||
-                 reInferiorExited.Matches(lines[i]) ||
-                 reInferiorExited2.Matches(lines[i]))
+        else if (   lines[i].StartsWith(_T("Error creating process"))
+                 || lines[i].StartsWith(_T("Program exited"))
+                 || lines[i].Contains(_T("The program is not being run"))
+                 || lines[i].Contains(_T("Target detached"))
+                 || lines[i].StartsWith(wxT("Program terminated with signal"))
+                 || reInferiorExited.Matches(lines[i])
+                 || reInferiorExited2.Matches(lines[i]) )
         {
             m_pDBG->Log(lines[i]);
             m_ProgramIsStopped = true;
@@ -906,9 +912,9 @@ void GDB_driver::ParseOutput(const wxString& output)
 
         // general errors
         // we don't deal with them, just relay them back to the user
-        else if (lines[i].StartsWith(_T("Error ")) ||
-                lines[i].StartsWith(_T("No such")) ||
-                lines[i].StartsWith(_T("Cannot evaluate")))
+        else if (   lines[i].StartsWith(_T("Error "))
+                 || lines[i].StartsWith(_T("No such"))
+                 || lines[i].StartsWith(_T("Cannot evaluate")) )
         {
             m_pDBG->Log(lines[i]);
         }
@@ -964,7 +970,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                     lineStr.ToLong(&line);
                     DebuggerState& state = m_pDBG->GetState();
                     int bpindex = state.HasBreakpoint(file, line - 1, false);
-                    DebuggerBreakpoint::Pointer bp = state.GetBreakpoint(bpindex);
+                    cb::shared_ptr<DebuggerBreakpoint> bp = state.GetBreakpoint(bpindex);
                     if (bp)
                     {
     //                    m_pDBG->Log(_T("Found BP!!! Updating index..."));
@@ -985,7 +991,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                 long index;
                 rePendingFound1.GetMatch(lines[i],1).ToLong(&index);
                 DebuggerState& state = m_pDBG->GetState();
-                DebuggerBreakpoint::Pointer bp = state.GetBreakpointByNumber(index);
+                cb::shared_ptr<DebuggerBreakpoint> bp = state.GetBreakpointByNumber(index);
                 if(bp && bp->wantsCondition)
                 {
                     bp->wantsCondition = false;
@@ -1001,7 +1007,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                 long index;
                 reTempBreakFound.GetMatch(lines[i],1).ToLong(&index);
                 DebuggerState& state = m_pDBG->GetState();
-                DebuggerBreakpoint::Pointer bp = state.GetBreakpointByNumber(index);
+                cb::shared_ptr<DebuggerBreakpoint> bp = state.GetBreakpointByNumber(index);
                 state.RemoveBreakpoint(bp, false);
                 Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
             }

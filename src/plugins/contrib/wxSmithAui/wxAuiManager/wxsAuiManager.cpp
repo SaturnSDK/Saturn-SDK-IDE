@@ -307,9 +307,9 @@ wxString wxsAuiPaneInfoExtra::AllParamsCode(wxsCoderContext* Ctx,wxsItem* ChildP
             else if ( !m_CloseButton && !(m_StandardPane == CenterPane) ) str << _T(".CloseButton(false)");
 
             //Layer, row and position
-            if ( m_Layer > 0    ) str << wxString::Format(_T(".Layer(%d)"),m_Layer);
-            if ( m_Row > 0      ) str << wxString::Format(_T(".Row(%d)"),m_Row);
-            if ( m_Position != 0 ) str << wxString::Format(_T(".Position(%d)"),m_Position);
+            if ( m_Layer > 0    ) str << wxString::Format(_T(".Layer(%ld)"),m_Layer);
+            if ( m_Row > 0      ) str << wxString::Format(_T(".Row(%ld)"),m_Row);
+            if ( m_Position != 0 ) str << wxString::Format(_T(".Position(%ld)"),m_Position);
 
             //Dock or Float
             if ( !m_Docked ) str << _T(".Float()");
@@ -499,11 +499,7 @@ void wxsAuiManager::OnBuildCreatingCode()
                 {
                     case wxsCPP:
                     {
-                        #if wxCHECK_VERSION(2, 9, 0)
                         Codef(_T("%AAddPane(%o, wxAuiPaneInfo()%s);\n"),i,Extra->AllParamsCode(GetCoderContext(),Child).wx_str());
-                        #else
-                        Codef(_T("%AAddPane(%o, wxAuiPaneInfo()%s);\n"),i,Extra->AllParamsCode(GetCoderContext(),Child).c_str());
-                        #endif
                         break;
                     }
 

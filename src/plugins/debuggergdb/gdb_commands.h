@@ -17,17 +17,19 @@
 #include <wx/regex.h>
 #include <wx/tipwin.h>
 #include <wx/tokenzr.h>
-#include "configmanager.h"
+
+#include <cbeditor.h>
+#include <cbdebugger_interfaces.h>
+#include <configmanager.h>
 #include <globals.h>
 #include <manager.h>
 #include <editormanager.h>
-#include <cbeditor.h>
+#include <infowindow.h>
+#include <logmanager.h>
+#include <macrosmanager.h>
 #include <scriptingmanager.h>
 #include <sqplus.h>
-#include <infowindow.h>
-#include "logmanager.h"
 
-#include <cbdebugger_interfaces.h>
 #include "debugger_defs.h"
 #include "debuggergdb.h"
 #include "gdb_driver.h"
@@ -385,14 +387,14 @@ class GdbCmd_Detach : public DebuggerCmd
   */
 class GdbCmd_AddBreakpointCondition : public DebuggerCmd
 {
-        DebuggerBreakpoint::Pointer m_BP;
+        cb::shared_ptr<DebuggerBreakpoint> m_BP;
     public:
         /** @param bp The breakpoint to set its condition. */
-        GdbCmd_AddBreakpointCondition(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
+        GdbCmd_AddBreakpointCondition(DebuggerDriver* driver, cb::shared_ptr<DebuggerBreakpoint> bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
-            m_Cmd << _T("condition ") << wxString::Format(_T("%d"), (int) m_BP->index);
+            m_Cmd << _T("condition ") << wxString::Format(_T("%ld"), (int) m_BP->index);
             if (m_BP->useCondition)
                 m_Cmd << _T(" ") << m_BP->condition;
         }
@@ -400,7 +402,7 @@ class GdbCmd_AddBreakpointCondition : public DebuggerCmd
         {
             if (output.StartsWith(_T("No symbol ")))
             {
-                wxString s = wxString::Format(_("While setting up custom conditions for breakpoint %d (%s, line %d),\n"
+                wxString s = wxString::Format(_("While setting up custom conditions for breakpoint %ld (%s, line %d),\n"
                                                 "the debugger responded with the following error:\n"
                                                 "\nError: %s\n\n"
                                                 "Do you want to make this an un-conditional breakpoint?"),
@@ -430,10 +432,10 @@ class GdbCmd_AddBreakpointCondition : public DebuggerCmd
   */
 class GdbCmd_AddBreakpoint : public DebuggerCmd
 {
-        DebuggerBreakpoint::Pointer m_BP;
+        cb::shared_ptr<DebuggerBreakpoint> m_BP;
     public:
         /** @param bp The breakpoint to set. */
-        GdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
+        GdbCmd_AddBreakpoint(DebuggerDriver* driver, cb::shared_ptr<DebuggerBreakpoint> bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -553,10 +555,10 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
   */
 class GdbCmd_AddDataBreakpoint : public DebuggerCmd
 {
-        DebuggerBreakpoint::Pointer m_BP;
+        cb::shared_ptr<DebuggerBreakpoint> m_BP;
     public:
         /** @param bp The breakpoint to set. */
-        GdbCmd_AddDataBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
+        GdbCmd_AddDataBreakpoint(DebuggerDriver* driver, cb::shared_ptr<DebuggerBreakpoint> bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -590,7 +592,7 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 {
     public:
         /** @param bp The breakpoint to remove. If NULL, all breakpoints are removed. */
-        GdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
+        GdbCmd_RemoveBreakpoint(DebuggerDriver* driver, cb::shared_ptr<DebuggerBreakpoint> bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -621,7 +623,7 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 //            m_pDriver->DebugLog(wxString::Format(_("Breakpoint removed: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
         }
 
-        DebuggerBreakpoint::Pointer m_BP;
+        cb::shared_ptr<DebuggerBreakpoint> m_BP;
 };
 
 /**
@@ -756,7 +758,8 @@ class GdbCmd_Threads : public DebuggerCmd
 
                     long number;
                     num.ToLong(&number, 10);
-                    m_pDriver->GetThreads().push_back(cbThread::Pointer(new cbThread(!active.empty(), number, info)));
+                    DebuggerDriver::ThreadsContainer &threads = m_pDriver->GetThreads();
+                    threads.push_back(cb::shared_ptr<cbThread>(new cbThread(!active.empty(), number, info)));
                 }
             }
             Manager::Get()->GetDebuggerManager()->GetThreadsDialog()->Reload();
@@ -768,10 +771,10 @@ class GdbCmd_Threads : public DebuggerCmd
   */
 class GdbCmd_Watch : public DebuggerCmd
 {
-        GDBWatch::Pointer m_watch;
+        cb::shared_ptr<GDBWatch> m_watch;
         wxString m_ParseFunc;
     public:
-        GdbCmd_Watch(DebuggerDriver* driver, GDBWatch::Pointer watch) :
+        GdbCmd_Watch(DebuggerDriver* driver, cb::shared_ptr<GDBWatch> watch) :
             DebuggerCmd(driver),
             m_watch(watch)
         {
@@ -859,10 +862,10 @@ class GdbCmd_Watch : public DebuggerCmd
   */
 class GdbCmd_FindWatchType : public DebuggerCmd
 {
-        GDBWatch::Pointer m_watch;
+        cb::shared_ptr<GDBWatch> m_watch;
         bool m_firstTry;
     public:
-        GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch::Pointer watch, bool firstTry = true) :
+        GdbCmd_FindWatchType(DebuggerDriver* driver, cb::shared_ptr<GDBWatch> watch, bool firstTry = true) :
             DebuggerCmd(driver),
             m_watch(watch),
             m_firstTry(firstTry)
@@ -1002,7 +1005,7 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             contents.Trim(true);
             contents.Trim(false);
 
-            GDBWatch::Pointer watch(new GDBWatch(m_What));
+            cb::shared_ptr<GDBWatch> watch(new GDBWatch(m_What));
             watch->SetType(m_Type);
 
             ParseGDBWatchValue(watch, contents);
@@ -1155,7 +1158,7 @@ class GdbCmd_Backtrace : public DebuggerCmd
                         validSF = sf;
                         validFrameNumber = sf.GetNumber();
                     }
-                    m_pDriver->GetStackFrames().push_back(cbStackFrame::Pointer(new cbStackFrame(sf)));
+                    m_pDriver->GetStackFrames().push_back(cb::shared_ptr<cbStackFrame>(new cbStackFrame(sf)));
                 }
             }
             if (validFrameNumber > 0) // if it's 0, then the driver already synced the editor
@@ -1690,26 +1693,27 @@ class GdbCmd_RemoteTarget : public DebuggerCmd
         GdbCmd_RemoteTarget(DebuggerDriver* driver, RemoteDebugging* rd)
             : DebuggerCmd(driver)
         {
+            const wxString targetRemote = rd->extendedRemote ? _T("target extended-remote ") : _T("target remote ");
             switch (rd->connType)
             {
                 case RemoteDebugging::TCP:
                 {
                     if (!rd->ip.IsEmpty() && !rd->ipPort.IsEmpty())
-                        m_Cmd << _T("target remote tcp:") << rd->ip << _T(":") << rd->ipPort;
+                        m_Cmd << targetRemote << _T("tcp:") << rd->ip << _T(":") << rd->ipPort;
                 }
                 break;
 
                 case RemoteDebugging::UDP:
                 {
                     if (!rd->ip.IsEmpty() && !rd->ipPort.IsEmpty())
-                        m_Cmd << _T("target remote udp:") << rd->ip << _T(":") << rd->ipPort;
+                        m_Cmd << targetRemote << _T("udp:") << rd->ip << _T(":") << rd->ipPort;
                 }
                 break;
 
                 case RemoteDebugging::Serial:
                 {
                     if (!rd->serialPort.IsEmpty())
-                        m_Cmd << _T("target remote ") << rd->serialPort;
+                        m_Cmd << targetRemote << rd->serialPort;
                 }
                 break;
 
@@ -1717,6 +1721,7 @@ class GdbCmd_RemoteTarget : public DebuggerCmd
                     break;
             }
 
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(m_Cmd);
             if (!m_Cmd.IsEmpty())
                 driver->Log(_("Connecting to remote target"));
             else

@@ -79,10 +79,10 @@ void BacktraceDlg::Reload()
     m_list->DeleteAllItems();
 
     int active_frame = plugin->GetActiveStackFrame();
-    int active_frame_index;
+    int active_frame_index = 0;
     for (int ii = 0; ii < plugin->GetStackFrameCount(); ++ii)
     {
-        cbStackFrame::ConstPointer frame = plugin->GetStackFrame(ii);
+        cb::shared_ptr<const cbStackFrame> frame = plugin->GetStackFrame(ii);
         wxString addr, num;
 
         if(frame->GetAddress())

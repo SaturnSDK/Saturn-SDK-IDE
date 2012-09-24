@@ -45,16 +45,16 @@ class wxsItemResData;
 /** \brief Class managing creation, destruction and enumeration of supported
  *         items
  *
- * All public functinos are static which means that this class is something
+ * All public functions are static which means that this class is something
  * like singleton but using static members for global operations.
  * Each instance of this class does represent one wxsItem - provides it's info
  * and is able to build this item.
- * Addind new supported item to factory is done by deriving other class from
+ * Adding new supported item to factory is done by deriving other class from
  * this one and writing it's
  */
 class wxsItemFactory
 {
-	public:
+    public:
 
         /** \brief Creating item with given name */
         static wxsItem* Build(const wxString& ClassName,wxsItemResData* Data);
@@ -65,13 +65,13 @@ class wxsItemFactory
          */
         static const wxsItemInfo* GetInfo(const wxString& ClassName);
 
-        /** \brief Getting onfo of first item */
+        /** \brief Getting info of first item */
         static const wxsItemInfo* GetFirstInfo();
 
         /** \brief Continuing getting item infos */
         static const wxsItemInfo* GetNextInfo();
 
-        /** \brief Getting global image list with enteries for items
+        /** \brief Getting global image list with entries for items
          *
          * In fact this function takes image list from resource browser
          */
@@ -81,23 +81,23 @@ class wxsItemFactory
         static int LoadImage(const wxString& Name);
 
         /** \brief Ctor */
-		wxsItemFactory(const wxsItemInfo* Info);
+        wxsItemFactory(const wxsItemInfo* Info);
 
-		/** \brief Extra ctor for templates - uses class name from param.
-		 *         It may be used when Info is going to be created
-		 *         inside constructor.
-		 */
+        /** \brief Extra ctor for templates - uses class name from param.
+         *         It may be used when Info is going to be created
+         *         inside constructor.
+         */
         wxsItemFactory(const wxsItemInfo* Info,wxString ClassName);
 
         /** \brief Dctor */
-		virtual ~wxsItemFactory();
+        virtual ~wxsItemFactory();
 
     protected:
 
         /** \brief Building item */
         virtual wxsItem* OnBuild(wxsItemResData* Data) = 0;
 
-	private:
+    private:
 
         WX_DECLARE_STRING_HASH_MAP(wxsItemFactory*,ItemMapT);
 

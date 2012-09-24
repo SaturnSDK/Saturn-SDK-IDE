@@ -39,10 +39,10 @@ namespace
         _T("#include \"$(Include)\"\n")
         _T("\n")
         _T("$(InternalHeadersPch)")
-        + wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),_T("$(ClassName)")) + _T("\n") +
+        + wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),_T("$(ClassName)")) + _T("\n")
         + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
-        + wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),_T("$(ClassName)")) + _T("\n") +
+        + wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),_T("$(ClassName)")) + _T("\n")
         + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
         _T("BEGIN_EVENT_TABLE($(ClassName),$(BaseClassName))\n")
@@ -457,7 +457,7 @@ bool wxsItemRes::CreateNewResource(NewResourceParams& Params)
                         break;
                     }
                     Cnt++;
-                    WxsName = wxString::Format(_T("%s%d.wxs"),WxsNameBase.c_str(),Cnt);
+                    WxsName = wxString::Format(_T("%s%d.wxs"),WxsNameBase.wx_str(),Cnt);
                 }
 
                 m_WxsFileName = WxsName;

@@ -22,48 +22,30 @@
     #include <wx/docview.h> // recent files history
 #endif
 
-#ifndef CB_FOR_CONSOLE
 #if defined(__WXGTK__) || defined(__WXMOTIF__) || defined(__WXMAC__) || defined(__WXMGL__) || defined(__WXX11__)
     #include "resources/icons/app.xpm"
 #endif
 
 #include <wx/taskbar.h>
 #include <wx/splash.h>
-#endif // #ifndef CB_FOR_CONSOLE
-
 #include <wx/snglinst.h>
 #include "manager.h"
-#ifndef CB_FOR_CONSOLE
 #include "main.h"
-#else // #ifndef CB_FOR_CONSOLE
-#include "cbplugin.h"
-#include "cbproject.h"
-#endif // #ifndef CB_FOR_CONSOLE
 
-#ifndef CB_FOR_CONSOLE
 class cbSplashScreen;
 
 class CodeBlocksApp : public wxApp
-#else // #ifndef CB_FOR_CONSOLE
-class CodeBlocksApp : public wxAppConsole
-#endif // #ifndef CB_FOR_CONSOLE
 {
     public:
         virtual bool OnInit();
         virtual int OnExit();
         virtual int OnRun();
         wxString GetAppPath() const;
-#ifndef CB_FOR_CONSOLE
         int ParseCmdLine(MainFrame* handlerFrame);
-#else // #ifndef CB_FOR_CONSOLE
-        int ParseCmdLine();
-#endif // #ifndef CB_FOR_CONSOLE
         void OnAppActivate(wxActivateEvent& event);
         bool OnCmdLineParsed(wxCmdLineParser& parser);
         void OnFatalException();
-#ifndef CB_FOR_CONSOLE
         void LoadDelayedFiles(MainFrame* frame); // command line or DDE (if available) files
-#endif // #ifndef CB_FOR_CONSOLE
         void SetAutoFile(wxString& file); // method to set m_AutoFile
 #ifdef __WXMAC__
         // in response of an open-document apple event
@@ -73,16 +55,12 @@ class CodeBlocksApp : public wxAppConsole
 #endif
     protected:
         void OnBatchBuildDone(CodeBlocksEvent& event);
-#ifndef CB_FOR_CONSOLE
         void OnTBIconLeftDown(wxTaskBarIconEvent& event);
-#endif // #ifndef CB_FOR_CONSOLE
         bool LoadConfig();
         void InitDebugConsole();
         void InitExceptionHandler();
         bool InitXRCStuff();
-#ifndef CB_FOR_CONSOLE
         MainFrame* InitFrame();
-#endif // #ifndef CB_FOR_CONSOLE
         void CheckVersion();
         void InitLocale();
         int BatchJob();
@@ -96,10 +74,8 @@ class CodeBlocksApp : public wxAppConsole
         wxString m_Script;
         wxString m_AutoFile; // --file foo.cpp[:line]
 
-#ifndef CB_FOR_CONSOLE
         wxScrollingDialog* m_pBatchBuildDialog;
         MainFrame* m_Frame;
-#endif // #ifndef CB_FOR_CONSOLE
         wxSingleInstanceChecker* m_pSingleInstance;
 
         bool m_Batch;

@@ -45,7 +45,7 @@ namespace
 
 /*! \brief Ctor
  *
- * \param Data wxsItemResData*	The control's resource data.
+ * \param Data wxsItemResData*    The control's resource data.
  *
  */
 wxsSimpleHtmlListBox::wxsSimpleHtmlListBox(wxsItemResData *Data):
@@ -53,8 +53,7 @@ wxsSimpleHtmlListBox::wxsSimpleHtmlListBox(wxsItemResData *Data):
         Data,
         &Reg.Info,
         wxsSimpleHtmlListBoxEvents,
-        wxsSimpleHtmlListBoxStyles,
-        flVariable | flId | flPosition | flSize | flEnabled | flFocused | flHidden | flColours  | flToolTip | flHelpText | flSubclass | flMinMaxSize | flExtraCode),
+        wxsSimpleHtmlListBoxStyles),
     DefaultSelection(-1)
 {
 }
@@ -78,11 +77,7 @@ void wxsSimpleHtmlListBox::OnBuildCreatingCode()
                     {
                         Codef(_T("%ASetSelection( "));
                     }
-#if wxCHECK_VERSION(2, 9, 0)
                     Codef(_T("%AAppend(%t)"), ArrayChoices[i].wx_str());
-#else
-                    Codef(_T("%AAppend(%t)"), ArrayChoices[i].c_str());
-#endif
                     if(DefaultSelection == (int)i)
                     {
                         Codef(_T(" )"));
@@ -101,11 +96,11 @@ void wxsSimpleHtmlListBox::OnBuildCreatingCode()
     }
 }
 
-/*! \brief	Build the control preview.
+/*! \brief    Build the control preview.
  *
- * \param parent wxWindow*	The parent window.
- * \param flags long				The control flags.
- * \return wxObject* 				The constructed control.
+ * \param parent wxWindow*    The parent window.
+ * \param flags long                The control flags.
+ * \return wxObject*                 The constructed control.
  *
  */
 wxObject *wxsSimpleHtmlListBox::OnBuildPreview(wxWindow *Parent, long Flags)
@@ -125,7 +120,7 @@ wxObject *wxsSimpleHtmlListBox::OnBuildPreview(wxWindow *Parent, long Flags)
 
 /*! \brief Enumerate the control's properties.
  *
- * \param flags long	The control flags.
+ * \param flags long    The control flags.
  * \return void
  *
  */

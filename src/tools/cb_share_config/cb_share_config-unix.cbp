@@ -18,6 +18,8 @@
 			<Add alias="All" targets="default;" />
 		</VirtualTargets>
 		<Compiler>
+			<Add option="-Wextra" />
+			<Add option="-Wall" />
 			<Add option="-Ulinux" />
 			<Add option="-Uunix" />
 			<Add option="`wx-config --cflags`" />
@@ -34,12 +36,10 @@
 		<Linker>
 			<Add option="`wx-config --libs`" />
 			<Add library="txml" />
-			<Add library="codeblocks" />
 			<Add library="wxpropgrid" />
 			<Add directory="../../base/tinyxml" />
 			<Add directory="../../devel" />
 		</Linker>
-		<Unit filename="../../base/tinyxml/tinywxuni.cpp" />
 		<Unit filename="app.cpp" />
 		<Unit filename="app.h" />
 		<Unit filename="mainframe.cpp" />

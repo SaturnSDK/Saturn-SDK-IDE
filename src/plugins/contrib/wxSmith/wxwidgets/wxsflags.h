@@ -41,6 +41,7 @@ namespace wxsFlags
     const long flSubclass  = 0x0000800;  ///< \brief Item is using subclassing
     const long flMinMaxSize= 0x0001000;  ///< \brief Item is using SetMinSize / SetMaxSize functions
     const long flExtraCode = 0x0002000;  ///< \brief Item is using extra item initialization code
+    const long flValidator = 0x0004000;  ///< \brief Item is using specific validator (not wxDefaultValidator)
 
     const long flFile      = 0x8000000;  ///< \brief Edition in file mode
     const long flSource    = 0x4000000;  ///< \brief Edition in source mode
@@ -51,11 +52,42 @@ namespace wxsFlags
     const long flLocal     = 0x0200000;  ///< \brief Flag set when current item is used only locally while building resource's content (is not member of class)
     const long flRoot      = 0x0100000;  ///< \brief Flag set when current item is root item of resource
 
+    const long flWidget    = flVariable
+                           | flId
+                           | flPosition
+                           | flSize
+                           | flEnabled
+                           | flFocused
+                           | flHidden
+                           | flColours
+                           | flToolTip
+                           | flFont
+                           | flHelpText
+                           | flSubclass
+                           | flMinMaxSize
+                           | flExtraCode
+                           | flValidator; ///< \brief Default properties flags used by widgets for convenience
+
+    const long flContainer = flVariable
+                           | flId
+                           | flPosition
+                           | flSize
+                           | flEnabled
+                           | flFocused
+                           | flHidden
+                           | flColours
+                           | flToolTip
+                           | flFont
+                           | flHelpText
+                           | flSubclass
+                           | flMinMaxSize
+                           | flExtraCode; ///< \brief Default properties flags used by container widgets for convenience
+
     // Preview flags
     const long pfExact     = 0x0000001;  ///< \brief Notify to create exact preview (without any editor-like goodies)
 
     // Header flags
-    const long hfLocal     = 0x0000001;  ///< \brief Header is neede only locally (while manually generating resource)
+    const long hfLocal     = 0x0000001;  ///< \brief Header is needed only locally (while manually generating resource)
     const long hfInPCH     = 0x0000002;  ///< \brief This header has been included in default pch file
     const long hfForbidFwd = 0x0000004;  ///< \brief This header (when included in resource's header file) can not be replaced by forward declaration
 }

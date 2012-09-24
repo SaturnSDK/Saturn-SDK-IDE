@@ -67,7 +67,7 @@ class DLLIMPORT cbEditor : public EditorBase
         };
 
         /** Don't use this. It throws an exception if you do. */
-        virtual void operator=(const cbEditor& /*rhs*/){ cbThrow(_T("Can't assign an cbEditor* !!!")); }
+        void operator=(const cbEditor& /*rhs*/){ cbThrow(_T("Can't assign an cbEditor* !!!")); }
 
         // properties
 
@@ -231,6 +231,7 @@ class DLLIMPORT cbEditor : public EditorBase
 
         /** Refresh all markers for the breakpoints (only the markers for the current debugger will be shown) */
         void RefreshBreakpointMarkers();
+
         /** Toggle bookmark at specified line. If @c line is -1, use current line. */
         void ToggleBookmark(int line = -1);
 
@@ -346,6 +347,7 @@ class DLLIMPORT cbEditor : public EditorBase
         void DestroySplitView();
 
         void DoInitializations(const wxString& filename, LoaderBase* fileLdr = 0);
+
         void BreakpointMarkerToggle(int line);
 
         // variables

@@ -34,7 +34,9 @@ namespace
         WXS_ST(wxDIRCTRL_DIR_ONLY)
         WXS_ST(wxDIRCTRL_3D_INTERNAL)
         WXS_ST(wxDIRCTRL_SELECT_FIRST)
+#if !wxCHECK_VERSION(2, 9, 0)
         WXS_ST(wxDIRCTRL_SHOW_FILTERS)
+#endif
         WXS_ST(wxDIRCTRL_EDIT_LABELS)
         WXS_ST_DEFAULTS()
     WXS_ST_END()
@@ -60,11 +62,7 @@ void wxsGenericDirCtrl::OnBuildCreatingCode()
         case wxsCPP:
         {
             AddHeader(_T("<wx/dirctrl.h>"),GetInfo().ClassName,0);
-            #if wxCHECK_VERSION(2, 9, 0)
             Codef(_T("%C(%W, %I, %n, %P, %S, %T, %n, %d, %N);\n"),DefaultFolder.wx_str(),Filter.wx_str(),DefaultFilter);
-            #else
-            Codef(_T("%C(%W, %I, %n, %P, %S, %T, %n, %d, %N);\n"),DefaultFolder.c_str(),Filter.c_str(),DefaultFilter);
-            #endif
             BuildSetupWindowCode();
             return;
         }

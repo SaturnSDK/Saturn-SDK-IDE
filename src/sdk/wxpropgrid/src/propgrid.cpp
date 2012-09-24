@@ -491,6 +491,8 @@ void wxPropertyGridInterface::DeletePropertyChoice( wxPGPropArg id,
 //     also need to offer option to use simpler approach.
 // -----------------------------------------------------------------------
 
+#define wxPG_USE_WXMODULE 0
+
 #ifndef wxPG_USE_WXMODULE
     #define wxPG_USE_WXMODULE 1
 #endif
@@ -10774,7 +10776,7 @@ bool wxPropertyGridInterface::Collapse( wxPGPropArg id )
     wxPG_PROP_ARG_CALL_PROLOG_RETVAL(false)
     wxPropertyGrid* pg = p->GetGridIfDisplayed();
     if ( pg )
-        return pg->DoCollapse(p, true /* CB modification */);
+        return pg->DoCollapse(p, true /* C::B patch */);
 
     return p->GetParentState()->DoCollapse(p);
 }
@@ -10786,7 +10788,7 @@ bool wxPropertyGridInterface::Expand( wxPGPropArg id )
     wxPG_PROP_ARG_CALL_PROLOG_RETVAL(false)
     wxPropertyGrid* pg = p->GetGridIfDisplayed();
     if ( pg )
-        return pg->DoExpand(p, true /* CB modification */);
+        return pg->DoExpand(p, true /* C::B patch */);
 
     return p->GetParentState()->DoExpand(p);
 }

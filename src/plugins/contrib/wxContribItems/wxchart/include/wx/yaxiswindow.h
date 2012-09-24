@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: yaxiswindow.h 7559 2011-11-04 10:19:48Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +86,7 @@ private:
     void OnPaint(wxPaintEvent &event);
     void OnMouse(wxMouseEvent &event);
 
-    DECLARE_CLASS(wxYAxisWindow)
+    DECLARE_DYNAMIC_CLASS(wxYAxisWindow)
     DECLARE_EVENT_TABLE()
 };
 

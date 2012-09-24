@@ -25,7 +25,7 @@ public:
     // Called from external:
     void Init(NativeParser* np, CCTreeCtrl* treeTop, CCTreeCtrl* treeBottom,
               const wxString& active_filename, void* user_data/*active project*/,
-              const BrowserOptions& bo, TokensTree* tt,
+              const BrowserOptions& bo, TokenTree* tt,
               int idThreadEvent);
 
     // Called from external, BuildTree():
@@ -67,13 +67,13 @@ protected:
 
 private:
     // Called from AddChildrenOf(), AddAncestorsOf(), AddDescendantsOf():
-    bool AddNodes(CCTreeCtrl* tree, wxTreeItemId parent, const TokenIdxSet& tokens,
+    bool AddNodes(CCTreeCtrl* tree, wxTreeItemId parent, const TokenIdxSet* tokens,
                   short int tokenKindMask = 0xffff, int tokenScopeMask = 0, bool allowGlobals = false);
 
     // Called from RemoveInvalidNodes(), AddNodes(), CreateSpecialFolder():
-    bool TokenMatchesFilter(Token* token, bool locked = false);
+    bool TokenMatchesFilter(const Token* token, bool locked = false);
     // Called from AddNodes():
-    bool TokenContainsChildrenOfKind(Token* token, int kind);
+    bool TokenContainsChildrenOfKind(const Token* token, int kind);
 
     // Called from BuildTree():
     void SaveExpandedItems(CCTreeCtrl* tree, wxTreeItemId parent, int level);
@@ -91,10 +91,10 @@ protected:
     wxString         m_ActiveFilename;
     void*            m_UserData; // active project
     BrowserOptions   m_BrowserOptions;
-    TokensTree*      m_TokensTree;
+    TokenTree*       m_TokenTree;
 
     // pair of current-file-filter
-    TokenFilesSet    m_CurrentFileSet;
+    TokenFileSet     m_CurrentFileSet;
     TokenIdxSet      m_CurrentTokenSet;
     TokenIdxSet      m_CurrentGlobalTokensSet;
 

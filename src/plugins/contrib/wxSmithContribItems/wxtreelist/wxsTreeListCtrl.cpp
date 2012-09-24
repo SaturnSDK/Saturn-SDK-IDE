@@ -68,7 +68,9 @@ WXS_ST (wxTR_ROW_LINES)
 WXS_ST (wxTR_HAS_VARIABLE_ROW_HEIGHT)
 WXS_ST (wxTR_SINGLE)
 WXS_ST (wxTR_MULTIPLE)
+#if !wxCHECK_VERSION(2, 9, 0)
 WXS_ST (wxTR_EXTENDED)
+#endif
 WXS_ST (wxTR_DEFAULT_STYLE)
 WXS_ST (wxTR_VIRTUAL)
 WXS_ST_DEFAULTS()
@@ -244,7 +246,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
         ss.Trim (false);
         if (ss[0] == '!') { continue; }
 
-        Codef (_ ("%AAddColumn(%t, %d);\n"), ss.c_str(), m_ColWidth);
+        Codef (_ ("%AAddColumn(%t, %d);\n"), ss.wx_str(), static_cast<int>(m_ColWidth));
         n += 1;
     };
 
@@ -268,7 +270,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 
 // add declaration for that many IDs
 
-    ss.Printf (_ ("wxTreeItemId    %s[%d];"), idname.c_str(), n);
+    ss.Printf (_ ("wxTreeItemId    %s[%d];"), idname.wx_str(), n);
     AddDeclaration (ss);
 
 // make sure there is no false readings
@@ -277,7 +279,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 
 // make our own root item
 
-    Codef (_ ("%s[0] = %AAddRoot(_(\"(root)\"));\n"), idname.c_str() );
+    Codef (_ ("%s[0] = %AAddRoot(_(\"(root)\"));\n"), idname.wx_str() );
     id[0] = 0;
 
 // and now each item in the tree data list
@@ -318,7 +320,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 
 // make the base item
 
-        Codef (_ ("%s = %AAppendItem(%s, _(\"%s\"));\n"), ss.c_str(), pp.c_str(), tt.c_str() );
+        Codef (_ ("%s = %AAppendItem(%s, _(\"%s\"));\n"), ss.wx_str(), pp.wx_str(), tt.wx_str() );
 
 // now each of the sub-items
 
@@ -326,13 +328,13 @@ void wxsTreeListCtrl::BuildItemCode (void)
         {
             if (j >= m_ColCount) { break; }
             tt = items.Item (j);
-            Codef (_ ("%ASetItemText(%s, %d, %t);\n"), ss.c_str(), j, tt.c_str() );
+            Codef (_ ("%ASetItemText(%s, %d, %t);\n"), ss.wx_str(), j, tt.wx_str() );
         };
     };
 
 // show everything
 
-    Codef (_ ("%AExpandAll(%s[0]);\n"), idname.c_str() );
+    Codef (_ ("%AExpandAll(%s[0]);\n"), idname.wx_str() );
 
 // read-only or editable?
 

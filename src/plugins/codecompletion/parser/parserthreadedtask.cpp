@@ -20,7 +20,7 @@
 
 #include "cclogger.h"
 #include "parser.h"
-#include "tokenstree.h"
+#include "tokentree.h"
 
 #define CC_PARSERTHREADEDTASK_DEBUG_OUTPUT 0
 
@@ -126,8 +126,8 @@ MarkFileAsLocalThreadedTask::MarkFileAsLocalThreadedTask(Parser* parser, cbProje
 int MarkFileAsLocalThreadedTask::Execute()
 {
     // mark all project files as local
-    for (FilesList::iterator it  = m_Project->GetFilesList().begin();
-                             it != m_Project->GetFilesList().end(); ++it)
+    for (FilesList::const_iterator it  = m_Project->GetFilesList().begin();
+                                   it != m_Project->GetFilesList().end(); ++it)
     {
         ProjectFile* pf = *it;
         if (!pf)
@@ -135,13 +135,13 @@ int MarkFileAsLocalThreadedTask::Execute()
 
         if (ParserCommon::FileType(pf->relativeFilename) != ParserCommon::ftOther)
         {
-            TokensTree* tree = m_Parser->GetTokensTree();
+            TokenTree* tree = m_Parser->GetTokenTree();
 
-            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
             tree->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, m_Project);
 
-            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
         }
     }
 

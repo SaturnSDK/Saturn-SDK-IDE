@@ -6,8 +6,6 @@
 #ifndef MENUITEMSMANAGER_H
 #define MENUITEMSMANAGER_H
 
-#ifndef CB_FOR_CONSOLE
-
 #include "settings.h"
 #include <wx/menu.h>
 
@@ -43,7 +41,6 @@ class DLLIMPORT MenuItemsManager
         bool m_AutoClearOnDestroy; // if true, the menus are cleared in the destructor
     private:
 };
-#endif // #ifndef CB_FOR_CONSOLE
 
 #endif // MENUITEMSMANAGER_H
 

@@ -106,7 +106,6 @@ void CompileTargetBase::SetImportLibraryFilename(const wxString& filename)
     }
     else if (m_ImportLibraryFilename == filename)
         return;
-
     m_ImportLibraryFilename = UnixFilename(filename);
 }
 
@@ -120,7 +119,6 @@ void CompileTargetBase::SetDefinitionFileFilename(const wxString& filename)
     }
     else if (m_DefinitionFileFilename == filename)
         return;
-
     m_DefinitionFileFilename = UnixFilename(filename);
 }
 

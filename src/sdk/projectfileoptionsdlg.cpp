@@ -224,21 +224,13 @@ void ProjectFileOptionsDlg::OnReadOnlyCheck(wxCommandEvent& event)
     {
         // make read-only
         if ( !ToggleFileReadOnly(true) )
-            #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Unable to set file '%s' read-only (probably missing access rights)."), m_FileNameStr.wx_str()));
-            #else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Unable to set file '%s' read-only (probably missing access rights)."), m_FileNameStr.c_str()));
-            #endif
     }
     else
     {
         // make writeable
         if ( !ToggleFileReadOnly(false) )
-            #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Unable to set file '%s' writeable (probably missing access rights)."), m_FileNameStr.wx_str()));
-            #else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Unable to set file '%s' writeable (probably missing access rights)."), m_FileNameStr.c_str()));
-            #endif
     }
 
     // Update UI
@@ -354,7 +346,7 @@ void ProjectFileOptionsDlg::FillGeneralProperties()
             XRCCTRL(*this, "staticEmptyLines",   wxStaticText)->SetLabel(wxString::Format(_T("%ld"), empty_lines));
             XRCCTRL(*this, "staticActualLines",  wxStaticText)->SetLabel(wxString::Format(_T("%ld"), code_lines + codecomments_lines));
             XRCCTRL(*this, "staticCommentLines", wxStaticText)->SetLabel(wxString::Format(_T("%ld"), comment_lines));
-            XRCCTRL(*this, "staticEmptyLines", wxStaticText)->GetContainingSizer()->Layout();
+            XRCCTRL(*this, "staticEmptyLines",   wxStaticText)->GetContainingSizer()->Layout();
         }
         wxFile file(m_FileName.GetFullPath());
         if (file.IsOpened())

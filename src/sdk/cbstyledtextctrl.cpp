@@ -15,6 +15,7 @@
 #include "sdk_precomp.h"
 #include "cbstyledtextctrl.h"
 #ifndef CB_PRECOMP
+    #include <wx/gdicmn.h> // for wxPoint
     #include <wx/string.h>
     #include <wx/timer.h>
 
@@ -60,6 +61,13 @@ cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos
 cbStyledTextCtrl::~cbStyledTextCtrl()
 {
     //dtor
+    // remove remaining event-handlers to avoid asserts in wx2.9
+    // the ymight be added by plugins (at least keybinder does it), but can not
+    // be removed by them, because the EditorCclose-event is sent from EditorBase
+    // after destroying the underlying editors (e.g. cbStyledTextCtrl).
+    // Doing this here should not harm.
+    while(GetEventHandler() != this)
+        RemoveEventHandler(GetEventHandler());
 }
 
 // events
@@ -126,9 +134,8 @@ void cbStyledTextCtrl::OnMouseMiddleDown(wxMouseEvent& event)
 
 void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
 {
-    bool emulateDwellStart = false;
-
     m_lastSelectedText = GetSelectedText();
+    bool emulateDwellStart = false;
 
     switch (event.GetKeyCode())
     {
@@ -183,6 +190,7 @@ void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
         break;
 
         case WXK_RETURN:
+        case WXK_NUMPAD_ENTER:
         case WXK_ESCAPE:
         {
             if (m_tabSmartJump)

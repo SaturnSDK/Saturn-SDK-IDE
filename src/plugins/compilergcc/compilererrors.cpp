@@ -9,13 +9,9 @@
 
 #include "sdk.h"
 #ifndef CB_PRECOMP
-    #ifndef CB_FOR_CONSOLE
-        #include "cbeditor.h"
-    #endif // #ifndef CB_FOR_CONSOLE
+    #include "cbeditor.h"
     #include "cbproject.h"
-    #ifndef CB_FOR_CONSOLE
-        #include "editormanager.h"
-    #endif // #ifndef CB_FOR_CONSOLE
+    #include "editormanager.h"
     #include "manager.h"
     #include "projectfile.h"
     #include "projectmanager.h"
@@ -47,7 +43,6 @@ void CompilerErrors::AddError(CompilerLineType lt, cbProject* project, const wxS
     DoAddError(err);
 }
 
-#ifndef CB_FOR_CONSOLE
 void CompilerErrors::GotoError(int nr)
 {
     if (m_Errors.GetCount() == 0 || nr < 0 || nr > (int)m_Errors.GetCount() - 1)
@@ -105,13 +100,10 @@ void CompilerErrors::Previous()
 
     DoGotoError(m_Errors[m_ErrorIndex]);
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerErrors::Clear()
 {
-#ifndef CB_FOR_CONSOLE
     DoClearErrorMarkFromAllEditors();
-#endif // #ifndef CB_FOR_CONSOLE
     m_Errors.Clear();
     m_ErrorIndex = -1;
 }
@@ -139,7 +131,6 @@ int CompilerErrors::ErrorLineHasMore(const wxString& filename, long int line) co
     return -1;
 }
 
-#ifndef CB_FOR_CONSOLE
 void CompilerErrors::DoGotoError(const CompileError& error)
 {
     if (error.line <= 0)
@@ -246,7 +237,6 @@ bool CompilerErrors::HasPreviousError() const
 {
     return m_ErrorIndex > 0;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 wxString CompilerErrors::GetErrorString(int index)
 {

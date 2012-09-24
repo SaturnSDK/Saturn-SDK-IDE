@@ -32,6 +32,8 @@ WX_DECLARE_HASH_MAP(wxString, pfCustomBuild, wxStringHash, wxStringEqual, pfCust
 class ProjectFile;
 typedef std::vector<ProjectFile*> ProjectFilesVector;
 
+WX_DEFINE_ARRAY_INT(int, editorFoldLinesArray);
+
 /** Represents a file in a Code::Blocks project. */
 class ProjectFile
 {
@@ -64,13 +66,11 @@ class ProjectFile
           * @param targetName The build target's name to remove this file from. */
         void RemoveBuildTarget(const wxString& targetName);
 
-#ifndef CB_FOR_CONSOLE
         /** Show the file properties dialog.
           * @param parent The parent window for the dialog (can be NULL).
           * @return True if the user closed the dialog with "OK", false if closed it with "Cancel".
           */
         bool ShowOptions(wxWindow* parent);
-#endif // #ifndef CB_FOR_CONSOLE
 
         // take as example the relative file sdk/cbProject.cpp
         /** @return The relative (to the project) filename without extension. */
@@ -95,14 +95,12 @@ class ProjectFile
           * @return The details for this project file for the specified build target. */
         const pfDetails& GetFileDetails(ProjectBuildTarget* target);
 
-#ifndef CB_FOR_CONSOLE
         /** Set the visual state (modified, read-only, etc).
           * @param state The new visual state. */
         void SetFileState(FileVisualState state);
 
         /** @return The visual state (modified, read-only, etc). */
         FileVisualState GetFileState() const;
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Modify 'Use custom command to build this file' for a compilerId. */
         void SetUseCustomBuildCommand(const wxString& compilerId, bool useCustomBuildCommand);
@@ -173,6 +171,9 @@ class ProjectFile
         /** The position of the editor-tab for this file. */
         int editorTabPos; // layout info
 
+        /** Fold lines */
+        wxArrayInt editorFoldLinesArray; // layout info
+
         /** A map for custom builds. Key is compiler ID, value is pfCustomBuild struct. */
         pfCustomBuildMap customBuild;
 
@@ -202,7 +203,7 @@ class ProjectFile
         /** Returns the wxTreeItemId for the file */
         const wxTreeItemId& GetTreeItemId() const { return m_TreeItemId; }
 
-        /** Compare relative names of rojectfiles.
+        /** Compare relative names of projectfiles.
           * Static helper function to sort array of projectfiles.
           * Needed because the order of files in a hashset is not guaranteed.
           * @param item1 first projectfile.

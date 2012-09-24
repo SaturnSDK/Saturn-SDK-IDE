@@ -500,6 +500,10 @@ static void ColouriseBatchDoc(
 	}
 }
 
+#define DIFF_BUFFER_START_SIZE 16
+// Note that ColouriseDiffLine analyzes only the first DIFF_BUFFER_START_SIZE
+// characters of each line to classify the line.
+
 static void ColouriseDiffLine(char *lineBuffer, int endLine, Accessor &styler) {
 	// It is needed to remember the current state to recognize starting
 	// comment lines before the first "diff " or "--- ". If a real
@@ -556,20 +560,27 @@ static void ColouriseDiffLine(char *lineBuffer, int endLine, Accessor &styler) {
 }
 
 static void ColouriseDiffDoc(unsigned int startPos, int length, int, WordList *[], Accessor &styler) {
-	char lineBuffer[1024];
+	char lineBuffer[DIFF_BUFFER_START_SIZE] = "";
 	styler.StartAt(startPos);
 	styler.StartSegment(startPos);
 	unsigned int linePos = 0;
 	for (unsigned int i = startPos; i < startPos + length; i++) {
-		lineBuffer[linePos++] = styler[i];
-		if (AtEOL(styler, i) || (linePos >= sizeof(lineBuffer) - 1)) {
-			// End of line (or of line buffer) met, colourise it
-			lineBuffer[linePos] = '\0';
+		if (AtEOL(styler, i)) {
+			if (linePos < DIFF_BUFFER_START_SIZE) {
+				lineBuffer[linePos] = 0;
+			}
 			ColouriseDiffLine(lineBuffer, i, styler);
 			linePos = 0;
+		} else if (linePos < DIFF_BUFFER_START_SIZE - 1) {
+			lineBuffer[linePos++] = styler[i];
+		} else if (linePos == DIFF_BUFFER_START_SIZE - 1) {
+			lineBuffer[linePos++] = 0;
 		}
 	}
 	if (linePos > 0) {	// Last line does not have ending characters
+		if (linePos < DIFF_BUFFER_START_SIZE) {
+			lineBuffer[linePos] = 0;
+		}
 		ColouriseDiffLine(lineBuffer, startPos + length - 1, styler);
 	}
 }
@@ -846,17 +857,19 @@ static void ColouriseMakeLine(
 	while ((i < lengthLine) && isspacechar(lineBuffer[i])) {
 		i++;
 	}
-	if (lineBuffer[i] == '#') {	// Comment
-		styler.ColourTo(endPos, SCE_MAKE_COMMENT);
-		return;
-	}
-	if (lineBuffer[i] == '!') {	// Special directive
-		styler.ColourTo(endPos, SCE_MAKE_PREPROCESSOR);
-		return;
+	if (i < lengthLine) {
+		if (lineBuffer[i] == '#') {	// Comment
+			styler.ColourTo(endPos, SCE_MAKE_COMMENT);
+			return;
+		}
+		if (lineBuffer[i] == '!') {	// Special directive
+			styler.ColourTo(endPos, SCE_MAKE_PREPROCESSOR);
+			return;
+		}
 	}
 	int varCount = 0;
 	while (i < lengthLine) {
-		if (lineBuffer[i] == '$' && lineBuffer[i + 1] == '(') {
+		if (((i + 1) < lengthLine) && (lineBuffer[i] == '$' && lineBuffer[i + 1] == '(')) {
 			styler.ColourTo(startLine + i - 1, state);
 			state = SCE_MAKE_IDENTIFIER;
 			varCount++;
@@ -1015,7 +1028,7 @@ static int RecogniseErrorListLine(const char *lineBuffer, unsigned int lengthLin
 		bool initialTab = (lineBuffer[0] == '\t');
 		bool initialColonPart = false;
 		enum { stInitial,
-			stGccStart, stGccDigit, stGcc,
+			stGccStart, stGccDigit, stGccColumn, stGcc,
 			stMsStart, stMsDigit, stMsBracket, stMsVc, stMsDigitComma, stMsDotNet,
 			stCtagsStart, stCtagsStartString, stCtagsStringDollar, stCtags,
 			stUnrecognized
@@ -1047,11 +1060,17 @@ static int RecogniseErrorListLine(const char *lineBuffer, unsigned int lengthLin
 				state = Is1To9(ch) ? stGccDigit : stUnrecognized;
 			} else if (state == stGccDigit) {	// <filename>:<line>
 				if (ch == ':') {
-					state = stGcc;	// :9.*: is GCC
+					state = stGccColumn;	// :9.*: is GCC
 					startValue = i + 1;
-					break;
 				} else if (!Is0To9(ch)) {
 					state = stUnrecognized;
+				}
+			} else if (state == stGccColumn) {	// <filename>:<line>:<column>
+				if (!Is0To9(ch)) {
+					state = stGcc;
+					if (ch == ':')
+						startValue = i + 1;
+					break;
 				}
 			} else if (state == stMsStart) {	// <filename>(
 				state = Is0To9(ch) ? stMsDigit : stUnrecognized;

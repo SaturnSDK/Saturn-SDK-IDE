@@ -46,12 +46,9 @@ class wxsWidget: public wxsItem
 {
     public:
 
-        /** \brief Default properties flags used by widgets */
-        static const long flWidget = flVariable|flId|flPosition|flSize|flEnabled|flFocused|flHidden|flColours|flToolTip|flFont|flHelpText|flSubclass|flMinMaxSize|flExtraCode;
-
         /** \brief Ctor
-         *  \param Data data managment object handling this item
-         *  \param PropertiesFlags flags filtering sed base properties
+         *  \param Data data management object handling this item
+         *  \param PropertiesFlags flags filtering set base properties
          *         (see wxsBaseProperties for details)
          *  \param Info pointer to static widget info
          *  \param EventArray pointer to static set of events
@@ -59,11 +56,11 @@ class wxsWidget: public wxsItem
          *         provide styles by default
          */
         wxsWidget(
-            wxsItemResData* Data,
-            const wxsItemInfo* Info,
+            wxsItemResData*     Data,
+            const wxsItemInfo*  Info,
             const wxsEventDesc* EventArray = 0,
-            const wxsStyleSet* StyleSet=0,
-            long PropertiesFlags = flWidget);
+            const wxsStyleSet*  StyleSet = 0,
+            long                PropertiesFlags = flWidget);
 
     protected:
 

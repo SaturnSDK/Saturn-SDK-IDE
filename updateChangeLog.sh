@@ -6,7 +6,7 @@
 #
 # $Revision$
 # $Id$
-# $HeadURL$
+# $HeadURL:$
 #
 
 REV_TO=${1:-"HEAD"}

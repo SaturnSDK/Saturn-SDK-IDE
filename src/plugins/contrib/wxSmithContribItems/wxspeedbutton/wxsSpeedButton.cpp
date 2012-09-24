@@ -126,13 +126,13 @@ wxString    ss, tt;
 // create the button
 
     Codef(_T("%s = new wxSpeedButton(%W, %I, %t, %s, %d, %d, %d, %b, %P, %S, %T, %V, %N);\n"),
-        vname.c_str(), mLabel.c_str(), bname.c_str(), mGlyphCount, mMargin, n, mAllowAllUp);
+        vname.wx_str(), mLabel.wx_str(), bname.wx_str(), mGlyphCount, mMargin, n, mAllowAllUp);
     BuildSetupWindowCode();
 
 // and individual button settings
 
-    if (mButtonDown) Codef(_T("%s->SetDown(true);\n"), vname.c_str());
-    Codef(_T("%s->SetUserData(%d);\n"), vname.c_str(), mUserData);
+    if (mButtonDown) Codef(_T("%s->SetDown(true);\n"), vname.wx_str());
+    Codef(_T("%s->SetUserData(%d);\n"), vname.wx_str(), static_cast<int>(mUserData));
 }
 
 //------------------------------------------------------------------------------
@@ -152,13 +152,13 @@ wxString    s,v;
 // no image
 
     if ((mGlyph.Id.IsEmpty()) && (mGlyph.FileName.IsEmpty())) {
-        Codef(_T("wxBitmap %s = wxNullBitmap;\n"), v.c_str());
+        Codef(_T("wxBitmap %s = wxNullBitmap;\n"), v.wx_str());
     }
 
 // art-provider image
 
     else if (! mGlyph.Id.IsEmpty()) {
-        Codef(_T("wxBitmap %s(%i);\n"), v.c_str(), &mGlyph);
+        Codef(_T("wxBitmap %s(%i);\n"), v.wx_str(), &mGlyph);
     }
 
 // is it an XPM and do we want to #include it?
@@ -170,7 +170,7 @@ wxString    s,v;
         AddHeader(s, GetInfo().ClassName, 0);
 
         s = GetXPMName(mGlyph);
-        Codef(_T("wxBitmap %s(%s);\n"), v.c_str(), s.c_str());
+        Codef(_T("wxBitmap %s(%s);\n"), v.wx_str(), s.wx_str());
     }
 
 // else a normal image file
@@ -179,13 +179,13 @@ wxString    s,v;
         s = mGlyph.FileName;
         s.Replace(_("\\"), _("/"), true);
 
-        Codef(_T("wxBitmap %s(%t, wxBITMAP_TYPE_ANY);\n"), v.c_str(), s.c_str());
+        Codef(_T("wxBitmap %s(%t, wxBITMAP_TYPE_ANY);\n"), v.wx_str(), s.wx_str());
     }
 
 // an unknown and unexpected set of conditions
 
     else {
-        Codef(_T("wxBitmap %s = wxNullBitmap;\n"), v.c_str());
+        Codef(_T("wxBitmap %s = wxNullBitmap;\n"), v.wx_str());
     };
 }
 
@@ -229,30 +229,27 @@ wxString    s;
 // of the static char array defined by the file
 
 wxString    wxsSpeedButton::GetXPMName(wxsBitmapData &inData) {
-int         i,n;
-wxString    s,t,v;
-wxFileInputStream input( inData.FileName );
-wxTextInputStream txt( input );
+    wxFileInputStream input( inData.FileName );
+    wxTextInputStream txt( input );
 
 
 // this will be our return value
 
-    v = _T("");
+    wxString v = _T("");
 
 // read until EOF, keeping the last data name we find
 
-    i = 0;
     while (! input.Eof()) {
 
 // next line
 
-        s = txt.ReadLine();
+        wxString s = txt.ReadLine();
 //std::cout << "line " << i++ << ") " << s.mb_str() << std::endl;
 
 // the "static" keyword is optional under some compilers
 
         s.Trim(false);
-        n = s.Find(_T("static"));
+        int n = s.Find(_T("static"));
         if (n == 0) s.erase(0, 6);
 
 // but the "char" and "*" are required

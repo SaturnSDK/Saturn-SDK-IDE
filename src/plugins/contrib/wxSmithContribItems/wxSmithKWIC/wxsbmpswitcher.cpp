@@ -94,15 +94,11 @@ void wxsBmpSwitcher::OnBuildCreatingCode()
 				// Escape Windows path separators.
 				wxString sPath = Desc->sPath;
 				sPath.Replace(wxT("\\"), wxT("\\\\"));
-#if wxCHECK_VERSION(2, 9, 0)
 				Codef(_T("\t%AAddBitmap(new wxBitmap(wxImage(wxT(\"%s\"))));\n"), sPath.wx_str());
-#else
-				Codef(_T("\t%AAddBitmap(new wxBitmap(wxImage(wxT(\"%s\"))));\n"), sPath.c_str());
-#endif
 			}
 			// Default is 0. If state <= 0 or > number of bitmaps, use default.
 			if(m_iState > 0 && m_iState < (long)m_arrBmps.Count()){
-				Codef(_T("\t%ASetState(%d);\n"), m_iState);
+				Codef(_T("\t%ASetState(%d);\n"), static_cast<int>(m_iState));
 			}
 
 			BuildSetupWindowCode();
@@ -270,7 +266,7 @@ bool wxsBmpSwitcher::OnXmlWrite(TiXmlElement *Element, bool IsXRC, bool IsExtra)
 
     for(size_t i = 0;i < m_arrBmps.Count();i++){
         BmpDesc *Desc = m_arrBmps[i];
-        wxString s = wxString::Format(wxT("bitmap_%d"), i + 1);
+        wxString s = wxString::Format(wxT("bitmap_%lu"), static_cast<unsigned long>(i + 1));
         TiXmlElement *msg = new TiXmlElement(s.mb_str());
         msg->LinkEndChild(new TiXmlText(Desc->sPath.mb_str()));
         tags->LinkEndChild(msg);

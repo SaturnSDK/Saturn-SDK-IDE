@@ -101,10 +101,13 @@ void CompilerGNUARM::Reset()
     m_Options.AddOption(_("Stop compiling after first error"), _T("-Wfatal-errors"), category);
     m_Options.AddOption(_("Inhibit all warning messages"), _T("-w"), category);
     m_Options.AddOption(_("Have g++ follow the 1998 ISO C++ language standard"), _T("-std=c++98"), category);
+    m_Options.AddOption(_("Have g++ follow the coming C++0x ISO C++ language standard"), _T("-std=c++0x"), category);
+    m_Options.AddOption(_("Have g++ follow the C++11 ISO C++ language standard"), _T("-std=c++11"), category);
     m_Options.AddOption(_("Enable warnings demanded by strict ISO C and ISO C++"), _T("-pedantic"), category);
     m_Options.AddOption(_("Treat as errors the warnings demanded by strict ISO C and ISO C++"), _T("-pedantic-errors"), category);
     m_Options.AddOption(_("Warn if main() is not conformant"), _T("-Wmain"), category);
     m_Options.AddOption(_("Enable Effective-C++ warnings (thanks Scott Myers)"), _T("-Weffc++"), category);
+    m_Options.AddOption(_("zero as null pointer constant"), _T("-Wzero-as-null-pointer-constant"), category);
     m_Options.AddOption(_("Warn whenever a switch statement does not have a default case"), _T("-Wswitch-default"), category);
     m_Options.AddOption(_("Warn whenever a switch statement has an index of enumerated type and lacks a case for one or more of the named codes of that enumeration"), _T("-Wswitch-enum"), category);
     m_Options.AddOption(_("Warn if a user supplied include directory does not exist"), _T("-Wmissing-include-dirs"), category);

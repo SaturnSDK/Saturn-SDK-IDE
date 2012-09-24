@@ -6,8 +6,6 @@
 #ifndef SC_PLUGIN_H
 #define SC_PLUGIN_H
 
-#ifndef CB_FOR_CONSOLE
-
 #include "sc_base_types.h"
 #include <wx/dynarray.h>
 
@@ -25,6 +23,5 @@ namespace ScriptBindings
         void OnScriptModuleMenu(int id);
     }; // namespace ScriptPluginWrapper
 };
-#endif // #ifndef CB_FOR_CONSOLE
 
 #endif // SC_PLUGIN_H

@@ -28,7 +28,9 @@ namespace
 
     WXS_ST_BEGIN(wxsTextCtrlStyles,_T(""))
         WXS_ST(wxTE_NO_VSCROLL)
+#if !wxCHECK_VERSION(2, 9, 0)
         WXS_ST(wxTE_AUTO_SCROLL)
+#endif
         WXS_ST(wxTE_PROCESS_ENTER)
         WXS_ST(wxTE_PROCESS_TAB)
         WXS_ST(wxTE_MULTILINE)
@@ -73,11 +75,7 @@ void wxsTextCtrl::OnBuildCreatingCode()
         case wxsCPP:
         {
             AddHeader(_T("<wx/textctrl.h>"),GetInfo().ClassName,hfInPCH);
-            #if wxCHECK_VERSION(2, 9, 0)
             Codef(_T("%C(%W, %I, %t, %P, %S, %T, %V, %N);\n"),Text.wx_str());
-            #else
-            Codef(_T("%C(%W, %I, %t, %P, %S, %T, %V, %N);\n"),Text.c_str());
-            #endif
             if ( MaxLength > 0 ) Codef(_T("%ASetMaxLength(%d);\n"),MaxLength);
             BuildSetupWindowCode();
             return;

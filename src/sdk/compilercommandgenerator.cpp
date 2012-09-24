@@ -255,11 +255,7 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString&           macro,
         || (compiler->GetPrograms().LIB.IsEmpty()     && macro.Contains(_T("$lib_linker")))
         || (compiler->GetPrograms().WINDRES.IsEmpty() && macro.Contains(_T("$rescomp"))) )
     {
-        #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("GenerateCommandLine: Required compiler executable (%s) not found! Check the toolchain settings."), file.wx_str()));
-        #else
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("GenerateCommandLine: Required compiler executable (%s) not found! Check the toolchain settings."), file.c_str()));
-        #endif
         macro.Clear();
         return;
     }
@@ -457,9 +453,7 @@ void CompilerCommandGenerator::DoBuildScripts(cbProject* project, CompileTargetB
         }
         catch (SquirrelError& e)
         {
-#ifndef CB_FOR_CONSOLE
             Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
-#endif // #ifndef CB_FOR_CONSOLE
             m_ScriptsWithErrors.Add(script_nomacro);
         }
     }
@@ -767,6 +761,7 @@ wxString CompilerCommandGenerator::SetupCompilerOptions(Compiler* compiler, Proj
     result << GetStringFromArray(compiler->GetCompilerOptions(), _T(' ')) << _T(" ");
 
     Manager::Get()->GetMacrosManager()->ReplaceMacros(result, target);
+
     wxString bt = ExpandBackticks(result);
     SearchDirsFromBackticks(compiler, target, bt);
 
@@ -793,6 +788,7 @@ wxString CompilerCommandGenerator::SetupLinkerOptions(Compiler* compiler, Projec
 
     // linker options
     result << GetStringFromArray(compiler->GetLinkerOptions(), _T(' '));
+
     Manager::Get()->GetMacrosManager()->ReplaceMacros(result, target);
 
     wxString bt = ExpandBackticks(result);
@@ -1000,67 +996,7 @@ wxString CompilerCommandGenerator::GetProcessedIncludeDir(Compiler* compiler, Pr
   return inc_string;
 }
 
-/** Adds support for backtick'd expressions under windows. */
-wxString CompilerCommandGenerator::ExpandBackticks(wxString& str)
-{
-    wxString ret;
 
-    // this function is not windows-only anymore because we parse the backticked command's output
-    // for compiler/linker search dirs
-
-    size_t start = str.find(_T('`'));
-    if (start == wxString::npos)
-        return ret; // no backticks here
-    size_t end = str.find(_T('`'), start + 1);
-    if (end == wxString::npos)
-        return ret; // no ending backtick; error?
-
-    while (start != wxString::npos && end != wxString::npos)
-    {
-        wxString cmd = str.substr(start + 1, end - start - 1);
-        cmd.Trim(true);
-        cmd.Trim(false);
-        if (cmd.IsEmpty())
-            break;
-
-        wxString bt;
-        BackticksMap::iterator it = m_Backticks.find(cmd);
-        if (it != m_Backticks.end())
-        {
-            // in cache :)
-            bt = it->second;
-        }
-        else
-        {
-//#ifndef CB_FOR_CONSOLE
-            #if wxCHECK_VERSION(2, 9, 0)
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.wx_str()));
-            #else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.c_str()));
-            #endif
-//#endif // #ifndef CB_FOR_CONSOLE
-            wxArrayString output;
-            if (platform::WindowsVersion() >= platform::winver_WindowsNT2000)
-                wxExecute(_T("cmd /c ") + cmd, output, wxEXEC_NODISABLE);
-            else
-                wxExecute(cmd, output, wxEXEC_NODISABLE);
-            bt = GetStringFromArray(output, _T(" "));
-            // add it in the cache
-            m_Backticks[cmd] = bt;
-//#ifndef CB_FOR_CONSOLE
-            Manager::Get()->GetLogManager()->DebugLog(_T("Cached"));
-//#endif // #ifndef CB_FOR_CONSOLE
-        }
-        ret << bt << _T(' ');
-        str = str.substr(0, start) + bt + str.substr(end + 1, wxString::npos);
-
-        // find next occurrence
-        start = str.find(_T('`'));
-        end = str.find(_T('`'), start + 1);
-    }
-
-    return ret;
-}
 
 // parse the result of a backticked expression for compiler/linker search dirs
 void CompilerCommandGenerator::SearchDirsFromBackticks(Compiler* compiler, ProjectBuildTarget* target, const wxString& btOutput)

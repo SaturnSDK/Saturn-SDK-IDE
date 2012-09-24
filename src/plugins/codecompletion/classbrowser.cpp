@@ -130,7 +130,6 @@ ClassBrowser::ClassBrowser(wxWindow* parent, NativeParser* np) :
     m_NativeParser(np),
     m_TreeForPopupMenu(0),
     m_Parser(0L),
-    m_ActiveProject(0),
     m_ClassBrowserSemaphore(0, 1),
     m_ClassBrowserBuilderThread(0)
 {
@@ -187,27 +186,31 @@ void ClassBrowser::SetParser(ParserBase* parser)
     m_Parser = parser;
     if (m_Parser)
     {
-        BrowserDisplayFilter filter = (BrowserDisplayFilter)XRCCTRL(*this, "cmbView", wxChoice)->GetSelection();
+        int sel = XRCCTRL(*this, "cmbView", wxChoice)->GetSelection();
+        BrowserDisplayFilter filter = static_cast<BrowserDisplayFilter>(sel);
         if (!m_NativeParser->IsParserPerWorkspace() && filter == bdfWorkspace)
             filter = bdfProject;
+
         m_Parser->ClassBrowserOptions().displayFilter = filter;
         m_Parser->WriteOptions();
+        UpdateClassBrowserView();
     }
-
-    UpdateClassBrowserView();
+    else
+        CCLogger::Get()->DebugLog(wxT("SetParser: No parser available."));
 }
 
 void ClassBrowser::UpdateSash()
 {
     int pos = Manager::Get()->GetConfigManager(_T("code_completion"))->ReadInt(_T("/splitter_pos"), 250);
     XRCCTRL(*this, "splitterWin", wxSplitterWindow)->SetSashPosition(pos, false);
+    XRCCTRL(*this, "splitterWin", wxSplitterWindow)->Refresh();
 }
 
 void ClassBrowser::UpdateClassBrowserView(bool checkHeaderSwap)
 {
-    m_ActiveProject = 0;
     TRACE(_T("ClassBrowser::UpdateClassBrowserView(), m_ActiveFilename = %s"), m_ActiveFilename.wx_str());
-    wxString oldActiveFilename = m_ActiveFilename;
+
+    wxString oldActiveFilename(m_ActiveFilename);
     m_ActiveFilename.Clear();
 
     if (!m_Parser || Manager::IsAppShuttingDown())
@@ -216,12 +219,6 @@ void ClassBrowser::UpdateClassBrowserView(bool checkHeaderSwap)
     cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (editor)
         m_ActiveFilename = editor->GetFilename();
-
-    if (!m_NativeParser->IsParserPerWorkspace())
-        m_ActiveProject = m_NativeParser->GetProjectByParser(m_Parser);
-    else
-        m_ActiveProject = m_NativeParser->GetCurrentProject();
-
     TRACE(_T("ClassBrowser::UpdateClassBrowserView(), new m_ActiveFilename = %s"), m_ActiveFilename.wx_str());
 
     if (checkHeaderSwap)
@@ -234,14 +231,23 @@ void ClassBrowser::UpdateClassBrowserView(bool checkHeaderSwap)
         if (newShortName.Find(_T('.')) != wxNOT_FOUND)
             newShortName = newShortName.BeforeLast(_T('.'));
 
-        if (oldShortName.IsSameAs(newShortName))
+        if ( oldShortName.IsSameAs(newShortName) )
         {
             TRACE(_T("ClassBrowser::UpdateClassBrowserView() match the old filename, return!"));
             return;
         }
     }
 
-    ThreadedBuildTree(); // (Re-) create tree UI
+    cbProject* activeProject = 0;
+    if (!m_NativeParser->IsParserPerWorkspace())
+        activeProject = m_NativeParser->GetProjectByParser(m_Parser);
+    else
+        activeProject = m_NativeParser->GetCurrentProject();
+
+    if (!activeProject)
+        CCLogger::Get()->DebugLog(wxT("No active project available."));
+
+    ThreadedBuildTree(activeProject); // (Re-) create tree UI
 
     wxSplitterWindow* splitter = XRCCTRL(*this, "splitterWin", wxSplitterWindow);
     if (m_Parser->ClassBrowserOptions().treeMembers)
@@ -297,8 +303,8 @@ void ClassBrowser::ShowMenu(wxTreeCtrl* tree, wxTreeItemId id, const wxPoint& pt
             menu->AppendSeparator();
 
         menu->AppendCheckItem(idCBViewInheritance, _("Show inherited members"));
-        menu->AppendCheckItem(idCBExpandNS, _("Auto-expand namespaces"));
-        menu->Append(idMenuRefreshTree, _("&Refresh tree"));
+        menu->AppendCheckItem(idCBExpandNS,        _("Auto-expand namespaces"));
+        menu->Append         (idMenuRefreshTree,   _("&Refresh tree"));
 
         if (id == m_CCTreeCtrl->GetRootItem())
         {
@@ -314,7 +320,7 @@ void ClassBrowser::ShowMenu(wxTreeCtrl* tree, wxTreeItemId id, const wxPoint& pt
         }
 
         menu->Check(idCBViewInheritance, m_Parser ? options.showInheritance : false);
-        menu->Check(idCBExpandNS,        m_Parser ? options.expandNS : false);
+        menu->Check(idCBExpandNS,        m_Parser ? options.expandNS        : false);
     }
 
     menu->AppendSeparator();
@@ -356,7 +362,7 @@ bool ClassBrowser::FoundMatch(const wxString& search, wxTreeCtrl* tree, const wx
     ClassTreeData* ctd = static_cast<ClassTreeData*>(tree->GetItemData(item));
     if (ctd && ctd->GetToken())
     {
-        Token* token = ctd->GetToken();
+        const Token* token = ctd->GetToken();
         if (   token->m_Name.Lower().StartsWith(search)
             || token->m_Name.Lower().StartsWith(_T('~') + search) ) // C++ destructor
         {
@@ -521,14 +527,14 @@ void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
     {
         if (wxGetKeyState(WXK_CONTROL) && wxGetKeyState(WXK_SHIFT))
         {
-//            TokensTree* tree = m_Parser->GetTokensTree(); // the one used inside CCDebugInfo
+//            TokenTree* tree = m_Parser->GetTokenTree(); // the one used inside CCDebugInfo
 
-            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
             CCDebugInfo info(wx_tree, m_Parser, ctd->m_Token);
             info.ShowModal();
 
-            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
 
             return;
         }
@@ -631,13 +637,14 @@ void ClassBrowser::OnCBExpandNS(wxCommandEvent& event)
 
 void ClassBrowser::OnViewScope(wxCommandEvent& event)
 {
+    int sel = event.GetSelection();
     if (m_Parser)
     {
-        BrowserDisplayFilter filter = (BrowserDisplayFilter)event.GetSelection();
+        BrowserDisplayFilter filter = static_cast<BrowserDisplayFilter>(sel);
         if (!m_NativeParser->IsParserPerWorkspace() && filter == bdfWorkspace)
         {
             cbMessageBox(_("This feature is not supported in combination with\n"
-                           "the option \"one parser per whole worspace\"."),
+                           "the option \"one parser per whole workspace\"."),
                          _("Information"), wxICON_INFORMATION);
             filter = bdfProject;
             XRCCTRL(*this, "cmbView", wxChoice)->SetSelection(filter);
@@ -648,8 +655,11 @@ void ClassBrowser::OnViewScope(wxCommandEvent& event)
         UpdateClassBrowserView();
     }
     else
+    {
         // we have no parser; just write the setting in the configuration
-        Manager::Get()->GetConfigManager(_T("code_completion"))->Write(_T("/browser_display_filter"), (int)event.GetSelection());
+        Manager::Get()->GetConfigManager(_T("code_completion"))->Write(_T("/browser_display_filter"), sel);
+        CCLogger::Get()->DebugLog(wxT("OnViewScope: No parser available."));
+    }
 }
 
 void ClassBrowser::OnDebugSmartSense(wxCommandEvent& event)
@@ -681,19 +691,19 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
     if (search.IsEmpty() || !m_Parser)
         return;
 
-    TokensTree* tree = m_Parser->GetTokensTree();
+    TokenTree* tree = m_Parser->GetTokenTree();
 
     TokenIdxSet result;
-    Token* token = 0;
     size_t count = 0;
     {
-        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
         count = tree->FindMatches(search, result, false, true);
 
-        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
     }
 
+    const Token* token = 0;
     if (count == 0)
     {
         cbMessageBox(_("No matches were found: ") + search,
@@ -702,11 +712,11 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
     }
     else if (count == 1)
     {
-        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
         token = tree->at(*result.begin());
 
-        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
     }
     else if (count > 1)
     {
@@ -714,16 +724,16 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
         wxArrayInt int_selections;
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
-            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
-            Token* sel = tree->at(*it);
+            const Token* sel = tree->at(*it);
             if (sel)
             {
                 selections.Add(sel->DisplayName());
                 int_selections.Add(*it);
             }
 
-            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
         }
         if (selections.GetCount() > 1)
         {
@@ -731,21 +741,21 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
             if (sel == -1)
                 return;
 
-            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
             token = tree->at(int_selections[sel]);
 
-            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
         }
         else if (selections.GetCount() == 1)
         {
-            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
             // number of selections can be < result.size() due to the if tests, so in case we fall
             // back on 1 entry no need to show a selection
             token = tree->at(int_selections[0]);
 
-            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+            CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
         }
     }
 
@@ -813,7 +823,7 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
     }
 }
 
-void ClassBrowser::ThreadedBuildTree()
+void ClassBrowser::ThreadedBuildTree(cbProject* activeProject)
 {
     if (Manager::IsAppShuttingDown() || !m_Parser)
         return;
@@ -850,9 +860,9 @@ void ClassBrowser::ThreadedBuildTree()
                                       m_CCTreeCtrl,
                                       m_CCTreeCtrlBottom,
                                       m_ActiveFilename,
-                                      m_ActiveProject,
+                                      activeProject,
                                       m_Parser->ClassBrowserOptions(),
-                                      m_Parser->GetTokensTree(),
+                                      m_Parser->GetTokenTree(),
                                       idThreadEvent);
 
     if      (thread_needs_run)

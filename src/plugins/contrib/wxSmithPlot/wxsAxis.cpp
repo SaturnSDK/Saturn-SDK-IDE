@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 7603 $
-* $Id: wxsAxis.cpp 7603 2011-11-20 15:49:42Z mortenmacfly $
-* $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/branches/wxsmith_addons/src/plugins/contrib/wxSmithPlot/wxsAxis.cpp $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #include "wxsAxis.h"
@@ -82,7 +82,6 @@ wxsAxis::wxsAxis(wxsItemResData* Data):
 //------------------------------------------------------------------------------
 
 void wxsAxis::OnBuildCreatingCode() {
-int         n;
 wxString    vname;
 wxString    pname;
 wxString    cname;
@@ -128,8 +127,10 @@ wxString    dtext;
 
 // add to parent window -- should be a mpWindow
 
-    if ((GetPropertiesFlags() & flHidden) && GetBaseProps()->m_Hidden) n = 0;        // do nothing
-    else Codef(_T("%s->AddLayer(%s);\n"), pname.c_str(), vname.c_str());
+    if ((GetPropertiesFlags() & flHidden) && GetBaseProps()->m_Hidden)
+        ; // do nothing
+    else
+        Codef(_T("%s->AddLayer(%s);\n"), pname.c_str(), vname.c_str());
 }
 
 //------------------------------------------------------------------------------

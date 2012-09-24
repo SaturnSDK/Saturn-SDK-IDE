@@ -29,7 +29,7 @@ namespace
 {
     wxsRegisterItem<wxsStaticBitmap> Reg(_T("StaticBitmap"),wxsTWidget,_T("Standard"),80);
 
-	// Cryogen 25/3/10 Bug #15354. Default to wxSIMPLE_BORDER.
+    // Cryogen 25/3/10 Bug #15354. Default to wxSIMPLE_BORDER.
     WXS_ST_BEGIN(wxsStaticBitmapStyles,_T("wxSIMPLE_BORDER"))
         WXS_ST_CATEGORY("wxStaticBitmap")
         WXS_ST_DEFAULTS()
@@ -64,11 +64,7 @@ void wxsStaticBitmap::OnBuildCreatingCode()
             wxString SizeCodeStr = SizeData.GetSizeCode(GetCoderContext());
             wxString BmpCode = Bitmap.IsEmpty() ? _T("wxNullBitmap") : Bitmap.BuildCode(DontResize,SizeCodeStr,GetCoderContext(),_T("wxART_OTHER"));
 
-            #if wxCHECK_VERSION(2, 9, 0)
             Codef(_T("%C(%W, %I, %s, %P, %S, %T, %N);\n"),BmpCode.wx_str());
-            #else
-            Codef(_T("%C(%W, %I, %s, %P, %S, %T, %N);\n"),BmpCode.c_str());
-            #endif
             BuildSetupWindowCode();
             return;
         }
@@ -83,9 +79,9 @@ void wxsStaticBitmap::OnBuildCreatingCode()
 
 wxObject* wxsStaticBitmap::OnBuildPreview(wxWindow* Parent,long Flags)
 {
-	// Cryogen 24/3/10 Bug #15354. Since we're no longer using the Background class we don't need to differentiate between cases where
-	// the user has assigned a bitmap and those where he hasn't and we're using the fake background. Just return the preview.
-	wxStaticBitmap* Preview = new wxStaticBitmap(Parent,GetId(),Bitmap.GetPreview(Size(Parent)),Pos(Parent),Size(Parent),Style());
+    // Cryogen 24/3/10 Bug #15354. Since we're no longer using the Background class we don't need to differentiate between cases where
+    // the user has assigned a bitmap and those where he hasn't and we're using the fake background. Just return the preview.
+    wxStaticBitmap* Preview = new wxStaticBitmap(Parent,GetId(),Bitmap.GetPreview(Size(Parent)),Pos(Parent),Size(Parent),Style());
     return SetupWindow(Preview,Flags);
 }
 

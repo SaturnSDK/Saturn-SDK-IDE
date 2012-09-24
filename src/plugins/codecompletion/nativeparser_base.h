@@ -13,9 +13,7 @@
 
 #include "parser/parserthread.h" // g_UnnamedSymbol
 #include "parser/token.h"
-#include "parser/tokenstree.h"
-
-class cbStyledTextCtrl;
+#include "parser/tokentree.h"
 
 /** debug only variable, used to print the AI match related log message*/
 extern bool s_DebugSmartSense;
@@ -92,7 +90,7 @@ protected:
     * @param fullMatch the result should be a full text match or prefix match
     * @return matching token number
     */
-    size_t FindAIMatches(TokensTree*                 tree,
+    size_t FindAIMatches(TokenTree*                  tree,
                          std::queue<ParserComponent> components,
                          TokenIdxSet&                result,
                          int                         parentTokenIdx = -1,
@@ -102,11 +100,11 @@ protected:
                          short int                   kindMask = 0xFFFF,
                          TokenIdxSet*                search_scope = 0);
 
-    void FindCurrentFunctionScope(TokensTree*        tree,
+    void FindCurrentFunctionScope(TokenTree*         tree,
                                   const TokenIdxSet& procResult,
                                   TokenIdxSet&       scopeResult);
 
-    void CleanupSearchScope(TokensTree*  tree,
+    void CleanupSearchScope(TokenTree*  tree,
                             TokenIdxSet* searchScope);
 
     /** Returns the start and end of the call-tip highlight region. */
@@ -120,10 +118,10 @@ protected:
     int FindFunctionOpenParenthesis(const wxString& calltip);
 
     /** Decides if the token belongs to its parent or one of its ancestors */
-    bool BelongsToParentOrItsAncestors(TokensTree* tree,
-                                       Token*      token,
-                                       int         parentIdx,
-                                       bool        use_inheritance = true);
+    bool BelongsToParentOrItsAncestors(TokenTree*   tree,
+                                       const Token* token,
+                                       int          parentIdx,
+                                       bool         use_inheritance = true);
 
     /** helper function to split the statement*/
     wxString GetCCToken(wxString&        line,
@@ -139,7 +137,7 @@ protected:
                             OperatorType&   tokenOperatroType);
 
     /** Remove the last function's childrens */
-    void RemoveLastFunctionChildren(TokensTree* tree, int& lastFuncTokenIdx);
+    void RemoveLastFunctionChildren(TokenTree* tree, int& lastFuncTokenIdx);
 
     /** @brief break a statement to several ParserComponents, and store them in a queue.
      * @param actual a statement string to be divided.
@@ -158,7 +156,7 @@ protected:
      * @param isPrefix match type( full match or prefix match)
      * @return result tokens count
      */
-    size_t ResolveExpression(TokensTree*                 tree,
+    size_t ResolveExpression(TokenTree*                  tree,
                              std::queue<ParserComponent> components,
                              const TokenIdxSet&          searchScope,
                              TokenIdxSet&                result,
@@ -168,11 +166,11 @@ protected:
     /** used to solve the overloaded operator functions return type
      * @param tokenOperatorType overloaded operator type, could be [], (), ->
      * @param tokens input tokens set
-     * @param tree Tokenstree pointer
+     * @param tree Token tree pointer
      * @param searchScope search scope
      * @param result output result
      */
-    void ResolveOperator(TokensTree*         tree,
+    void ResolveOperator(TokenTree*          tree,
                          const OperatorType& tokenOperatorType,
                          const TokenIdxSet&  tokens,
                          const TokenIdxSet&  searchScope,
@@ -183,7 +181,7 @@ protected:
      * @param searchScope search scope defined in TokenIdxSet format
      * @param result result token specify the Type of searchText
      */
-    size_t ResolveActualType(TokensTree*        tree,
+    size_t ResolveActualType(TokenTree*         tree,
                              wxString           searchText,
                              const TokenIdxSet& searchScope,
                              TokenIdxSet&       result);
@@ -193,18 +191,18 @@ protected:
      * @param actualtypeScope Token type(actual parameter)
      * @param initialScope search scope
      */
-    void ResolveTemplateMap(TokensTree*                   tree,
-                            const wxString&               searchStr,
-                            const TokenIdxSet&            actualTypeScope,
-                            TokenIdxSet&                  initialScope);
+    void ResolveTemplateMap(TokenTree*         tree,
+                            const wxString&    searchStr,
+                            const TokenIdxSet& actualTypeScope,
+                            TokenIdxSet&       initialScope);
 
     /** add template parameter, get the actual parameter from the formal parameter list
      * @param id template token id
      * @param actualTypeScope search scope
      * @param initialScope resolved result
-     * @param tree Tokenstree pointer.
+     * @param tree Token tree pointer.
      */
-    void AddTemplateAlias(TokensTree*        tree,
+    void AddTemplateAlias(TokenTree*         tree,
                           const int&         id,
                           const TokenIdxSet& actualTypeScope,
                           TokenIdxSet&       initialScope);
@@ -213,14 +211,14 @@ protected:
      *
      * All functions that call this recursive function, should already entered a critical section.
      *
-     * @param tree TokensTree pointer
+     * @param tree TokenTree pointer
      * @param target Scope (defined in TokenIdxSet)
      * @param result result token index set
      * @param isPrefix whether a full match is used or only do a prefix match
      * @param kindMask define the result tokens filter, such as only class type is OK
      * @return result token set number
      */
-    size_t GenerateResultSet(TokensTree*     tree,
+    size_t GenerateResultSet(TokenTree*      tree,
                              const wxString& target,
                              int             parentIdx,
                              TokenIdxSet&    result,
@@ -228,13 +226,13 @@ protected:
                              bool            isPrefix = false,
                              short int       kindMask = 0xFFFF);
 
-    /** This function is just like the one above, especially that no Tokenstree information is used
-     * So, it use the current parser's Tokenstree.
+    /** This function is just like the one above, especially that no Token tree information is used
+     * So, it use the current parser's Token tree.
      *
      * All functions that call this recursive function, should already entered a critical section.
      *
      */
-    size_t GenerateResultSet(TokensTree*        tree,
+    size_t GenerateResultSet(TokenTree*         tree,
                              const wxString&    target,
                              const TokenIdxSet& ptrParentID,
                              TokenIdxSet&       result,
@@ -245,22 +243,22 @@ protected:
     /** Collect search scopes, add the searchScopes's parent scope
      * @param searchScope input search scope
      * @param actualTypeScope returned search scope
-     * @param tree TokensTree pointer
+     * @param tree TokenTree pointer
      */
     void CollectSearchScopes(const TokenIdxSet& searchScope,
                              TokenIdxSet&       actualTypeScope,
-                             TokensTree*        tree);
+                             TokenTree*         tree);
 
     /** used to get the correct token index in current line, e.g. class A { void test() { | } };
      * @param tokens all current file's function and class
      * @param curLine the line of the current position
      */
-    int GetTokenFromCurrentLine(TokensTree*        tree,
+    int GetTokenFromCurrentLine(TokenTree*         tree,
                                 const TokenIdxSet& tokens,
                                 size_t             curLine,
                                 const wxString&    file);
 
-    void ComputeCallTip(TokensTree*        tree,
+    void ComputeCallTip(TokenTree*         tree,
                         const TokenIdxSet& tokens,
                         int                chars_per_line,
                         wxArrayString&     items);
@@ -268,7 +266,7 @@ protected:
     /** For ComputeCallTip()
      * No critical section needed in this recursive function!
      * All functions that call this recursive function, should already entered a critical section. */
-    bool PrettyPrintToken(const TokensTree*  tree,
+    bool PrettyPrintToken(const TokenTree*   tree,
                           const Token*       token,
                           wxString&          result,
                           bool               isRoot = true);
@@ -396,12 +394,13 @@ private:
     // should already entered a critical section.
 
     // for GenerateResultSet()
-    bool AddChildrenOfUnnamed(TokensTree* tree, Token* parent, TokenIdxSet& result)
+    bool AddChildrenOfUnnamed(TokenTree* tree, const Token* parent, TokenIdxSet& result)
     {
         if (parent->m_TokenKind == tkClass && parent->m_Name.StartsWith(g_UnnamedSymbol))
         {
             // add all its children
-            for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
+            for (TokenIdxSet::const_iterator it = parent->m_Children.begin();
+                                             it != parent->m_Children.end(); ++it)
             {
                 Token* tokenChild = tree->at(*it);
                 if (tokenChild)

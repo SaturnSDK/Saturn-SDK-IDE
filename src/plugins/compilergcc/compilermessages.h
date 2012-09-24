@@ -3,7 +3,6 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifndef CB_FOR_CONSOLE
 #ifndef COMPILERMESSAGES_H
 #define COMPILERMESSAGES_H
 
@@ -33,5 +32,4 @@ class CompilerMessages : public wxEvtHandler, public ListCtrlLogger
 };
 
 #endif // COMPILERMESSAGES_H
-#endif // #ifndef CB_FOR_CONSOLE
 

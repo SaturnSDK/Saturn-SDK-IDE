@@ -13,10 +13,10 @@
 #include <map>
 
 class Token;
-class TokensTree;
+class TokenTree;
 
 typedef std::set< int,    std::less<int>    > TokenIdxSet;
-typedef std::set< size_t, std::less<size_t> > TokenFilesSet;
+typedef std::set< size_t, std::less<size_t> > TokenFileSet;
 
 enum TokenScope
 {
@@ -51,14 +51,14 @@ enum TokenKind
 
 class Token
 {
-friend class TokensTree;
+friend class TokenTree;
 public:
     Token(const wxString& name, unsigned int file, unsigned int line, size_t ticket);
     ~Token();
 
     bool AddChild(int childIdx);
     bool DeleteAllChildren();
-    bool HasChildren() { return !m_Children.empty(); }
+    bool HasChildren() const { return !m_Children.empty(); }
     wxString GetNamespace() const;
     bool InheritsFrom(int idx) const;
     wxString DisplayName() const;
@@ -69,49 +69,54 @@ public:
     wxString GetFormattedArgs() const; // remove all '\n'
     wxString GetStrippedArgs() const; // remove all default value
     size_t GetTicket() const { return m_Ticket; }
-    bool MatchesFiles(const TokenFilesSet& files);
+    bool MatchesFiles(const TokenFileSet& files);
 
-    TokensTree* GetTree() { return m_TokensTree; }
+    TokenTree* GetTree() const { return m_TokenTree; }
     bool IsValidAncestor(const wxString& ancestor);
 
     wxString                     m_FullType; // this is the full return value (if any): e.g. const wxString&
     wxString                     m_BaseType; // this is what the parser believes is the actual return value: e.g. wxString
-    wxString                     m_Name;
-    wxString                     m_Args;
-    wxString                     m_BaseArgs;
+    wxString                     m_Name;     // Token's name, it can be searched in the TokenTree
+    wxString                     m_Args;     // If it is a function Token, then this value is function arguments
+                                             // e.g.   (int arg1 = 10, float arg2 = 9.0)
+    wxString                     m_BaseArgs; // stripped arguments e.g. (int arg1, float arg2)
+
     wxString                     m_AncestorsString; // all ancestors comma-separated list
-    wxString                     m_TemplateArgument;
-    unsigned int                 m_FileIdx;
-    unsigned int                 m_Line;
-    unsigned int                 m_ImplFileIdx;
-    unsigned int                 m_ImplLine;      // where the token was met
+
+    unsigned int                 m_FileIdx;       // File index in TokenTree
+    unsigned int                 m_Line;          // Line index where the token was met, which is 0/1 based
+    unsigned int                 m_ImplFileIdx;   // function implementation file index
+    unsigned int                 m_ImplLine;      // function implementation line index
     unsigned int                 m_ImplLineStart; // if token is impl, opening brace line
     unsigned int                 m_ImplLineEnd;   // if token is impl, closing brace line
-    TokenScope                   m_Scope;
-    TokenKind                    m_TokenKind;
-    bool                         m_IsOperator;
-    bool                         m_IsLocal;       // found in a local file?
-    bool                         m_IsTemp;        // local variable
+
+    TokenScope                   m_Scope;         // public? private? protected?
+    TokenKind                    m_TokenKind;     // See TokenKind class
+    bool                         m_IsOperator;    // is operator overload function?
+    bool                         m_IsLocal;       // found in a local source file, otherwise in wxString
+    bool                         m_IsTemp;        // local (automatic) variable
     bool                         m_IsConst;       // the member method is const (yes/no)
 
-    int                          m_Index;         // current index in the tree
-    int                          m_ParentIndex;
-    TokenIdxSet                  m_Children;
-    TokenIdxSet                  m_Ancestors;
-    TokenIdxSet                  m_DirectAncestors;
-    TokenIdxSet                  m_Descendants;
+    int                          m_Index;         // current Token index in the tree
+    int                          m_ParentIndex;   // Parent Token index
+    TokenIdxSet                  m_Children;      // if it is a class kind token, then it contains all the member tokens
+    TokenIdxSet                  m_Ancestors;     // all the ancestors in the inheritance hierarchy
+    TokenIdxSet                  m_DirectAncestors; //the neatest ancestors
+    TokenIdxSet                  m_Descendants;   // all the descendants in the inheritance hierarchy
 
-    wxArrayString                m_Aliases; // used for namespace aliases
+    wxArrayString                m_Aliases;       // used for namespace aliases
 
-    wxArrayString                m_TemplateType;
+    wxString                     m_TemplateArgument;
+    wxArrayString                m_TemplateType;    //for a class template, this is the formal template argument list
+                                                    //but for a variable Token, this is the actual template arguments.
     std::map<wxString, wxString> m_TemplateMap;
 
-    wxString                     m_TemplateAlias; // alias for templates, e.g. template T1 T2;
-    void*                        m_UserData; // custom user-data (the classbrowser expects it to be a pointer to a cbProject)
+    wxString                     m_TemplateAlias;   // alias for templates, e.g. template T1 T2;
+    void*                        m_UserData;        // custom user-data (the classbrowser expects it to be a pointer to a cbProject)
 
 protected:
-    TokensTree*                  m_TokensTree;
-    size_t                       m_Ticket;
+    TokenTree*                   m_TokenTree;      // a pointer to TokenTree
+    size_t                       m_Ticket;          // This is used in classbrowser to avoid duplication
 };
 
 #endif // TOKEN_H

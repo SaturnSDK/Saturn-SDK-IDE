@@ -34,13 +34,13 @@ class wxsGUI;
 /** \brief This class integrates current project with wxsmith. */
 class wxsProject
 {
-	public:
+    public:
 
         /** \brief Ctor */
-		wxsProject(cbProject* Project);
+        wxsProject(cbProject* Project);
 
-		/** \brief Dctor */
-		~wxsProject();
+        /** \brief Dctor */
+        ~wxsProject();
 
         /** \brief Getting C::B project */
         inline cbProject* GetCBProject() { return m_Project; }
@@ -73,7 +73,7 @@ class wxsProject
          */
         bool AddResource(wxsResource* Resource);
 
-        /** \brief Getting number of resources in this prject */
+        /** \brief Getting number of resources in this project */
         inline int GetResourcesCount() { return (int)m_Resources.Count(); }
 
         /** \brief Getting resource from index */
@@ -118,14 +118,14 @@ class wxsProject
 
         /** \brief Function updating project's name
          *
-         * Curently it only updates name of project in resource browser
+         * Currently it only updates name of project in resource browser
          */
         void UpdateName();
 
         /** \brief Try to recover wxs file */
         bool RecoverWxsFile( const wxString& ResourceDescription );
 
-	private:
+    private:
 
         WX_DEFINE_ARRAY(wxsResource*,ResourcesT);
         WX_DECLARE_STRING_HASH_MAP(wxsResourceItemId,ResBrowserIdsT);

@@ -156,7 +156,7 @@ void RegExDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
     for(size_t i = 0; i < as.GetCount(); ++i)
     {
         cbEscapeHtml(as[i]);
-        tmp.Printf(_T("<tr><td width=35><b>%d</b></td><td>%s</td></tr>"), i, as[i].c_str());
+        tmp.Printf(_T("<tr><td width=35><b>%lu</b></td><td>%s</td></tr>"), static_cast<unsigned long>(i), as[i].wx_str());
         s.append(tmp);
     }
     s.append(_T("</table></font></html>"));
@@ -214,7 +214,7 @@ wxArrayString RegExDlg::GetBuiltinMatches(const wxString& text)
     }
 
     for(size_t i = 0; i < m_wxre.GetMatchCount(); ++i)
-        if (m_wxre.GetMatch(text, i))
+        if (!m_wxre.GetMatch(text, i).IsEmpty())
             ret.Add(m_wxre.GetMatch(text, i));
 
     return ret;

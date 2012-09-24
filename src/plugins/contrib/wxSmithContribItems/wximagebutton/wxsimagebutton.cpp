@@ -92,10 +92,6 @@ wxsImageButton::wxsImageButton(wxsItemResData* Data):
 //------------------------------------------------------------------------------
 
 void wxsImageButton::OnBuildCreatingCode() {
-long            ll;
-wxString        ss, tt, vv;
-wxsImageList    *ilist;
-
 // we only handle C++ constructs here
 
     if (GetLanguage() != wxsCPP) wxsCodeMarks::Unknown(_T("wxsImageButton"),GetLanguage());
@@ -106,12 +102,8 @@ wxsImageList    *ilist;
 
 // the basic constructor
 
-    vv = GetVarName();
-	#if wxCHECK_VERSION(2, 9, 0)
+    const wxString vv = GetVarName();
     Codef(_T("%s = new wxBitmapButton(%W, %I, wxNullBitmap, %P, %S, %T, %V, %N);\n"), vv.wx_str());
-    #else
-    Codef(_T("%s = new wxBitmapButton(%W, %I, wxNullBitmap, %P, %S, %T, %V, %N);\n"), vv.c_str());
-    #endif
 
 // default button?
 
@@ -120,50 +112,32 @@ wxsImageList    *ilist;
 // add all the bitmaps at the bottom of the code... after the wxsImage's and wxsImageList's
 // have been coded
 
-    ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, mImageList);
+    wxsImageList* ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, mImageList);
     if (ilist != NULL) {
-        ss = ilist->GetVarName();
+        const wxString ss = ilist->GetVarName();
 		// Locator comment.
-		#if wxCHECK_VERSION(2, 9, 0)
+        wxString tt;
 		tt.Printf(_("// Set the bitmaps for %s.\n"), vv.wx_str());
-		#else
-		tt.Printf(_("// Set the bitmaps for %s.\n"), vv.c_str());
-		#endif
         AddEventCode(tt);
 
+        long ll = 0;
         if (mLabelIndex.ToLong(&ll)) {
-			#if wxCHECK_VERSION(2, 9, 0)
-            tt.Printf(_T("%s->SetBitmapLabel(%s->GetBitmap(%d));\n"), vv.wx_str(), ss.wx_str(), ll);
-			#else
-            tt.Printf(_T("%s->SetBitmapLabel(%s->GetBitmap(%d));\n"), vv.c_str(), ss.c_str(), ll);
-			#endif
+            tt.Printf(_T("%s->SetBitmapLabel(%s->GetBitmap(%ld));\n"), vv.wx_str(), ss.wx_str(), ll);
             AddEventCode(tt);
         };
 
         if (mDisabledIndex.ToLong(&ll)) {
-			#if wxCHECK_VERSION(2, 9, 0)
             tt.Printf(_T("%s->SetBitmapDisabled(%s->GetBitmap(%d));\n"), vv.wx_str(), ss.wx_str(), ll);
-			#else
-            tt.Printf(_T("%s->SetBitmapDisabled(%s->GetBitmap(%d));\n"), vv.c_str(), ss.c_str(), ll);
-			#endif
             AddEventCode(tt);
         };
 
         if (mSelectedIndex.ToLong(&ll)) {
-			#if wxCHECK_VERSION(2, 9, 0)
             tt.Printf(_T("%s->SetBitmapSelected(%s->GetBitmap(%d));\n"), vv.wx_str(), ss.wx_str(), ll);
-			#else
-            tt.Printf(_T("%s->SetBitmapSelected(%s->GetBitmap(%d));\n"), vv.c_str(), ss.c_str(), ll);
-			#endif
             AddEventCode(tt);
         };
 
         if (mFocusIndex.ToLong(&ll)) {
-			#if wxCHECK_VERSION(2, 9, 0)
             tt.Printf(_T("%s->SetBitmapFocus(%s->GetBitmap(%d));\n"), vv.wx_str(), ss.wx_str(), ll);
-			#else
-            tt.Printf(_T("%s->SetBitmapFocus(%s->GetBitmap(%d));\n"), vv.c_str(), ss.c_str(), ll);
-			#endif
             AddEventCode(tt);
         };
     };
@@ -178,21 +152,18 @@ wxsImageList    *ilist;
 //------------------------------------------------------------------------------
 
 wxObject* wxsImageButton::OnBuildPreview(wxWindow* Parent,long Flags) {
-wxBitmapButton  *button;
-wxsImageList    *ilist;
-long            ll;
-
 // the basic button
 
-    button = new wxBitmapButton(Parent, GetId(), wxNullBitmap,Pos(Parent),Size(Parent),Style());
+    wxBitmapButton* button = new wxBitmapButton(Parent, GetId(), wxNullBitmap,Pos(Parent),Size(Parent),Style());
 
 // find the image list
 
-    ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, mImageList);
+    wxsImageList* ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, mImageList);
 
 // make the preview bitmaps
 
     if (ilist != NULL) {
+        long ll = 0;
         if (mLabelIndex.ToLong(&ll))    button->SetBitmapLabel(ilist->GetPreview(ll));
         if (mDisabledIndex.ToLong(&ll)) button->SetBitmapDisabled(ilist->GetPreview(ll));
         if (mSelectedIndex.ToLong(&ll)) button->SetBitmapSelected(ilist->GetPreview(ll));
@@ -213,27 +184,19 @@ static wxString         sImageNames[128];
 static const wxChar    *pImageNames[128];
 static wxString         sIndexNames[1024];
 static const wxChar    *pIndexNames[1024];
-static long             iIndexNames[1024];
-
-int                     i,n,k;
-wxsItemResData         *res;
-wxsTool                *tool;
-wxsImageList           *ilist;
-wxString                ss, tt;
-
 
 // find available images, and pointer to current imagelist
 
-    ilist = NULL;
-    res = GetResourceData();
-    n = 0;
+    wxsImageList* ilist = NULL;
+    wxsItemResData* res = GetResourceData();
+    int n = 0;
     sImageNames[n] = _("<none>");
     pImageNames[n] = (const wxChar *) sImageNames[n];
     n += 1;
-    k = res->GetToolsCount();
-    for(i=0; i<k; i++) {
-        tool = res->GetTool(i);
-        ss = tool->GetUserClass();
+    int k = res->GetToolsCount();
+    for(int i=0; i < k; ++i) {
+        wxsTool* tool = res->GetTool(i);
+        wxString ss = tool->GetUserClass();
 
         if ((ss == _T("wxImageList")) && (n < 127)) {
             ss = tool->GetVarName();
@@ -253,15 +216,13 @@ wxString                ss, tt;
     n = 0;
     sIndexNames[n] = _("<none>");
     pIndexNames[n] = (const wxChar *) sIndexNames[n];
-    iIndexNames[n] = -1;
     n += 1;
     if (ilist == NULL) k = 0;
     else               k = ilist->GetCount();
 
-    for(i=0; i<k; i++) {
+    for(int i = 0; i < k; ++i) {
         sIndexNames[n].Printf(_("%d"), i);
         pIndexNames[n] = (const wxChar *) sIndexNames[n];
-        iIndexNames[n] = i;
         n += 1;
     };
     pIndexNames[n] = NULL;
@@ -285,9 +246,3 @@ wxString    vname;
     vname = GetVarName();
     AddDeclaration(_T("wxBitmapButton        *") + vname + _T(";"));
 }
-
-
-
-
-
-

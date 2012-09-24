@@ -116,7 +116,7 @@ public:
 
     /** Returns the image assigned to a specific token for a symbol browser
      */
-    int GetTokenKindImage(Token* token);
+    int GetTokenKindImage(const Token* token);
 
     /** Get the implementation file path if the input is a header file. or Get the header file path
      * if the input is an implementation file.
@@ -336,7 +336,7 @@ private:
      */
     bool ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& search_scope, int caretPos = -1);
 
-    /** collect function argument, add them to the tokenstree (as temporary tokens)
+    /** collect function argument, add them to the token tree (as temporary tokens)
      * @param searchData search location
      * @param caretPos caret position, if not specified, we use the current caret position
      */
@@ -351,8 +351,14 @@ private:
     /** collect the compiler default header file search directories */
     bool AddCompilerDirs(cbProject* project, ParserBase* parser);
 
-    /** collect compiler predefined preprocessor definition */
+    /** collect compiler specific predefined preprocessor definition */
     bool AddCompilerPredefinedMacros(cbProject* project, ParserBase* parser);
+
+    /** collect GCC compiler predefined preprocessor definition */
+    bool AddCompilerPredefinedMacrosGCC(const wxString& compilerId, cbProject* project, wxString& defs);
+
+    /** collect VC compiler predefined preprocessor definition */
+    bool AddCompilerPredefinedMacrosVC(const wxString& compilerId, wxString& defs);
 
     /** collect project (user) defined preprocessor definition */
     bool AddProjectDefinedMacros(cbProject* project, ParserBase* parser);
@@ -360,21 +366,20 @@ private:
     /** Collect the default compiler include file search paths. called by AddCompilerDirs() function*/
     const wxArrayString& GetGCCCompilerDirs(const wxString &cpp_compiler);
 
-    /** Add the collected default compiler include file search paths to a parser */
-    void AddGCCCompilerDirs(Compiler* compiler, ParserBase* parser);
+    /** Add the collected default GCC compiler include file search paths to a parser */
+    void AddGCCCompilerDirs(const wxString& masterPath, const wxString& compilerCpp, ParserBase* parser);
 
     /** Event handler when the batch parse starts, print some log information */
     void OnParserStart(wxCommandEvent& event);
 
     /** Event handler when the batch parse finishes, print some log information, check  whether the active editor
-     * belong to the current parser, if not, do a parser switch
-     */
+     * belong to the current parser, if not, do a parser switch */
     void OnParserEnd(wxCommandEvent& event);
 
     /** If use one parser per whole workspace, we need parse all project one by one */
     void OnParsingOneByOneTimer(wxTimerEvent& event);
 
-    /** Event handler when an editor activate, *NONE* project is handled here*/
+    /** Event handler when an editor activate, *NONE* project is handled here */
     void OnEditorActivated(EditorBase* editor);
 
     /** Event handler when an editor closed, if it is the last editor belong to *NONE* project, then
@@ -403,8 +408,8 @@ private:
     ClassBrowser*                m_ClassBrowser;
     bool                         m_ClassBrowserIsFloating;
     ProjectSearchDirsMap         m_ProjectSearchDirsMap;
-    int                          m_HookId;               /// project loader hook ID
-    wxImageList*                 m_ImageList;
+    int                          m_HookId;    //!< project loader hook ID
+    wxImageList*                 m_ImageList; //!< Images for class browser
 
     wxArrayString                m_StandaloneFiles;
     bool                         m_ParserPerWorkspace;
@@ -414,12 +419,12 @@ private:
     wxString          m_CCItems;
     int               m_EditorStartWord;
     int               m_EditorEndWord;
-    wxString          m_LastAIGlobalSearch;    /// same case like above, it holds the search string
-    bool              m_LastAISearchWasGlobal; /// true if the phrase for code-completion is empty or partial text (i.e. no . -> or :: operators)
+    wxString          m_LastAIGlobalSearch;    //!< same case like above, it holds the search string
+    bool              m_LastAISearchWasGlobal; //!< true if the phrase for code-completion is empty or partial text (i.e. no . -> or :: operators)
     cbStyledTextCtrl* m_LastControl;
     wxString          m_LastFile;
     int               m_LastFunctionIndex;
-    int               m_LastFuncTokenIdx;      /// saved the function token's index, for remove all local variable
+    int               m_LastFuncTokenIdx;      //!< saved the function token's index, for remove all local variable
     int               m_LastLine;
     wxString          m_LastNamespace;
     wxString          m_LastPROC;

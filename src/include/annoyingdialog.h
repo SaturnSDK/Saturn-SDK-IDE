@@ -6,10 +6,6 @@
 #ifndef ANNOYINGDIALOG_H
 #define ANNOYINGDIALOG_H
 
-#ifdef CB_FOR_CONSOLE
-    #include "annoyingdialog_base.h"
-#else // #ifdef CB_FOR_CONSOLE
-
 #include "settings.h"
 #include "scrollingdialog.h"
 #include <wx/string.h>
@@ -49,7 +45,5 @@ class DLLIMPORT AnnoyingDialog : public wxScrollingDialog
         int defRet;
         DECLARE_EVENT_TABLE()
 };
-
-#endif // #ifdef CB_FOR_CONSOLE
 
 #endif // ANNOYINGDIALOG_H

@@ -216,11 +216,7 @@ void wxsMenu::OnBuildCreatingCode()
             }
             if ( GetParent() && GetParent()->GetClassName()==_T("wxMenuBar") )
             {
-                #if wxCHECK_VERSION(2, 9, 0)
                 Codef(_T("%MAppend(%O, %t);\n"),m_Label.wx_str());
-                #else
-                Codef(_T("%MAppend(%O, %t);\n"),m_Label.c_str());
-                #endif
             }
             BuildSetupWindowCode();
             break;
@@ -234,7 +230,7 @@ void wxsMenu::OnEnumToolProperties(long Flags)
 {
     if ( GetParent() )
     {
-        // If there's parent we got labl for this menu
+        // If there's parent we got label for this menu
         WXS_SHORT_STRING(wxsMenu,m_Label,_("Title"),_T("label"),_T(""),true);
     }
 }

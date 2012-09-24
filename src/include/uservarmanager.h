@@ -20,9 +20,9 @@ class DLLIMPORT UserVariableManager : public Mgr<UserVariableManager>
         friend class Mgr<UserVariableManager>;
         friend class MacrosManager;
 
-        ConfigManager * cfg;
-        wxString        activeSet;
-        wxArrayString   preempted;
+        ConfigManager * m_CfgMan;
+        wxString        m_ActiveSet;
+        wxArrayString   m_Preempted;
 
     public:
         UserVariableManager();
@@ -33,16 +33,14 @@ class DLLIMPORT UserVariableManager : public Mgr<UserVariableManager>
         void Arrogate();
         bool Exists(const wxString& variable) const;
 
-#ifndef CB_FOR_CONSOLE
         void Configure();
-#endif // #ifndef CB_FOR_CONSOLE
         void Migrate();
 
         UserVariableManager& operator=(const UserVariableManager& /*rhs*/) // prevent assignment operator
         {
-        	cbThrow(_T("Can't assign a UserVariableManager* !!!"));
-        	return *this;
-		}
+            cbThrow(_T("Can't assign a UserVariableManager* !!!"));
+            return *this;
+        }
     private:
         UserVariableManager(const UserVariableManager& /*rhs*/); // prevent copy construction
 };

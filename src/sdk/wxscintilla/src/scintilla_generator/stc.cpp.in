@@ -126,6 +126,7 @@ wxDEFINE_EVENT( wxEVT_STC_INDICATOR_CLICK, wxStyledTextEvent );
 wxDEFINE_EVENT( wxEVT_STC_INDICATOR_RELEASE, wxStyledTextEvent );
 wxDEFINE_EVENT( wxEVT_STC_AUTOCOMP_CANCELLED, wxStyledTextEvent );
 wxDEFINE_EVENT( wxEVT_STC_AUTOCOMP_CHAR_DELETED, wxStyledTextEvent );
+wxDEFINE_EVENT( wxEVT_STC_HOTSPOT_RELEASE_CLICK, wxStyledTextEvent );
 
 
 
@@ -199,7 +200,6 @@ bool wxStyledTextCtrl::Create(wxWindow *parent,
     m_swx = new ScintillaWX(this);
     m_stopWatch.Start();
     m_lastKeyDownConsumed = false;
-    m_lastWheelTimestamp = 0;
     m_vScrollBar = NULL;
     m_hScrollBar = NULL;
 #if wxUSE_UNICODE
@@ -210,7 +210,7 @@ bool wxStyledTextCtrl::Create(wxWindow *parent,
     SetInitialSize(size);
 
     // Reduces flicker on GTK+/X11
-    SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+    SetBackgroundStyle(wxBG_STYLE_PAINT);
 
     // Make sure it can take the focus
     SetCanFocus(true);
@@ -586,9 +586,11 @@ bool wxStyledTextCtrl::GetUseAntiAliasing() {
 
 
 
-void wxStyledTextCtrl::AddTextRaw(const char* text)
+void wxStyledTextCtrl::AddTextRaw(const char* text, int length)
 {
-    SendMsg(SCI_ADDTEXT, strlen(text), (sptr_t)text);
+    if (length == -1)
+        length = strlen(text);
+    SendMsg(SCI_ADDTEXT, length, (sptr_t)text);
 }
 
 void wxStyledTextCtrl::InsertTextRaw(int pos, const char* text)
@@ -626,16 +628,10 @@ wxCharBuffer wxStyledTextCtrl::GetLineRaw(int line)
 
 wxCharBuffer wxStyledTextCtrl::GetSelectedTextRaw()
 {
-    long   start;
-    long   end;
+    // Calculate the length needed first.
+    const int len = SendMsg(SCI_GETSELTEXT, 0, (sptr_t)0);
 
-    GetSelection(&start, &end);
-    int   len  = end - start;
-    if (!len) {
-        wxCharBuffer empty;
-        return empty;
-    }
-
+    // And then really get the data.
     wxCharBuffer buf(len);
     SendMsg(SCI_GETSELTEXT, 0, (sptr_t)buf.data());
     return buf;
@@ -676,9 +672,11 @@ wxCharBuffer wxStyledTextCtrl::GetTextRaw()
     return buf;
 }
 
-void wxStyledTextCtrl::AppendTextRaw(const char* text)
+void wxStyledTextCtrl::AppendTextRaw(const char* text, int length)
 {
-    SendMsg(SCI_APPENDTEXT, strlen(text), (sptr_t)text);
+    if (length == -1)
+        length = strlen(text);
+    SendMsg(SCI_APPENDTEXT, length, (sptr_t)text);
 }
 
 
@@ -764,19 +762,11 @@ void wxStyledTextCtrl::OnContextMenu(wxContextMenuEvent& evt) {
 
 void wxStyledTextCtrl::OnMouseWheel(wxMouseEvent& evt)
 {
-    // prevent having an event queue with wheel events that cannot be processed
-    // reasonably fast (see ticket #9057)
-    if ( m_lastWheelTimestamp <= evt.GetTimestamp() )
-    {
-        m_lastWheelTimestamp = m_stopWatch.Time();
-        m_swx->DoMouseWheel(evt.GetWheelRotation(),
-                            evt.GetWheelDelta(),
-                            evt.GetLinesPerAction(),
-                            evt.ControlDown(),
-                            evt.IsPageScroll());
-        m_lastWheelTimestamp = m_stopWatch.Time() - m_lastWheelTimestamp;
-        m_lastWheelTimestamp += evt.GetTimestamp();
-    }
+    m_swx->DoMouseWheel(evt.GetWheelRotation(),
+                        evt.GetWheelDelta(),
+                        evt.GetLinesPerAction(),
+                        evt.ControlDown(),
+                        evt.IsPageScroll());
 }
 
 
@@ -941,10 +931,12 @@ void wxStyledTextCtrl::NotifyParent(SCNotification* _scn) {
 
     case SCN_DOUBLECLICK:
         evt.SetEventType(wxEVT_STC_DOUBLECLICK);
+        evt.SetLine(scn.line);
         break;
 
     case SCN_UPDATEUI:
         evt.SetEventType(wxEVT_STC_UPDATEUI);
+        evt.SetUpdated(scn.updated);
         break;
 
     case SCN_MODIFIED:
@@ -956,6 +948,8 @@ void wxStyledTextCtrl::NotifyParent(SCNotification* _scn) {
         evt.SetLine(scn.line);
         evt.SetFoldLevelNow(scn.foldLevelNow);
         evt.SetFoldLevelPrev(scn.foldLevelPrev);
+        evt.SetToken(scn.token);
+        evt.SetAnnotationLinesAdded(scn.annotationLinesAdded);
         break;
 
     case SCN_MACRORECORD:
@@ -1042,6 +1036,10 @@ void wxStyledTextCtrl::NotifyParent(SCNotification* _scn) {
         evt.SetEventType(wxEVT_STC_AUTOCOMP_CHAR_DELETED);
         break;
 
+    case SCN_HOTSPOTRELEASECLICK:
+        evt.SetEventType(wxEVT_STC_HOTSPOT_RELEASE_CLICK);
+        break;
+
     default:
         return;
     }
@@ -1073,6 +1071,10 @@ wxStyledTextEvent::wxStyledTextEvent(wxEventType commandType, int id)
     m_listType = 0;
     m_x = 0;
     m_y = 0;
+    m_token = 0;
+    m_annotationLinesAdded = 0;
+    m_updated = 0;
+
 #if wxUSE_DRAG_AND_DROP
     m_dragFlags = wxDrag_CopyOnly;
     m_dragResult = wxDragNone;
@@ -1108,6 +1110,10 @@ wxStyledTextEvent::wxStyledTextEvent(const wxStyledTextEvent& event):
     m_x =            event.m_x;
     m_y =            event.m_y;
 
+    m_token =        event.m_token;
+    m_annotationLinesAdded = event.m_annotationLinesAdded;
+    m_updated =      event.m_updated;
+
 #if wxUSE_DRAG_AND_DROP
     m_dragText =     event.m_dragText;
     m_dragFlags =    event.m_dragFlags;
@@ -1120,7 +1126,7 @@ wxStyledTextEvent::wxStyledTextEvent(const wxStyledTextEvent& event):
 
 /*static*/ wxVersionInfo wxStyledTextCtrl::GetLibraryVersionInfo()
 {
-    return wxVersionInfo("Scintilla", 2, 3, 0, "Scintilla 2.03");
+    return wxVersionInfo("Scintilla", 3, 21, 0, "Scintilla 3.21");
 }
 
 #endif // wxUSE_STC

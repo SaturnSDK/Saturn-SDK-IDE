@@ -56,7 +56,7 @@ class wxsEventsEditor
          */
         bool GotoOrBuildEvent(wxsItem* Item,int EventIndex,wxsPropertyGridManager* Grid);
 
-	private:
+    private:
 
         WX_DEFINE_ARRAY(wxPGId,wxArrayPGId);
 
@@ -72,7 +72,7 @@ class wxsEventsEditor
         /** \brief Finding all handlers with given argument type */
         void FindFunctions(const wxString& ArgType,wxArrayString& Array);
 
-        /** \brief Gerring input from user with new function name */
+        /** \brief Getting input from user with new function name */
         wxString GetNewFunction(const wxsEventDesc* Event);
 
         /** \brief Generating proposition for new function name */

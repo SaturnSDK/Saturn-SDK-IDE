@@ -21,7 +21,7 @@
 #include "cclogger.h"
 #include "tokenizer.h"
 #include "token.h"
-#include "tokenstree.h"
+#include "tokentree.h"
 
 extern const wxString g_UnnamedSymbol;
 
@@ -91,7 +91,7 @@ struct ParserThreadOptions
 /** @brief A parser thread
   *
   * This class represents a worker thread for the Code Completion plug-in, the main task is doing the syntax
-  * analysis and add every token to the token tree. The Token tree (sometimes, we call it TokensTree ) is a
+  * analysis and add every token to the token tree. The Token tree (sometimes, we call it TokenTree ) is a
   * Patricia tree structure, more details can be seen in token.h and token.cpp. The buffer can  either be loaded
   * from a local file or directly used of a wxString.
   */
@@ -103,13 +103,13 @@ public:
       * @param bufferOrFilename if isLocal is true, it's the filename to open, otherwise it is a wxString already in memory.
       * @param isLocal determine whether this is a file in local disk or already in memory.
       * @param parserThreadOptions parser thread options, see ParserThreadOptions Class for details.
-      * @param tokensTree it is the tree structure holding all the tokens, ParserThread will add every token when it parsed.
+      * @param tokenTree it is the tree structure holding all the tokens, ParserThread will add every token when it parsed.
       */
     ParserThread(ParserBase*          parent,
                  const wxString&      bufferOrFilename,
                  bool                 isLocal,
                  ParserThreadOptions& parserThreadOptions,
-                 TokensTree*          tokensTree);
+                 TokenTree*           tokenTree);
 
     /** ParserThread destructor.*/
     virtual ~ParserThread();
@@ -145,11 +145,11 @@ protected:
       */
     int Execute()
     {
-        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
         bool success = Parse();
 
-        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
 
         return success ? 0 : 1;
     }
@@ -205,7 +205,7 @@ protected:
     void HandleTypedef();
 
     /** handle macro expansion
-      * @param id token id in Tokenstree
+      * @param id token id in Token tree
       * @param peek macro body
       */
     void HandleMacroExpansion(int id, const wxString& peek);
@@ -235,14 +235,14 @@ protected:
       * @param isOperator bool variable to determine an operator override function or not
       * @param isTmpl bool variable to determine it is a function declaration or implementation
       */
-    Token* DoAddToken(TokenKind kind,
+    Token* DoAddToken(TokenKind       kind,
                       const wxString& name,
-                      int line,
-                      int implLineStart = 0,
-                      int implLineEnd = 0,
+                      int             line,
+                      int             implLineStart = 0,
+                      int             implLineEnd = 0,
                       const wxString& args = wxEmptyString,
-                      bool isOperator = false,
-                      bool isImpl = false);
+                      bool            isOperator = false,
+                      bool            isImpl = false);
 
     /** return the actual token's base type.
       * e.g.: if the token type string is: "const wxString &"
@@ -259,17 +259,17 @@ private:
       * @param parent parent token pointer, we only search under the parent token scope
       * @param kindMask filter for the result token, only the specified type of tokens were matched
       */
-    Token* TokenExists(const wxString& name, Token* parent = 0, short int kindMask = 0xFFFF);
+    Token* TokenExists(const wxString& name, const Token* parent = 0, short int kindMask = 0xFFFF);
 
     /** Support function overloading */
-    Token* TokenExists(const wxString& name, const wxString& baseArgs, Token* parent, TokenKind kind);
+    Token* TokenExists(const wxString& name, const wxString& baseArgs, const Token* parent, TokenKind kind);
 
     /** TODO comment here?
       */
     Token* FindTokenFromQueue(std::queue<wxString>& q,
-                              Token* parent = 0,
-                              bool createIfNotExist = false,
-                              Token* parentIfCreated = 0);
+                              Token*                parent = 0,
+                              bool                  createIfNotExist = false,
+                              Token*                parentIfCreated = 0);
 
     /** Converts a full argument list (including variable names) to argument types only and strips spaces.
       * eg: if the argument list is like "(const TheClass* the_class, int my_int)"
@@ -286,11 +286,30 @@ private:
     /** Get the macro's type, if the token is a macro, and saved the type in tokenName */
     bool GetRealTypeIfTokenIsMacro(wxString& tokenName);
 
+    /** Read the <xxxx=yyy, zzz> , and store the value in m_TemplateArgs */
     void GetTemplateArgs();
+
+    /** this function just associate the formal template argument to actual argument
+     *  For example, we have such code:
+     *  template <typename T> class AAA { T m_aaa;};
+     *  AAA<int> bbb;
+     *  When handling the "bbb", we need to construct a TemplateMap, we store the map
+     *  in the "bbb"'s member variable, which is "T"->"int".
+     */
     void ResolveTemplateArgs(Token* newToken);
+
+    /** normally the template argument is all in a wxString, this function just split them
+     *  to a wxArrayString, each element is an actual argument.
+     */
     wxArrayString GetTemplateArgArray(const wxString& templateArgs, bool remove_gt_lt, bool add_last);
+
+    /** Split formal template argument list*/
     void ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals);
+
+    /** Split actual template argument list*/
     void ResolveTemplateActualArgs(const wxString& templateArgs, wxArrayString& actuals);
+
+    /** associate formal argument with actual template argument*/
     bool ResolveTemplateMap(const wxString& typeStr, const wxArrayString& actuals,
                             std::map<wxString, wxString>& results);
 
@@ -306,7 +325,7 @@ private:
     ParserBase*          m_Parent;
 
     /** a pointer to the token tree, all the tokens will be added to that tree structure */
-    TokensTree*          m_TokensTree;
+    TokenTree*           m_TokenTree;
 
     /** parent Token, for example, when you are parsing in the class member variables, m_LastParent
       * holds a pointer to the current context, which is a token holding class name

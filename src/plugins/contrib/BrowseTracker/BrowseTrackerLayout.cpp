@@ -260,13 +260,13 @@ bool BrowseTrackerLayout::Save(const wxString& filename, FileBrowse_MarksHash& m
             cursor->SetAttribute("position", f->editorPos);
             cursor->SetAttribute("topLine", f->editorTopLine);
 
-            EditorBase* eb = 0;
+            ////EditorBase* eb = 0;
             // write out a string of browse mark positions
             #if defined(LOGGING)
             ////LOGIT( _T("ProjectFilename[%s]"),f->file.GetFullPath().c_str() );
             #endif
 
-            eb = Manager::Get()->GetEditorManager()->GetEditor(f->file.GetFullPath());
+            ////eb = Manager::Get()->GetEditorManager()->GetEditor(f->file.GetFullPath());
             #if defined(LOGGING)
             ////if (eb) LOGIT( _T("EditorBase Filename[%d][%s]"), i, eb->GetFilename().c_str() );
             #endif
@@ -362,7 +362,7 @@ void BrowseTrackerLayout::DumpBrowse_Marks( const wxString /*hashType*/, FileBro
         phash = &m_FileBook_MarksArchive;
     FileBrowse_MarksHash& hash = *phash;
     #if defined(LOGGING)
-    LOGIT( _T("Dump_%s Size[%d]"), hashType.c_str(), hash.size() );
+    LOGIT( _T("Dump_%s Size[%lu]"), hashType.wx_str(), static_cast<unsigned long>(hash.size()) );
     #endif
     for (FileBrowse_MarksHash::iterator it = hash.begin(); it != hash.end(); ++it)
     {

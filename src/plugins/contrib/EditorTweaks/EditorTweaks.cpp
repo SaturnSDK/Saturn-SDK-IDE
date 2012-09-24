@@ -166,7 +166,7 @@ void EditorTweaks::OnAttach()
 
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("EditorTweaks"));
 
-    for (int i = 0 ; i < cfg->ReadInt(_T("AlingerSavedEntries"),defaultStoredAlignerEntries) ; ++i)
+    for (int i = 0 ; i < cfg->ReadInt(_T("AlignerSavedEntries"),defaultStoredAlignerEntries) ; ++i)
     {
         e.MenuName = cfg->Read(wxString::Format(_T("AlignerFirstName%d"),i),defaultNames[i]);
         e.ArgumentString = cfg->Read(wxString::Format(_T("AlignerFirstArgumentString%d"),i) ,defaultStrings[i]);
@@ -197,14 +197,14 @@ void EditorTweaks::OnRelease(bool /*appShutDown*/)
     std::sort (AlignerMenuEntries.begin(), AlignerMenuEntries.end(),CompareAlignerMenuEntryObject);
     std::reverse( AlignerMenuEntries.begin(), AlignerMenuEntries.end());
     int i = 0;
-    for (; i < cfg->ReadInt(_T("AlingerMaxSavedEntries"),defaultStoredAlignerEntries) && i < AlignerMenuEntries.size() ; ++i)
+    for (; i < cfg->ReadInt(_T("AlingerMaxSavedEntries"),defaultStoredAlignerEntries) && i < static_cast<int>(AlignerMenuEntries.size()) ; ++i)
     {
         cfg->Write(wxString::Format(_T("AlignerFirstName%d"),i),AlignerMenuEntries[i].MenuName);
         cfg->Write(wxString::Format(_T("AlignerFirstArgumentString%d"),i) ,AlignerMenuEntries[i].ArgumentString);
 
         Disconnect(AlignerMenuEntries[i].id, wxEVT_COMMAND_MENU_SELECTED,  wxCommandEventHandler(EditorTweaks::OnAlign) );
     }
-    cfg->Write(_T("AlingerSavedEntries"),i);
+    cfg->Write(_T("AlignerSavedEntries"),i);
     for (; i < static_cast<int>(AlignerMenuEntries.size()) ; ++i)
         Disconnect(AlignerMenuEntries[i].id, wxEVT_COMMAND_MENU_SELECTED,  wxCommandEventHandler(EditorTweaks::OnAlign) );
     cfg->Write(_("SuppressInsertKey"),m_suppress_insert);
@@ -652,7 +652,28 @@ void EditorTweaks::OnStripTrailingBlanks(wxCommandEvent &/*event*/)
     if (!ed || !ed->GetControl())
         return;
 
-    wxMessageBox(_("Not Implemented"));
+    cbStyledTextCtrl* control = ed->GetControl();
+    int maxLines = control->GetLineCount();
+    control->BeginUndoAction();
+    for (int line = 0; line < maxLines; line++)
+    {
+        int lineStart = control->PositionFromLine(line);
+        int lineEnd = control->GetLineEndPosition(line);
+        int i = lineEnd-1;
+        wxChar ch = (wxChar)(control->GetCharAt(i));
+        while ((i >= lineStart) && ((ch == _T(' ')) || (ch == _T('\t'))))
+        {
+            i--;
+            ch = (wxChar)(control->GetCharAt(i));
+        }
+        if (i < (lineEnd-1))
+        {
+            control->SetTargetStart(i+1);
+            control->SetTargetEnd(lineEnd);
+            control->ReplaceTarget(_T(""));
+        }
+    }
+    control->EndUndoAction();
 }
 
 void EditorTweaks::OnEnsureConsistentEOL(wxCommandEvent &/*event*/)

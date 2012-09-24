@@ -171,19 +171,19 @@ bool CodeRefactoring::Parse()
     // handle local variables
     bool isLocalVariable = false;
 
-    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+    TokenTree* tree = m_NativeParser.GetParser().GetTokenTree();
 
-    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
-    Token* token = tree->at(*targetResult.begin());
+    const Token* token = tree->at(*targetResult.begin());
     if (token)
     {
-        Token* parent = tree->at(token->m_ParentIndex);
+        const Token* parent = tree->at(token->m_ParentIndex);
         if (parent && parent->m_TokenKind == tkFunction)
             isLocalVariable = true;
     }
 
-    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
 
     wxArrayString files;
     cbProject* project = m_NativeParser.GetProjectByEditor(editor);
@@ -287,17 +287,17 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
     if (!editor)
         return 0;
 
-    Token* parentOfLocalVariable = nullptr;
+    const Token* parentOfLocalVariable = nullptr;
     if (isLocalVariable)
     {
-        TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+        TokenTree* tree = m_NativeParser.GetParser().GetTokenTree();
 
-        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
-        Token* token = tree->at(*targetResult.begin());
+        const Token* token = tree->at(*targetResult.begin());
         parentOfLocalVariable = tree->at(token->m_ParentIndex);
 
-        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
     }
 
     // now that list is filled, we'll search
@@ -310,7 +310,7 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
     EditorColourSet edColSet;
 
     size_t totalCount = 0;
-    for (SearchDataMap::iterator it = m_SearchDataMap.begin(); it != m_SearchDataMap.end(); ++it)
+    for (SearchDataMap::const_iterator it = m_SearchDataMap.begin(); it != m_SearchDataMap.end(); ++it)
         totalCount += it->second.size();
 
     // let's create a progress dialog because it might take some time depending on the files count
@@ -374,7 +374,7 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
             }
 
             // verify result
-            TokenIdxSet::iterator findIter = targetResult.begin();
+            TokenIdxSet::const_iterator findIter = targetResult.begin();
             for (; findIter != targetResult.end(); ++findIter)
             {
                 if (result.find(*findIter) != result.end())
@@ -390,14 +390,14 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                 {
                     bool do_continue = false;
 
-                    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+                    TokenTree* tree = m_NativeParser.GetParser().GetTokenTree();
 
-                    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+                    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokenTreeMutex)
 
-                    Token* token = tree->at(*findIter);
+                    const Token* token = tree->at(*findIter);
                     if (token)
                     {
-                        Token* parent = tree->at(token->m_ParentIndex);
+                        const Token* parent = tree->at(token->m_ParentIndex);
                         if (parent != parentOfLocalVariable)
                         {
                             it->second.erase(itList++);
@@ -405,7 +405,7 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                         }
                     }
 
-                    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+                    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokenTreeMutex)
 
                     if (do_continue) continue;
                 }
@@ -539,7 +539,8 @@ void CodeRefactoring::GetAllProjectFiles(wxArrayString& files, cbProject* projec
         return;
 
     // fill the search list with all the project files
-    for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
+    for (FilesList::const_iterator it = project->GetFilesList().begin();
+                                   it != project->GetFilesList().end(); ++it)
     {
         ProjectFile* pf = *it;
         if (!pf)

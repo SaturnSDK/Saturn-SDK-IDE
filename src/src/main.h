@@ -58,7 +58,7 @@ class MainFrame : public wxFrame
 {
 	public:
         // needed for binding with SqPlus
-        MainFrame& operator=(const MainFrame& /*rhs*/) // prevent assignement operator
+        MainFrame& operator=(const MainFrame& /*rhs*/) // prevent assignment operator
         {
         	cbThrow(_T("Can't use MainFrame's operator="));
         	return *this;
@@ -165,6 +165,7 @@ class MainFrame : public wxFrame
         void OnEditLineTranspose(wxCommandEvent& event);
         void OnEditLineCopy(wxCommandEvent& event);
         void OnEditLinePaste(wxCommandEvent& event);
+        void OnEditLineMove(wxCommandEvent& event);
         void OnEditUpperCase(wxCommandEvent& event);
         void OnEditLowerCase(wxCommandEvent& event);
         void OnEditInsertNewLine(wxCommandEvent& event);
@@ -184,6 +185,7 @@ class MainFrame : public wxFrame
         void OnViewLayoutSave(wxCommandEvent& event);
         void OnViewLayoutDelete(wxCommandEvent& event);
         void OnViewScriptConsole(wxCommandEvent& event);
+        void OnViewHideEditorTabs(wxCommandEvent& event);
 
         void OnSearchFind(wxCommandEvent& event);
         void OnSearchFindNext(wxCommandEvent& event);
@@ -215,6 +217,7 @@ class MainFrame : public wxFrame
         void OnFocusLogsAndOthers(wxCommandEvent& event);
         void OnSwitchTabs(wxCommandEvent& event);
         void OnToggleFullScreen(wxCommandEvent& event);
+        void OnToggleStartPage(wxCommandEvent& event);
 
         // plugin events
         void OnPluginLoaded(CodeBlocksEvent& event);
@@ -322,7 +325,7 @@ class MainFrame : public wxFrame
         void DoUpdateEditorStyle();
         void DoUpdateEditorStyle(cbAuiNotebook* target, const wxString& prefix, long defaultStyle);
 
-        void ShowHideStartPage(bool forceHasProject = false);
+        void ShowHideStartPage(bool forceHasProject = false, int forceState = 0);
         void ShowHideScriptConsole();
 
         void LoadWindowState();
@@ -377,8 +380,8 @@ class MainFrame : public wxFrame
 
         wxScrollingDialog* m_pBatchBuildDialog;
 
-        DebuggerMenuHandler *m_debuggerMenuHandler;
-        DebuggerToolbarHandler *m_debuggerToolbarHandler;
+        DebuggerMenuHandler*    m_debuggerMenuHandler;
+        DebuggerToolbarHandler* m_debuggerToolbarHandler;
 
         DECLARE_EVENT_TABLE()
 };

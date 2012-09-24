@@ -44,6 +44,7 @@
 #endif
 
 
+
 cbPlugin::cbPlugin()
     : m_Type(ptNone),
     m_IsAttached(false)
@@ -59,14 +60,12 @@ void cbPlugin::Attach()
 {
     if (m_IsAttached)
         return;
-#ifndef CB_FOR_CONSOLE
     wxWindow* window = Manager::Get()->GetAppWindow();
     if (window)
     {
         // push ourself in the application's event handling chain...
         window->PushEventHandler(this);
     }
-#endif // #ifndef CB_FOR_CONSOLE
     m_IsAttached = true;
     OnAttach();
     SetEvtHandlerEnabled(true);
@@ -96,14 +95,12 @@ void cbPlugin::Release(bool appShutDown)
     if (appShutDown)
         return; // nothing more to do, if the app is shutting down
 
-#ifndef CB_FOR_CONSOLE
     wxWindow* window = Manager::Get()->GetAppWindow();
     if (window)
     {
         // remove ourself from the application's event handling chain...
         window->RemoveEventHandler(this);
     }
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void cbPlugin::NotImplemented(const wxString& log) const
@@ -120,7 +117,6 @@ cbCompilerPlugin::cbCompilerPlugin()
     m_Type = ptCompiler;
 }
 
-#ifndef CB_FOR_CONSOLE
 /////
 ///// cbDebuggerPlugin
 /////
@@ -140,6 +136,7 @@ cbDebuggerPlugin::cbDebuggerPlugin(const wxString &guiName, const wxString &sett
 {
     m_Type = ptDebugger;
 }
+
 
 void cbDebuggerPlugin::OnAttach()
 {
@@ -375,7 +372,7 @@ bool HasBreakpoint(cbDebuggerPlugin &plugin, wxString const &filename, int line)
     int count = plugin.GetBreakpointsCount();
     for (int ii = 0; ii < count; ++ii)
     {
-        const cbBreakpoint::Pointer &b = plugin.GetBreakpoint(ii);
+        const cb::shared_ptr<cbBreakpoint> &b = plugin.GetBreakpoint(ii);
 
         if (b->GetLocation() == filename && b->GetLine() == line)
             return true;
@@ -396,7 +393,7 @@ void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline
     int count = GetBreakpointsCount();
     for (int ii = 0; ii < count; ++ii)
     {
-        const cbBreakpoint::Pointer &b = GetBreakpoint(ii);
+        const cb::shared_ptr<cbBreakpoint> &b = GetBreakpoint(ii);
 
         if (b->GetLocation() == filename)
         {
@@ -411,18 +408,18 @@ void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline
         lines = -lines;
         int endline = startline + lines - 1;
 
-        std::vector<cbBreakpoint::Pointer> to_remove;
+        std::vector<cb::shared_ptr<cbBreakpoint> > to_remove;
 
         for (std::vector<int>::iterator it = breakpoints_for_file.begin(); it != breakpoints_for_file.end(); ++it)
         {
-            const cbBreakpoint::Pointer &b = GetBreakpoint(*it);
+            const cb::shared_ptr<cbBreakpoint> &b = GetBreakpoint(*it);
             if (b->GetLine() > endline)
                 ShiftBreakpoint(*it, -lines);
             else if (b->GetLine() >= startline && b->GetLine() <= endline)
                 to_remove.push_back(b);
         }
 
-        for (std::vector<cbBreakpoint::Pointer>::iterator it = to_remove.begin(); it != to_remove.end(); ++it)
+        for (std::vector<cb::shared_ptr<cbBreakpoint> >::iterator it = to_remove.begin(); it != to_remove.end(); ++it)
             DeleteBreakpoint(*it);
 
         // special case:
@@ -441,7 +438,7 @@ void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline
     {
         for (std::vector<int>::iterator it = breakpoints_for_file.begin(); it != breakpoints_for_file.end(); ++it)
         {
-            const cbBreakpoint::Pointer &b = GetBreakpoint(*it);
+            const cb::shared_ptr<cbBreakpoint> &b = GetBreakpoint(*it);
             if (b->GetLine() > startline)
                 ShiftBreakpoint(*it, lines);
         }
@@ -622,11 +619,7 @@ void cbDebuggerPlugin::SwitchToDebuggingLayout()
 
     CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, perspectiveName);
 
-    #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.c_str()));
-    #endif
 
     // query the current layout
     Manager::Get()->ProcessEvent(queryEvent);
@@ -644,11 +637,7 @@ void cbDebuggerPlugin::SwitchToPreviousLayout()
 
     wxString const &name = !switchEvent.layout.IsEmpty() ? switchEvent.layout : wxString(_("Code::Blocks default"));
 
-    #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.c_str()));
-    #endif
 
     // switch to previous layout
     Manager::Get()->ProcessEvent(switchEvent);
@@ -788,7 +777,7 @@ namespace
 {
 wxString MakeSleepCommand()
 {
-    return wxString::Format(wxT("sleep %d"), 80000000 + ::wxGetProcessId());
+    return wxString::Format(wxT("sleep %lu"), 80000000 + ::wxGetProcessId());
 }
 }
 #endif
@@ -901,7 +890,7 @@ wxString cbDebuggerPlugin::GetConsoleTty(int ConsolePid)
         do
         {
             // check for correct "sleep" line
-            if (psCmd.Contains(wxT("-T")))
+            if (psCmd.Find(ConsPidStr) != wxNOT_FOUND)
                 break; //error;wrong sleep line.
             // found "sleep 93343" string, extract tty field
             ConsTtyStr = wxT("/dev/") + psCmd.BeforeFirst(' ');
@@ -986,9 +975,6 @@ void cbDebuggerPlugin::CancelValueTooltip(CodeBlocksEvent& event)
 {
     Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->HideValueTooltip();
 }
-
-#endif // #ifndef CB_FOR_CONSOLE
-
 /////
 ///// cbToolPlugin
 /////

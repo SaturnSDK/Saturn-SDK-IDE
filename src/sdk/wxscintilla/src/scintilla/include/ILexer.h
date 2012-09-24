@@ -49,7 +49,9 @@ enum { lvOriginal=0 };
 
 class ILexer {
 public:
+/* C::B begin */
 	virtual ~ILexer() {}
+/* C::B end */
 	virtual int SCI_METHOD Version() const = 0;
 	virtual void SCI_METHOD Release() = 0;
 	virtual const char * SCI_METHOD PropertyNames() = 0;
@@ -61,6 +63,14 @@ public:
 	virtual void SCI_METHOD Lex(unsigned int startPos, int lengthDoc, int initStyle, IDocument *pAccess) = 0;
 	virtual void SCI_METHOD Fold(unsigned int startPos, int lengthDoc, int initStyle, IDocument *pAccess) = 0;
 	virtual void * SCI_METHOD PrivateCall(int operation, void *pointer) = 0;
+};
+
+class ILoader {
+public:
+	virtual int SCI_METHOD Release() = 0;
+	// Returns a status code from SC_STATUS_*
+	virtual int SCI_METHOD AddData(char *data, int length) = 0;
+	virtual void * SCI_METHOD ConvertToDocument() = 0;
 };
 
 #ifdef SCI_NAMESPACE

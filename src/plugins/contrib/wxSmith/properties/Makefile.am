@@ -1,9 +1,7 @@
-AM_CPPFLAGS = -DwxPG_USE_WXMODULE=0
-
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
-		-I$(top_srcdir)/src/sdk/wxpropgrid/include
+		$(WXPROPGRID_INCLUDE)
 
 noinst_LTLIBRARIES = libwxsmith_properties.la
 

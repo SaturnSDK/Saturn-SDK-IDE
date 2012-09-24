@@ -42,60 +42,60 @@ class wxsItem;
  */
 class wxsItemEditor : public wxsEditor
 {
-	public:
+    public:
 
         /** \brief Ctor */
-		wxsItemEditor(wxWindow* parent,wxsItemRes* ItemRes);
+        wxsItemEditor(wxWindow* parent,wxsItemRes* ItemRes);
 
         /** \brief Dctor */
-		virtual ~wxsItemEditor();
+        virtual ~wxsItemEditor();
 
-		/** \brief Saving resource */
-		virtual bool Save();
+        /** \brief Saving resource */
+        virtual bool Save();
 
-		/** \brief Notifying that configuration has been changed */
-		static void ConfigChanged();
+        /** \brief Notifying that configuration has been changed */
+        static void ConfigChanged();
 
     protected:
 
-		/** \brief Returns true if resource is modified, false otherwise */
-		virtual bool GetModified() const;
+        /** \brief Returns true if resource is modified, false otherwise */
+        virtual bool GetModified() const;
 
-		/** \brief Checking if can Undo */
-		virtual bool CanUndo() const;
+        /** \brief Checking if can Undo */
+        virtual bool CanUndo() const;
 
-		/** \brief Ckecing if can Redo */
-		virtual bool CanRedo() const;
+        /** \brief Checking if can Redo */
+        virtual bool CanRedo() const;
 
-		/** \brief Checking if we can cut */
-		virtual bool HasSelection() const;
+        /** \brief Checking if we can cut */
+        virtual bool HasSelection() const;
 
-		/** \brief Checking if we can paste */
-		virtual bool CanPaste() const;
+        /** \brief Checking if we can paste */
+        virtual bool CanPaste() const;
 
         /** \brief testing if current resource is read-only */
         virtual bool IsReadOnly() const;
 
         /** \brief Undoing */
-		virtual void Undo();
+        virtual void Undo();
 
-		/** \brief Redoing */
-		virtual void Redo();
+        /** \brief Redoing */
+        virtual void Redo();
 
-		/** \brief Cutting */
-		virtual void Cut();
+        /** \brief Cutting */
+        virtual void Cut();
 
-		/** \brief Copying */
-		virtual void Copy();
+        /** \brief Copying */
+        virtual void Copy();
 
-		/** \brief Pasting */
-		virtual void Paste();
+        /** \brief Pasting */
+        virtual void Paste();
 
     private:
 
         WX_DECLARE_HASH_SET(wxsItemEditor*,wxPointerHash,wxPointerEqual,WindowSet);
 
-		/* Event handlers */
+        /* Event handlers */
         void OnMouseClick(wxMouseEvent& event);
         void OnButton(wxCommandEvent& event);
         void OnInsPoint(wxCommandEvent& event);
@@ -144,7 +144,7 @@ class wxsItemEditor : public wxsEditor
         /** \brief Building icon for one button */
         void BuildInsTypeIcon(wxBitmapButton* Btn,const wxImage& Original,int ButtonType);
 
-        /** \brief Opening or closiung Quick Props panel */
+        /** \brief Opening or closing Quick Props panel */
         void ToggleQuickPropsPanel(bool Open);
 
         /** \brief Refreshing content of Quick Props panel */
@@ -156,7 +156,7 @@ class wxsItemEditor : public wxsEditor
         /** \brief Updating things related to current selection */
         void UpdateSelection();
 
-        /** \brief Updating editor's title applying asterix before name of file when modified */
+        /** \brief Updating editor's title applying asterisk before name of file when modified */
         void UpdateModified();
 
         /** \brief Getting item which will be used as reference item when adding new
@@ -167,16 +167,16 @@ class wxsItemEditor : public wxsEditor
         /** \brief Starting sequence of adding new item when inserting by pointing with mouse */
         void StartInsertPointSequence(const wxsItemInfo* Info);
 
-		/** \brief Reloading images in all editors */
-		static void ReloadImages();
+        /** \brief Reloading images in all editors */
+        static void ReloadImages();
 
-		/** \brief Causing editor's content to refresh */
-		static void RefreshContents();
+        /** \brief Causing editor's content to refresh */
+        static void RefreshContents();
 
-		/** \brief Showing popup menu */
-		void ShowPopup(wxsItem* Item,wxMenu* Menu);
+        /** \brief Showing popup menu */
+        void ShowPopup(wxsItem* Item,wxMenu* Menu);
 
-        wxsItemResData* m_Data;             ///< \brief Data managment object
+        wxsItemResData* m_Data;             ///< \brief Data management object
 
         wxsItemEditorContent* m_Content;    ///< \brief Window with content area
         wxsToolSpace* m_ToolSpace;          ///< \brief Space for tools in resource
@@ -194,7 +194,7 @@ class wxsItemEditor : public wxsEditor
         wxBitmapButton* m_PreviewBtn;
         wxBitmapButton* m_QuickPanelBtn;
         wxWindow* m_TopPreview;             ///< \brief Top window of preview
-        wxPanel* m_PreviewBackground;       ///< \brief Background panel used as background for peview
+        wxPanel* m_PreviewBackground;       ///< \brief Background panel used as background for preview
         int m_InsType;                      ///< \brief Current insertion type
         int m_InsTypeMask;                  ///< \brief Current insertion type mask
         bool m_QuickPropsOpen;              ///< \brief Set to true if quick properties panel is opened

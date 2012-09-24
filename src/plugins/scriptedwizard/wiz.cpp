@@ -479,11 +479,7 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
                         }
                         else
                         {
-                            #if wxCHECK_VERSION(2, 9, 0)
                             Manager::Get()->GetLogManager()->DebugLog(F(_T("File %s exists"), actual.wx_str()));
-                            #else
-                            Manager::Get()->GetLogManager()->DebugLog(F(_T("File %s exists"), actual.c_str()));
-                            #endif
                         }
                     }
                 }
@@ -702,11 +698,7 @@ wxString Wiz::GenerateFile(const wxString& basePath, const wxString& filename, c
                 // attempt to create file outside the project dir
                 // remove any path info from the filename
                 fname = fname.GetFullName();
-                #if wxCHECK_VERSION(2, 9, 0)
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("Attempt to generate a file outside the project base dir:\nOriginal: %s\nConverted to:%s"), filename.wx_str(), fname.GetFullPath().wx_str()));
-                #else
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("Attempt to generate a file outside the project base dir:\nOriginal: %s\nConverted to:%s"), filename.c_str(), fname.GetFullPath().c_str()));
-                #endif
                 break;
             }
         }
@@ -1164,11 +1156,7 @@ void Wiz::AddWizard(TemplateOutputType otype,
         WizardInfo& info = m_Wizards[i];
         if (info.output_type == otype && info.title == title)
         {
-            #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Wizard already registered. Skipping... (%s)"), title.wx_str()));
-            #else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Wizard already registered. Skipping... (%s)"), title.c_str()));
-            #endif
             return;
         }
     }
@@ -1204,11 +1192,7 @@ void Wiz::AddWizard(TemplateOutputType otype,
         default: break;
     }
 
-    #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(typS + _T(" wizard added for '%s'"), title.wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(typS + _T(" wizard added for '%s'"), title.c_str()));
-    #endif
 }
 
 wxString Wiz::GetProjectPath()

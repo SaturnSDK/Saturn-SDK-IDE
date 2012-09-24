@@ -269,19 +269,19 @@ wxObject *wxsTreebook::OnBuildPreview(wxWindow *Parent, long PreviewFlags)
 
     AddChildrenPreview(Treebook, PreviewFlags);
 
-	for ( int i=0; i<GetChildCount(); i++ )
-	{
-	    wxsItem* Child = GetChild(i);
-	    wxsTreebookExtra* Extra = (wxsTreebookExtra*)GetChildExtra(i);
+    for ( int i=0; i<GetChildCount(); i++ )
+    {
+        wxsItem* Child = GetChild(i);
+        wxsTreebookExtra* Extra = (wxsTreebookExtra*)GetChildExtra(i);
 
-	    wxWindow* ChildPreview = wxDynamicCast(GetChild(i)->GetLastPreview(),wxWindow);
-	    if ( !ChildPreview ) continue;
+        wxWindow* ChildPreview = wxDynamicCast(GetChild(i)->GetLastPreview(),wxWindow);
+        if ( !ChildPreview ) continue;
 
-	    bool Selected = (Child == m_CurrentSelection);
-	    if ( PreviewFlags & pfExact ) Selected = Extra->m_Selected;
+        bool Selected = (Child == m_CurrentSelection);
+        if ( PreviewFlags & pfExact ) Selected = Extra->m_Selected;
 
-	    Treebook->AddPage(ChildPreview,Extra->m_Label,Selected);
-	}
+        Treebook->AddPage(ChildPreview,Extra->m_Label,Selected);
+    }
 
     return Treebook;
 }
@@ -301,11 +301,7 @@ void wxsTreebook::OnBuildCreatingCode()
                 for(int i = 0; i < GetChildCount(); i++)
                 {
                     wxsTreebookExtra *Extra = (wxsTreebookExtra*)GetChildExtra(i);
-#if wxCHECK_VERSION(2, 9, 0)
                     Codef(_T("%AAddPage(%o, %t, %b);\n"), i, Extra->m_Label.wx_str(), Extra->m_Selected);
-#else
-                    Codef(_T("%AAddPage(%o, %t, %b);\n"), i, Extra->m_Label.c_str(), Extra->m_Selected);
-#endif
                 }
 
                 break;

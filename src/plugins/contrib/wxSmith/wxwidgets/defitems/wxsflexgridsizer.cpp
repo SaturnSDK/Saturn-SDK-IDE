@@ -78,19 +78,19 @@ wxsFlexGridSizer::wxsFlexGridSizer(wxsItemResData* Data):
 
 wxSizer* wxsFlexGridSizer::OnBuildSizerPreview(wxWindow* Parent)
 {
-	wxFlexGridSizer* Sizer = new wxFlexGridSizer(Rows,Cols,
+    wxFlexGridSizer* Sizer = new wxFlexGridSizer(Rows,Cols,
         VGap.GetPixels(Parent),HGap.GetPixels(Parent));
 
     wxArrayInt Cols = GetArray(GrowableCols);
     for ( size_t i=0; i<Cols.Count(); i++ )
     {
-    	Sizer->AddGrowableCol(Cols[i]);
+        Sizer->AddGrowableCol(Cols[i]);
     }
 
     wxArrayInt Rows = GetArray(GrowableRows);
     for ( size_t i=0; i<Rows.Count(); i++ )
     {
-    	Sizer->AddGrowableRow(Rows[i]);
+        Sizer->AddGrowableRow(Rows[i]);
     }
     return Sizer;
 }
@@ -103,13 +103,8 @@ void wxsFlexGridSizer::OnBuildSizerCreatingCode()
         {
             AddHeader(_T("<wx/sizer.h>"),GetInfo().ClassName,hfInPCH);
             Codef(_T("%C(%d, %d, %s, %s);\n"),Rows,Cols,
-                 #if wxCHECK_VERSION(2, 9, 0)
-                 VGap.GetPixelsCode(GetCoderContext()).wx_str(),
-                 HGap.GetPixelsCode(GetCoderContext()).wx_str());
-                 #else
-                 VGap.GetPixelsCode(GetCoderContext()).c_str(),
-                 HGap.GetPixelsCode(GetCoderContext()).c_str());
-                 #endif
+                  VGap.GetPixelsCode(GetCoderContext()).wx_str(),
+                  HGap.GetPixelsCode(GetCoderContext()).wx_str());
 
             wxArrayInt Cols = GetArray(GrowableCols);
             for ( size_t i=0; i<Cols.Count(); i++ )

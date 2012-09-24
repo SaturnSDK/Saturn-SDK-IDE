@@ -97,11 +97,7 @@ Compiler::Compiler(const wxString& name, const wxString& ID, const wxString& par
     m_Switches.forceFwdSlashes = false;
     m_VersionString = wxEmptyString;
 
-#if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Added compiler \"%s\""), m_Name.wx_str()));
-#else
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Added compiler \"%s\""), m_Name.c_str()));
-#endif
 }
 
 Compiler::Compiler(const Compiler& other) :
@@ -435,7 +431,7 @@ void Compiler::SaveSettings(const wxString& baseKey)
         {
             if (n >= m_Mirror.Commands[i].size() || m_Mirror.Commands[i][n] != m_Commands[i][n])
             {
-                wxString key = wxString::Format(_T("%s/macros/%s/tool%d/"), tmp.c_str(), CommandTypeDescriptions[i].c_str(), n);
+                wxString key = wxString::Format(_T("%s/macros/%s/tool%lu/"), tmp.c_str(), CommandTypeDescriptions[i].c_str(), static_cast<unsigned long>(n));
                 cfg->Write(key + _T("command"), m_Commands[i][n].command);
                 cfg->Write(key + _T("extensions"), m_Commands[i][n].extensions);
                 cfg->Write(key + _T("generatedFiles"), m_Commands[i][n].generatedFiles);

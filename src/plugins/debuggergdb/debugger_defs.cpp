@@ -153,7 +153,7 @@ wxString DebuggerBreakpoint::GetInfo() const
                     s += wxT(" ");
                 s += _("temporary");
             }
-            s += wxString::Format(wxT(" (index: %d)"), index);
+            s += wxString::Format(wxT(" (index: %ld)"), index);
             return s;
         }
         case bptFunction:
@@ -209,7 +209,7 @@ bool GDBWatch::SetValue(const wxString &value)
 }
 void GDBWatch::GetFullWatchString(wxString &full_watch) const
 {
-    cbWatch::ConstPointer parent = GetParent();
+    cb::shared_ptr<const cbWatch> parent = GetParent();
     if (parent)
     {
         parent->GetFullWatchString(full_watch);

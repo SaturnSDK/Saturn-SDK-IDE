@@ -27,6 +27,7 @@
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --multiple-instance -ns -ni" />
 				<Option host_application="../../../devel/codeblocks" />
+				<Option run_host_application_in_terminal="0" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Linker>
 					<Add library="libwxPdfDocument.a" />
@@ -42,6 +43,7 @@
 			<Add alias="All" targets="wxPdfDocument;default;" />
 		</VirtualTargets>
 		<Compiler>
+			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-g" />
 			<Add option="-Ulinux" />
@@ -97,6 +99,9 @@
 			<Option target="default" />
 		</Unit>
 		<Unit filename="exporter.h">
+			<Option target="default" />
+		</Unit>
+		<Unit filename="manifest.xml">
 			<Option target="default" />
 		</Unit>
 		<Unit filename="wxPdfDocument/include/wx/pdfannotation.h">
@@ -241,6 +246,9 @@
 			<Option target="wxPdfDocument" />
 		</Unit>
 		<Unit filename="wxPdfDocument/include/wx/pdfpattern.h">
+			<Option target="wxPdfDocument" />
+		</Unit>
+		<Unit filename="wxPdfDocument/include/wx/pdfprint.h">
 			<Option target="wxPdfDocument" />
 		</Unit>
 		<Unit filename="wxPdfDocument/include/wx/pdfproperties.h">
@@ -402,6 +410,9 @@
 		<Unit filename="wxPdfDocument/src/pdfpattern.cpp">
 			<Option target="wxPdfDocument" />
 		</Unit>
+		<Unit filename="wxPdfDocument/src/pdfprint.cpp">
+			<Option target="wxPdfDocument" />
+		</Unit>
 		<Unit filename="wxPdfDocument/src/pdfrijndael.cpp">
 			<Option target="wxPdfDocument" />
 		</Unit>
@@ -412,6 +423,9 @@
 			<Option target="wxPdfDocument" />
 		</Unit>
 		<Unit filename="wxPdfDocument/src/pdfxml.cpp">
+			<Option target="wxPdfDocument" />
+		</Unit>
+		<Unit filename="wxPdfDocument/src/wxmemdbg.h">
 			<Option target="wxPdfDocument" />
 		</Unit>
 		<Extensions>

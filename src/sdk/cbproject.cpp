@@ -23,49 +23,39 @@
     #include <wx/dir.h>
 
     #include "cbproject.h" // class's header file
-    #include "compiler.h" // GetSwitches
-    #include "sdk_events.h"
-    #include "manager.h"
     #include "cbeditor.h"
-    #include "globals.h"
-    #include "pluginmanager.h"
-    #include "projectmanager.h"
-    #include "macrosmanager.h"
-    #include "logmanager.h"
-    #ifndef CB_FOR_CONSOLE
-    #include "editormanager.h"
-    #endif // #ifndef CB_FOR_CONSOLE
-    #include "filemanager.h"
-    #include "configmanager.h"
+    #include "cbtreectrl.h"
+    #include "compiler.h" // GetSwitches
     #include "compilerfactory.h"
+    #include "configmanager.h"
+    #include "editormanager.h"
+    #include "filemanager.h"
+    #include "globals.h"
+    #include "infowindow.h"
+    #include "logmanager.h"
+    #include "macrosmanager.h"
+    #include "manager.h"
+    #include "pluginmanager.h"
     #include "projectbuildtarget.h"
     #include "projectfile.h"
-    #ifndef CB_FOR_CONSOLE
-    #include "infowindow.h"
-    #else // #ifndef CB_FOR_CONSOLE
-    #include "infowindow_base.h"
-    #endif // #ifndef CB_FOR_CONSOLE
+    #include "projectmanager.h"
+    #include "sdk_events.h"
 #endif
 
 #include <map>
-#ifndef CB_FOR_CONSOLE
 #include "projectoptionsdlg.h"
-#endif // #ifndef CB_FOR_CONSOLE
 #include "projectloader.h"
-#ifndef CB_FOR_CONSOLE
 #include "projectlayoutloader.h"
 #include "selecttargetdlg.h"
-#endif // #ifndef CB_FOR_CONSOLE
 #include "filegroupsandmasks.h"
 #include "filefilters.h"
 #include "annoyingdialog.h"
-#ifndef CB_FOR_CONSOLE
 #include "genericmultilinenotesdlg.h"
-#endif // #ifndef CB_FOR_CONSOLE
 
 // class constructor
 cbProject::cbProject(const wxString& filename)
     : m_CustomMakefile(false),
+    m_Globs(),
     m_FileArray(ProjectFile::CompareProjectFiles),
     m_Loaded(false),
     m_CurrentlyLoading(false),
@@ -89,7 +79,6 @@ cbProject::cbProject(const wxString& filename)
         m_BasePath = GetBasePath();
         Open();
     }
-#ifndef CB_FOR_CONSOLE
     else
     {
         // new project
@@ -116,7 +105,6 @@ cbProject::cbProject(const wxString& filename)
 //            NotifyPlugins(cbEVT_PROJECT_OPEN);
         }
     }
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
 // class destructor
@@ -212,7 +200,6 @@ void cbProject::SetMakefileCustom(bool custom)
     }
 }
 
-#ifndef CB_FOR_CONSOLE
 wxString cbProject::CreateUniqueFilename()
 {
     const wxString prefix = _("Untitled");
@@ -245,7 +232,6 @@ wxString cbProject::CreateUniqueFilename()
     }
     return tmp << _T(".") << FileFilters::CODEBLOCKS_EXT;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::ClearAllProperties()
 {
@@ -368,6 +354,7 @@ void cbProject::CalculateCommonTopLevelPath()
 
     m_CommonTopLevelPath = base.GetFullPath();
     Manager::Get()->GetLogManager()->DebugLog(_T("Project's common toplevel path: ") + m_CommonTopLevelPath);
+
     for (FilesList::iterator it = m_Files.begin(); it != m_Files.end(); ++it)
     {
         ProjectFile* f = (*it);
@@ -391,7 +378,6 @@ void cbProject::Touch()
     m_LastModified = wxDateTime::Now();
 }
 
-#ifndef CB_FOR_CONSOLE
 bool cbProject::SaveAs()
 {
     wxFileName fname;
@@ -535,7 +521,6 @@ bool cbProject::LoadLayout()
     }
     return result;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::BeginAddFiles()
 {
@@ -764,12 +749,10 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     SetModified(true);
     m_ProjectFilesMap[UnixFilename(pf->relativeFilename)] = pf; // add to hashmap
 
-#ifndef CB_FOR_CONSOLE
     if (!wxFileExists(fullFilename))
         pf->SetFileState(fvsMissing);
     else if (!wxFile::Access(fullFilename.c_str(), wxFile::write)) // readonly
         pf->SetFileState(fvsReadOnly);
-#endif // #ifndef CB_FOR_CONSOLE
 
     if (!GenFilesHackMap.empty())
     {
@@ -811,9 +794,7 @@ bool cbProject::RemoveFile(ProjectFile* pf)
     if (!pf)
         return false;
     m_ProjectFilesMap.erase(UnixFilename(pf->relativeFilename)); // remove from hashmap
-#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetEditorManager()->Close(pf->file.GetFullPath());
-#endif // #ifndef CB_FOR_CONSOLE
 
     FilesList::iterator it = m_Files.find(pf);
     if (it == m_Files.end())
@@ -850,7 +831,6 @@ bool cbProject::RemoveFile(ProjectFile* pf)
     return true;
 }
 
-#ifndef CB_FOR_CONSOLE
 void cbProject::SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent)
 {
     wxTreeItemIdValue cookie = 0;
@@ -1588,7 +1568,6 @@ void cbProject::RestoreTreeState(wxTreeCtrl* tree)
 {
     ::RestoreTreeState(tree, m_ProjectNode, m_ExpandedNodes, m_SelectedNodes);
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 const wxString& cbProject::GetMakefile()
 {
@@ -1680,7 +1659,6 @@ ProjectFile* cbProject::GetFileByFilename(const wxString& filename, bool isRelat
     return m_ProjectFilesMap[UnixFilename(tmp)];
 }
 
-#ifndef CB_FOR_CONSOLE
 bool cbProject::QueryCloseAllFiles()
 {
     FilesList::iterator it = m_Files.begin();
@@ -1746,24 +1724,22 @@ bool cbProject::ShowOptions()
             ProjectFile* f = *it++;
             f->UpdateFileDetails();
         }
+        NotifyPlugins(cbEVT_PROJECT_OPTIONS_CHANGED);
         return true;
     }
     return false;
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 int cbProject::SelectTarget(int initial, bool evenIfOne)
 {
     if (!evenIfOne && GetBuildTargetsCount() == 1)
         return 0;
 
-#ifndef CB_FOR_CONSOLE
     SelectTargetDlg dlg(0L, this, initial);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
         return dlg.GetSelection();
 
-#endif // #ifndef CB_FOR_CONSOLE
     return -1;
 }
 
@@ -1792,11 +1768,7 @@ ProjectBuildTarget* cbProject::AddBuildTarget(const wxString& targetName)
     if (HasVirtualBuildTarget(targetName))
     {
         RemoveVirtualBuildTarget(targetName);
-        #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->LogWarning(F(_T("Deleted existing virtual target '%s' because real target was added with the same name"), targetName.wx_str()));
-        #else
-        Manager::Get()->GetLogManager()->LogWarning(F(_T("Deleted existing virtual target '%s' because real target was added with the same name"), targetName.c_str()));
-        #endif
     }
 
     SetModified(true);
@@ -1806,7 +1778,6 @@ ProjectBuildTarget* cbProject::AddBuildTarget(const wxString& targetName)
     return target;
 }
 
-#ifndef CB_FOR_CONSOLE
 bool cbProject::RenameBuildTarget(int index, const wxString& targetName)
 {
     ProjectBuildTarget* target = GetBuildTarget(index);
@@ -1954,7 +1925,6 @@ bool cbProject::RemoveBuildTarget(const wxString& targetName)
 {
     return RemoveBuildTarget(IndexOfBuildTargetName(targetName));
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 int cbProject::IndexOfBuildTargetName(const wxString& targetName) const
 {
@@ -2037,13 +2007,14 @@ ProjectBuildTarget* cbProject::GetBuildTarget(const wxString& targetName)
     return GetBuildTarget(idx);
 }
 
-#ifndef CB_FOR_CONSOLE
 void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
 {
     LogManager* msgMan = Manager::Get()->GetLogManager();
     if (nameOrder.GetCount() != m_Targets.GetCount())
     {
-        msgMan->DebugLog(F(_T("cbProject::ReOrderTargets() : Count does not match (%d sent, %d had)..."), nameOrder.GetCount(), m_Targets.GetCount()));
+        msgMan->DebugLog(F(_T("cbProject::ReOrderTargets() : Count does not match (%lu sent, %lu had)..."),
+                           static_cast<unsigned long>(nameOrder.GetCount()),
+                           static_cast<unsigned long>(m_Targets.GetCount())));
         return;
     }
 
@@ -2052,11 +2023,7 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
         ProjectBuildTarget* target = GetBuildTarget(nameOrder[i]);
         if (!target)
         {
-            #if wxCHECK_VERSION(2, 9, 0)
             msgMan->DebugLog(F(_T("cbProject::ReOrderTargets() : Target \"%s\" not found..."), nameOrder[i].wx_str()));
-            #else
-            msgMan->DebugLog(F(_T("cbProject::ReOrderTargets() : Target \"%s\" not found..."), nameOrder[i].c_str()));
-            #endif
             break;
         }
 
@@ -2078,7 +2045,6 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
     }
     SetModified(true);
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::SetCurrentlyCompilingTarget(ProjectBuildTarget* bt)
 {
@@ -2089,22 +2055,14 @@ bool cbProject::DefineVirtualBuildTarget(const wxString& alias, const wxArrayStr
 {
     if (targets.GetCount() == 0)
     {
-        #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->LogWarning(F(_T("Can't define virtual build target '%s': Group of build targets is empty!"), alias.wx_str()));
-        #else
-        Manager::Get()->GetLogManager()->LogWarning(F(_T("Can't define virtual build target '%s': Group of build targets is empty!"), alias.c_str()));
-        #endif
         return false;
     }
 
     ProjectBuildTarget* existing = GetBuildTarget(alias);
     if (existing)
     {
-        #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->LogWarning(F(_T("Can't define virtual build target '%s': Real build target exists with that name!"), alias.wx_str()));
-        #else
-        Manager::Get()->GetLogManager()->LogWarning(F(_T("Can't define virtual build target '%s': Real build target exists with that name!"), alias.c_str()));
-        #endif
         return false;
     }
 
@@ -2235,7 +2193,6 @@ bool cbProject::GetExtendedObjectNamesGeneration() const
     return m_ExtendedObjectNamesGeneration;
 }
 
-#ifndef CB_FOR_CONSOLE
 void cbProject::SetNotes(const wxString& notes)
 {
     if (m_Notes != notes)
@@ -2280,7 +2237,6 @@ void cbProject::ShowNotes(bool nonEmptyOnly, bool editable)
             SetNotes(dlg.GetNotes());
     }
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::SetTitle(const wxString& title)
 {
@@ -2376,3 +2332,14 @@ void cbProject::ProjectFileRenamed(ProjectFile* pf)
         }
     }
 }
+
+void cbProject::SetGlobs(const std::vector<Glob>& globs)
+{
+    m_Globs = globs;
+}
+
+std::vector<cbProject::Glob> cbProject::GetGlobs() const
+{
+    return m_Globs;
+}
+

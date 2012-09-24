@@ -18,22 +18,24 @@
     #include <wx/wfstream.h>
 
     #include "cbeditor.h" // class's header file
+
     #include "cbauibook.h"
-    #include "globals.h"
-    #include "sdk_events.h"
+    #include "cbplugin.h"
     #include "cbproject.h"
-    #include "projectfile.h"
-    #include "projectbuildtarget.h"
-    #include "editorcolourset.h"
-    #include "manager.h"
     #include "configmanager.h"
     #include "debuggermanager.h"
-    #include "projectmanager.h"
-    #include "pluginmanager.h"
+    #include "editorcolourset.h"
     #include "editormanager.h"
+    #include "globals.h"
+    #include "infowindow.h"
     #include "logmanager.h"
     #include "macrosmanager.h" // ReplaceMacros
-    #include "cbplugin.h"
+    #include "manager.h"
+    #include "pluginmanager.h"
+    #include "projectbuildtarget.h"
+    #include "projectfile.h"
+    #include "projectmanager.h"
+    #include "sdk_events.h"
 #endif
 #include "cbstyledtextctrl.h"
 
@@ -42,7 +44,6 @@
 
 #include "cbeditorprintout.h"
 #include "cbdebugger_interfaces.h"
-#include "debuggermanager.h"
 #include "editor_hooks.h"
 #include "encodingdetector.h"
 #include "filefilters.h"
@@ -407,6 +408,8 @@ struct cbEditorInternalData
             int lineEnd = control->GetLineEndPosition(line);
             int i = lineEnd-1;
             wxChar ch = (wxChar)(control->GetCharAt(i));
+            if (control->GetLexer() == wxSCI_LEX_DIFF)
+                lineStart++;
             while ((i >= lineStart) && ((ch == _T(' ')) || (ch == _T('\t'))))
             {
                 i--;
@@ -552,7 +555,67 @@ struct cbEditorInternalData
         }
     }
 
-    //vars
+    wxString GetUrl()
+    {
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        if (!control)
+            return wxEmptyString;
+
+        wxRegEx reUrl(wxT("***:(((ht|f)tp(s?)\\:\\/\\/)|(www\\.))(([a-zA-Z0-9\\-\\._]+(\\.[a-zA-Z0-9\\-\\._]+)+)|localhost)(\\/?)([a-zA-Z0-9\\-\\.\\?\\,\\'\\/\\\\\\+&amp;%\\$#_]*)?([\\d\\w\\.\\/\\%\\+\\-\\=\\&amp;\\?\\:\\\\\\&quot;\\'\\,\\|\\~\\;]*)"));
+        wxString url = control->GetSelectedText();
+        // Is the URL selected?
+        if (reUrl.Matches(url))
+            return reUrl.GetMatch(url);
+        // else is there a URL near the cursor?
+
+        // Find out start position
+        int startPos = control->GetCurrentPos();
+        const wxString space = wxT(" \n\r\t{}");
+        wxChar curCh = control->GetCharAt(startPos);
+        while ( (startPos > 0) && (space.Find(curCh) == -1) )
+        {
+            startPos--;
+            curCh = control->GetCharAt(startPos);
+        }
+
+        // Find out end position
+        int endPos = control->GetCurrentPos();
+        int maxPos = control->GetLineEndPosition(control->GetLineCount());
+        curCh = control->GetCharAt(endPos);
+        while ( (endPos < maxPos) && (space.Find(curCh) == -1) )
+        {
+            endPos++;
+            curCh = control->GetCharAt(endPos);
+        }
+
+        url = control->GetTextRange(startPos, endPos);
+        if (    (control->GetLexer() == wxSCI_LEX_CPP)
+            &&  (   (control->GetStyleAt(control->GetCurrentPos()) == wxSCI_C_STRING)
+                 || (control->GetStyleAt(control->GetCurrentPos()) == wxSCI_C_STRINGEOL) ) )
+        {
+            url.Replace(wxT("\\n"), wxT("\n"));
+            url.Replace(wxT("\\r"), wxT("\r"));
+            url.Replace(wxT("\\t"), wxT("\t"));
+        }
+
+        if (reUrl.Matches(url))
+        {
+            wxString match = reUrl.GetMatch(url);
+            if (   (url.Find(match) + startPos                       < control->GetCurrentPos())
+                && (url.Find(match) + startPos + (int)match.Length() > control->GetCurrentPos()) )
+            {
+                url = match;
+            }
+            else
+                url = wxEmptyString; // nope, too far from cursor, return invalid (empty)
+        }
+        else
+            url = wxEmptyString; // nope, return invalid (empty)
+
+        return url;
+    }
+
+    // vars
     bool m_strip_trailing_spaces;
     bool m_ensure_final_line_end;
     bool m_ensure_consistent_line_ends;
@@ -609,6 +672,7 @@ const int idProperties = wxNewId();
 const int idAddFileToProject = wxNewId();
 const int idRemoveFileFromProject = wxNewId();
 const int idShowFileInProject = wxNewId();
+const int idOpenUrl = wxNewId();
 
 const int idBookmarkAdd = wxNewId();
 const int idBookmarkRemove = wxNewId();
@@ -661,11 +725,101 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_MENU(idSplitHorz, cbEditor::OnContextMenuEntry)
     EVT_MENU(idSplitVert, cbEditor::OnContextMenuEntry)
     EVT_MENU(idUnsplit, cbEditor::OnContextMenuEntry)
+    EVT_MENU(idOpenUrl, cbEditor::OnContextMenuEntry)
 
     EVT_SCI_ZOOM(-1, cbEditor::OnZoom)
     EVT_SCI_ZOOM(-1, cbEditor::OnZoom)
 
 END_EVENT_TABLE()
+
+// Count lines of EOL style in the opened file
+static void CountLineEnds(cbStyledTextCtrl* control, int &linesCR, int &linesLF, int &linesCRLF)
+{
+    linesCR = 0;
+    linesLF = 0;
+    linesCRLF = 0;
+
+    int lengthDoc = control->GetLength();
+    const int maxLengthDoc = 1000000;
+    char chPrev = ' ';
+    char chNext = control->GetCharAt(0);
+    for (int i = 0; i < lengthDoc; i++)
+    {
+        char ch = chNext;
+        chNext = control->GetCharAt(i + 1);
+        if (ch == '\r')
+        {
+            if (chNext == '\n')
+                linesCRLF++;
+            else
+                linesCR++;
+        }
+        else if (ch == '\n')
+        {
+            if (chPrev != '\r')
+                linesLF++;
+        }
+        else if (i > maxLengthDoc)     // stop the loop if the file contains too many characters
+            return;
+
+        chPrev = ch;
+    }
+}
+
+// Detect the EOL mode of the control. If a file has mixed EOLs, we will using the voting
+// logic, and give user a InfoWindow notification.
+static int DetectLineEnds(cbStyledTextCtrl* control)
+{
+    int eolMode;
+    wxString eolModeStr;
+    // initial EOL mode depend on OS
+    if (platform::windows)
+    {
+        eolMode =  wxSCI_EOL_CRLF;
+        eolModeStr = _T("\"CR-LF\"");
+    }
+    else
+    {
+        eolMode =  wxSCI_EOL_LF;
+        eolModeStr = _T("\"LF\"");
+    }
+
+    int linesCR;
+    int linesLF;
+    int linesCRLF;
+    // count lines of each EOL style
+    CountLineEnds(control, linesCR, linesLF, linesCRLF);
+
+    // voting logic
+    // if the file does not contain any line-feed or the most largest counts are equal( e.g.: linesLF=5,
+    // linesCRLF=5, linesCR=0 ), then we will use the initial EOL mode
+    if ( (linesLF > linesCR) && (linesLF > linesCRLF) )
+    {
+        eolMode = wxSCI_EOL_LF;
+        eolModeStr = _T("\"LF\"");
+    }
+    else if ( (linesCR > linesLF) && (linesCR > linesCRLF) )
+    {
+        eolMode = wxSCI_EOL_CR;
+        eolModeStr = _T("\"CR\"");
+    }
+    else if ( (linesCRLF > linesLF) && (linesCRLF > linesCR))
+    {
+        eolMode = wxSCI_EOL_CRLF;
+        eolModeStr = _T("\"CR-LF\"");
+    }
+
+    unsigned int delay = 2000;
+    if (  ( (linesCR>0) && (linesCRLF>0) )
+       || ( (linesLF>0) && (linesCRLF>0) )
+       || ( (linesCR>0) && (linesLF>0) ) )
+    {
+        //In mixed EOL file, give the user a beep and InfoWindow notification.
+        wxBell();
+        InfoWindow::Display(_("Mixed Line Endings"), _("Mixed line endings found, setting mode ") + eolModeStr, delay);
+    }
+    return eolMode;
+}
 
 // class constructor
 cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColourSet* theme)
@@ -862,9 +1016,7 @@ void cbEditor::SetEditorTitle(const wxString& title)
     if (m_Modified)
         SetTitle(g_EditorModified + title);
     else
-    {
         SetTitle(title);
-    }
 }
 
 void cbEditor::SetProjectFile(ProjectFile* project_file, bool preserve_modified)
@@ -897,6 +1049,12 @@ void cbEditor::SetProjectFile(ProjectFile* project_file, bool preserve_modified)
                 m_pControl2->ScrollToColumn(0);
                 m_pControl2->SetZoom(m_pProjectFile->editorZoom_2);
             }
+        }
+
+        if ( Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/folding/show_folds"), true) )
+        {
+            for (unsigned int i = 0; i < m_pProjectFile->editorFoldLinesArray.GetCount(); i++)
+                m_pControl->ToggleFold(m_pProjectFile->editorFoldLinesArray[i]);
         }
 
         m_pProjectFile->editorOpen = true;
@@ -945,6 +1103,13 @@ void cbEditor::UpdateProjectFile()
             if (GetControl()==m_pControl2)
                 m_pProjectFile->editorSplitActive = 2;
         }
+
+        if (m_pProjectFile->editorFoldLinesArray.GetCount() != 0)
+            m_pProjectFile->editorFoldLinesArray.Clear();
+
+        int i = 0;
+        while ((i = m_pControl->ContractedFoldNext(i)) != -1)
+            m_pProjectFile->editorFoldLinesArray.Add(i++);
     }
 }
 
@@ -981,8 +1146,8 @@ cbStyledTextCtrl* cbEditor::CreateEditor(bool connectEvents)
     cbStyledTextCtrl* control = new cbStyledTextCtrl(this, m_ID, wxDefaultPosition, size);
     control->UsePopUp(false);
 
-    wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxEmptyString);
-    m_pData->m_encoding = wxFontMapper::GetEncodingFromName(enc_name);
+    m_pData->m_encoding = wxFontMapper::GetEncodingFromName(
+        Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxEmptyString) );
 
     if (connectEvents)
     {
@@ -1040,6 +1205,7 @@ cbStyledTextCtrl* cbEditor::CreateEditor(bool connectEvents)
     //        wxEVT_SCI_DWELLSTART,
     //        wxEVT_SCI_DWELLEND,
             wxEVT_SCI_START_DRAG,
+            wxEVT_SCI_FINISHED_DRAG,
             wxEVT_SCI_DRAG_OVER,
             wxEVT_SCI_DO_DROP,
             wxEVT_SCI_ZOOM,
@@ -1340,15 +1506,32 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     // if user wants "Home" key to set cursor to the very beginning of line
     if (mgr->ReadBool(_T("/simplified_home"), false))
     {
-        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM, wxSCI_CMD_HOME);
-        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT, wxSCI_CMD_HOMEEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM,                    wxSCI_CMD_HOME);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT,                   wxSCI_CMD_HOMEEXTEND);
         control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_ALT | wxSCI_SCMOD_SHIFT, wxSCI_CMD_HOMERECTEXTEND);
     }
     else // else set default "Home" key behavior
     {
-        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM, wxSCI_CMD_VCHOME);
-        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT, wxSCI_CMD_VCHOMEEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM,                    wxSCI_CMD_VCHOME);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT,                   wxSCI_CMD_VCHOMEEXTEND);
         control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_ALT | wxSCI_SCMOD_SHIFT, wxSCI_CMD_VCHOMERECTEXTEND);
+    }
+
+    // setup for "CamelCase selection"
+    if (mgr->ReadBool(_T("/camel_case"), false))
+    {
+        // consider CamelCase for both: cursor movement with CTRL and selection with CTRL+SHIFT:
+        control->CmdKeyAssign(wxSCI_KEY_LEFT,  wxSCI_SCMOD_CTRL,                   wxSCI_CMD_WORDPARTLEFT);
+        control->CmdKeyAssign(wxSCI_KEY_RIGHT, wxSCI_SCMOD_CTRL,                   wxSCI_CMD_WORDPARTRIGHT);
+        control->CmdKeyAssign(wxSCI_KEY_LEFT,  wxSCI_SCMOD_CTRL|wxSCI_SCMOD_SHIFT, wxSCI_CMD_WORDPARTLEFTEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_RIGHT, wxSCI_SCMOD_CTRL|wxSCI_SCMOD_SHIFT, wxSCI_CMD_WORDPARTRIGHTEXTEND);
+    }
+    else // else set default "none CamelCase" key behavior (also default scintilla behaviour, see scintilla docs)
+    {
+        control->CmdKeyAssign(wxSCI_KEY_LEFT,  wxSCI_SCMOD_CTRL,                   wxSCI_CMD_WORDLEFT);
+        control->CmdKeyAssign(wxSCI_KEY_RIGHT, wxSCI_SCMOD_CTRL,                   wxSCI_CMD_WORDRIGHT);
+        control->CmdKeyAssign(wxSCI_KEY_LEFT,  wxSCI_SCMOD_CTRL|wxSCI_SCMOD_SHIFT, wxSCI_CMD_WORDLEFTEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_RIGHT, wxSCI_SCMOD_CTRL|wxSCI_SCMOD_SHIFT, wxSCI_CMD_WORDRIGHTEXTEND);
     }
 
     control->SetUseTabs(mgr->ReadBool(_T("/use_tab"), false));
@@ -1362,21 +1545,21 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         // otherwise to the start/end of the entire line.
         // alt+home/end go to start/end of the entire line.
         // in unwrapped mode, there is no difference between home/end and alt+home/end
-        control->CmdKeyAssign(wxSCI_KEY_HOME,wxSCI_SCMOD_NORM,wxSCI_CMD_VCHOMEWRAP);
-        control->CmdKeyAssign(wxSCI_KEY_END,wxSCI_SCMOD_NORM,wxSCI_CMD_LINEENDWRAP);
-        control->CmdKeyAssign(wxSCI_KEY_HOME,wxSCI_SCMOD_ALT,wxSCI_CMD_VCHOME);
-        control->CmdKeyAssign(wxSCI_KEY_END,wxSCI_SCMOD_ALT,wxSCI_CMD_LINEEND);
-        control->CmdKeyAssign(wxSCI_KEY_HOME,wxSCI_SCMOD_SHIFT,wxSCI_CMD_VCHOMEWRAPEXTEND);
-        control->CmdKeyAssign(wxSCI_KEY_END,wxSCI_SCMOD_SHIFT,wxSCI_CMD_LINEENDWRAPEXTEND);
-        control->CmdKeyAssign(wxSCI_KEY_HOME,wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT,wxSCI_CMD_VCHOMEEXTEND);
-        control->CmdKeyAssign(wxSCI_KEY_END,wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT,wxSCI_CMD_LINEENDEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM,                  wxSCI_CMD_VCHOMEWRAP);
+        control->CmdKeyAssign(wxSCI_KEY_END,  wxSCI_SCMOD_NORM,                  wxSCI_CMD_LINEENDWRAP);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_ALT,                   wxSCI_CMD_VCHOME);
+        control->CmdKeyAssign(wxSCI_KEY_END,  wxSCI_SCMOD_ALT,                   wxSCI_CMD_LINEEND);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT,                 wxSCI_CMD_VCHOMEWRAPEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_END,  wxSCI_SCMOD_SHIFT,                 wxSCI_CMD_LINEENDWRAPEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT, wxSCI_CMD_VCHOMEEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_END,  wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT, wxSCI_CMD_LINEENDEXTEND);
     }
     else
     {   // in word wrap mode, home/end keys goto start/end of the entire line. alt+home/end goes to wrap points
-        control->CmdKeyAssign(wxSCI_KEY_HOME,wxSCI_SCMOD_ALT,wxSCI_CMD_VCHOMEWRAP);
-        control->CmdKeyAssign(wxSCI_KEY_END,wxSCI_SCMOD_ALT,wxSCI_CMD_LINEENDWRAP);
-        control->CmdKeyAssign(wxSCI_KEY_HOME,wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT,wxSCI_CMD_VCHOMEWRAPEXTEND);
-        control->CmdKeyAssign(wxSCI_KEY_END,wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT,wxSCI_CMD_LINEENDWRAPEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_ALT,                   wxSCI_CMD_VCHOMEWRAP);
+        control->CmdKeyAssign(wxSCI_KEY_END,  wxSCI_SCMOD_ALT,                   wxSCI_CMD_LINEENDWRAP);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT, wxSCI_CMD_VCHOMEWRAPEXTEND);
+        control->CmdKeyAssign(wxSCI_KEY_END,  wxSCI_SCMOD_SHIFT|wxSCI_SCMOD_ALT, wxSCI_CMD_LINEENDWRAPEXTEND);
     }
     control->SetViewEOL(mgr->ReadBool(_T("/show_eol"), false));
     control->SetViewWhiteSpace(mgr->ReadInt(_T("/view_whitespace"), 0));
@@ -1444,11 +1627,6 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     control->MarkerDefine(ERROR_MARKER, ERROR_STYLE);
     control->MarkerSetBackground(ERROR_MARKER, wxColour(0xFF, 0x00, 0x00));
 
-    // NOTE: duplicate line in editorconfigurationdlg.cpp (ctor)
-    static const int default_eol = platform::windows ? wxSCI_EOL_CRLF : wxSCI_EOL_LF; // Windows takes CR+LF, other platforms LF only
-
-    control->SetEOLMode(mgr->ReadInt(_T("/eol/eolmode"), default_eol));
-
     // changebar margin
     if (mgr->ReadBool(_T("/margin/use_changebar"), true))
     {
@@ -1463,15 +1641,15 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->MarkerDefine(wxSCI_MARKNUM_CHANGEUNSAVED, wxSCI_MARK_LEFTRECT);
         control->MarkerSetBackground(wxSCI_MARKNUM_CHANGEUNSAVED, wxColour(0xFF, 0xE6, 0x04));
         control->MarkerDefine(wxSCI_MARKNUM_CHANGESAVED, wxSCI_MARK_LEFTRECT);
-        control->MarkerSetBackground(wxSCI_MARKNUM_CHANGESAVED, wxColour(0x04, 0xFF, 0x50));
+        control->MarkerSetBackground(wxSCI_MARKNUM_CHANGESAVED,   wxColour(0x04, 0xFF, 0x50));
     }
     else
         control->SetMarginWidth(C_CHANGEBAR_MARGIN, 0);
 
-    control->SetScrollWidthTracking(mgr->ReadBool(_T("/margin/scroll_width_tracking"), false));
-
-    control->SetMultipleSelection(mgr->ReadBool(_T("/selection/multi_select"), false));
-    control->SetAdditionalSelectionTyping(mgr->ReadBool(_T("/selection/multi_typing"), false));
+    // NOTE: duplicate line in editorconfigurationdlg.cpp (ctor)
+    control->SetScrollWidthTracking(      mgr->ReadBool(_T("/margin/scroll_width_tracking"), false));
+    control->SetMultipleSelection(        mgr->ReadBool(_T("/selection/multi_select"),       false));
+    control->SetAdditionalSelectionTyping(mgr->ReadBool(_T("/selection/multi_typing"),       false));
     if (mgr->ReadBool(_T("/selection/use_vspace"), false))
         control->SetVirtualSpaceOptions(wxSCI_SCVS_RECTANGULARSELECTION | wxSCI_SCVS_USERACCESSIBLE);
     else
@@ -1486,8 +1664,16 @@ void cbEditor::InternalSetEditorStyleAfterFileOpen(cbStyledTextCtrl* control)
 
     ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
 
+    // set the EOL, fall back value: Windows takes CR+LF, other platforms LF only
+    int eolMode = mgr->ReadInt(_T("/eol/eolmode"), platform::windows ? wxSCI_EOL_CRLF : wxSCI_EOL_LF);
+
+    if (eolMode == 3) //auto detect the EOL
+        eolMode = DetectLineEnds(control);
+
+    control->SetEOLMode(eolMode);
+
     // Interpret #if/#else/#endif to grey out code that is not active
-    control->SetProperty(_T("lexer.cpp.track.preprocessor"), mgr->ReadBool(_T("/track_preprocessor"), false) ? _T("1") : _T("0"));
+    control->SetProperty(_T("lexer.cpp.track.preprocessor"), mgr->ReadBool(_T("/track_preprocessor"), true) ? _T("1") : _T("0"));
 
     // code folding
     if (mgr->ReadBool(_T("/folding/show_folds"), true))
@@ -1515,6 +1701,7 @@ void cbEditor::InternalSetEditorStyleAfterFileOpen(cbStyledTextCtrl* control)
         control->SetProperty(_T("fold"), _T("0"));
         control->SetMarginWidth(C_FOLDING_MARGIN, 0);
     }
+    control->SetProperty(_T("highlight.wxsmith"), mgr->ReadBool(_T("/highlight_wxsmith"), true) ? _T("1") : _T("0"));
 
     // line numbering
     control->SetMarginType(C_LINE_MARGIN, wxSCI_MARGIN_NUMBER);
@@ -2271,7 +2458,7 @@ void cbEditor::RefreshBreakpointMarkers()
         {
             for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
             {
-                cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+                cb::shared_ptr<const cbBreakpoint> bp = debugger->GetBreakpoint(ii);
                 if (bp->GetLocation() == GetFilename())
                 {
                     if (bp->IsEnabled())
@@ -2286,7 +2473,7 @@ void cbEditor::RefreshBreakpointMarkers()
             // all breakpoints for the non active debugger use the other breakpoint marker
             for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
             {
-                cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+                cb::shared_ptr<const cbBreakpoint> bp = debugger->GetBreakpoint(ii);
                 if (bp->GetLocation() == GetFilename())
                     MarkerToggle(BREAKPOINT_OTHER_MARKER, bp->GetLine() - 1);
             }
@@ -2479,6 +2666,51 @@ void cbEditor::GotoMatchingBrace()
     // if we haven't found it, we 'll search at pos-1 too
     if (matchingBrace == wxSCI_INVALID_POSITION)
         matchingBrace = control->BraceMatch(control->GetCurrentPos() - 1);
+    else
+        ++matchingBrace; // to keep the caret on the same side of the brace
+
+    // else look for a matching preprocessor command
+    if (matchingBrace == wxSCI_INVALID_POSITION)
+    {
+        wxRegEx ppIf(wxT("^[ \t]*#[ \t]*if"));
+        wxRegEx ppElse(wxT("^[ \t]*#[ \t]*el"));
+        wxRegEx ppEnd(wxT("^[ \t]*#[ \t]*endif"));
+        wxRegEx pp(wxT("^[ \t]*#[ \t]*[a-z]*")); // generic match to get length
+        if (ppIf.Matches(control->GetCurLine()) || ppElse.Matches(control->GetCurLine()))
+        {
+            int depth = 1; // search forwards
+            for (int i = control->GetCurrentLine() + 1; i < control->GetLineCount(); ++i)
+            {
+                if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
+                    ++depth;
+                else if (ppEnd.Matches(control->GetLine(i)))
+                    --depth;
+                if (depth == 0)
+                {
+                    pp.Matches(control->GetLine(i));
+                    matchingBrace = control->PositionFromLine(i) + pp.GetMatch(control->GetLine(i)).Length();
+                    break;
+                }
+            }
+        }
+        else if (ppEnd.Matches(control->GetCurLine()))
+        {
+            int depth = -1; // search backwards
+            for (int i = control->GetCurrentLine() - 1; i >= 0; --i)
+            {
+                if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
+                    ++depth;
+                else if (ppEnd.Matches(control->GetLine(i)))
+                    --depth;
+                if (depth == 0)
+                {
+                    pp.Matches(control->GetLine(i));
+                    matchingBrace = control->PositionFromLine(i) + pp.GetMatch(control->GetLine(i)).Length();
+                    break;
+                }
+            }
+        }
+    }
 
     // now, we either found it or not
     if (matchingBrace != wxSCI_INVALID_POSITION)
@@ -2673,6 +2905,12 @@ void cbEditor::AddToContextMenu(wxMenu* popup,ModuleType type,bool pluginsdone)
     }
     else
     {
+        if (!noeditor && !m_pData->GetUrl().IsEmpty())
+        {
+            popup->InsertSeparator(0);
+            popup->Insert(0, idOpenUrl, _("Open link in browser"));
+        }
+
         wxMenu* splitMenu = new wxMenu;
         splitMenu->Append(idSplitHorz, _("Horizontally"));
         splitMenu->Append(idSplitVert, _("Vertically"));
@@ -2933,6 +3171,8 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
         UnfoldBlockFromLine();
     else if (id == idFoldingToggleCurrent)
         ToggleFoldBlockFromLine();
+    else if (id == idOpenUrl)
+        wxLaunchDefaultBrowser(m_pData->GetUrl());
     else if (id == idSplitHorz)
         Split(stHorizontal);
     else if (id == idSplitVert)
@@ -3795,10 +4035,16 @@ void cbEditor::OnScintillaEvent(wxScintillaEvent& event)
 
 bool cbEditor::CanSelectAll() const
 {
-    return GetControl()->GetLength() > 0;
+    int res = 0;
+    cbStyledTextCtrl* control = GetControl();
+    if (control)
+        res = control->GetLength();
+    return res > 0;
 }
 
 void cbEditor::SelectAll()
 {
-    GetControl()->SelectAll();
+    cbStyledTextCtrl* control = GetControl();
+    if (control)
+        control->SelectAll();
 }

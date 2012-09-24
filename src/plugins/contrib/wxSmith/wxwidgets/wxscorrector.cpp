@@ -99,10 +99,10 @@ bool wxsCorrector::FixAfterLoadCheckNames(wxsItem* Item)
         if ( m_Ids.find(IdName)!=m_Ids.end() )
         {
             Ret = true;
-			if (Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadBool(_T("/uniqueids"),true))
-			{
-				Item->SetIdName(wxEmptyString);
-			}
+            if (Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadBool(_T("/uniqueids"),true))
+            {
+                Item->SetIdName(wxEmptyString);
+            }
         }
         else
         {
@@ -199,13 +199,13 @@ void wxsCorrector::AfterChange(wxsItem* Item)
             Item->SetIdName(IdName);
         }
 
-		if (Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadBool(_T("/uniqueids"),true))
-		{
-			if ( m_Ids.find(IdName) != m_Ids.end() )
-			{
-				SetNewIdName(Item);
-			}
-		}
+        if (Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadBool(_T("/uniqueids"),true))
+        {
+            if ( m_Ids.find(IdName) != m_Ids.end() )
+            {
+                SetNewIdName(Item);
+            }
+        }
 
         if (!IsWxWidgetsIdPrefix(Item->GetIdName()))
         {
@@ -280,7 +280,7 @@ void wxsCorrector::SetNewVarName(wxsItem* Item)
     wxString NewName;
     for ( int i=1;; i++ )
     {
-        NewName = wxString::Format(_T("%s%d"),Prefix.c_str(),i);
+        NewName = wxString::Format(_T("%s%d"),Prefix.wx_str(),i);
         if ( m_Vars.find(NewName) == m_Vars.end() ) break;
     }
     Item->SetVarName(NewName);
@@ -293,7 +293,7 @@ void wxsCorrector::SetNewIdName(wxsItem* Item)
     wxString NewName;
     for ( int i=1;; i++ )
     {
-        NewName = wxString::Format(_T("%s%d"),Prefix.c_str(),i);
+        NewName = wxString::Format(_T("%s%d"),Prefix.wx_str(),i);
         if ( m_Ids.find(NewName) == m_Ids.end() ) break;
     }
     Item->SetIdName(NewName);
@@ -358,10 +358,10 @@ bool wxsCorrector::FixVarName(wxString& Name)
 {
     wxString Corrected;
     Name.Trim(true);
-   	Name.Trim(false);
+    Name.Trim(false);
 
-   	if ( !Name.empty() )
-   	{
+    if ( !Name.empty() )
+    {
         // Validating name as C++ ideentifier
         // TODO: Other languages ?
 
@@ -371,17 +371,9 @@ bool wxsCorrector::FixVarName(wxString& Name)
             _T("_"));
 
         if ( FirstChar.Find(Name.GetChar(0)) == -1 )
-        {
-            #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %d)"),Name.wx_str(),wxChar(Name.GetChar(0)),0));
-            #else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %d)"),Name.c_str(),Name.GetChar(0),0));
-            #endif
-        }
         else
-        {
             Corrected.Append(Name.GetChar(0));
-        }
 
         static wxString NextChars(
             _T("0123456789")
@@ -393,22 +385,19 @@ bool wxsCorrector::FixVarName(wxString& Name)
         {
             if ( NextChars.Find(Name.GetChar(i)) == -1 )
             {
-                #if wxCHECK_VERSION(2, 9, 0)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %d)"),Name.wx_str(),wxChar(Name.GetChar(i)),i));
-                #else
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %d)"),Name.c_str(),Name.GetChar(i),i));
-                #endif
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %lu)"),
+                                                            Name.wx_str(),
+                                                            wxChar(Name.GetChar(i)),
+                                                            static_cast<unsigned long>(i)));
             }
             else
-            {
                 Corrected.Append(Name.GetChar(i));
-            }
         }
-   	}
+    }
 
-   	bool Diff = Name != Corrected;
-   	Name = Corrected;
-   	return Diff;
+    bool Diff = Name != Corrected;
+    Name = Corrected;
+    return Diff;
 }
 
 bool wxsCorrector::FixIdName(wxString& Id)

@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: legendwindow.h 7559 2011-11-04 10:19:48Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,7 @@ private:
     void OnMouse(wxMouseEvent &event);
     void OnMouseMove(wxMouseEvent &event);
 
-    DECLARE_CLASS(wxLegendWindow)
+    DECLARE_DYNAMIC_CLASS(wxLegendWindow)
     DECLARE_EVENT_TABLE()
 };
 

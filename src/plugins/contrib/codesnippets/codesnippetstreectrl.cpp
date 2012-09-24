@@ -202,7 +202,7 @@ void CodeSnippetsTreeCtrl::OnItemSelected(wxTreeEvent& event)
     // other routines.
 
     //CodeSnippetsTreeCtrl* pTree = (CodeSnippetsTreeCtrl*)event.GetEventObject();
-    wxTreeItemId itemId = event.GetItem();
+    //wxTreeItemId itemId = event.GetItem();
 
     //-SetStatusText(wxEmptyString);
 
@@ -1955,7 +1955,7 @@ bool CodeSnippetsTreeCtrl::EditSnippetProperties(wxTreeItemId& itemId)
     SnippetProperty* pdlg = new SnippetProperty(GetSnippetsTreeCtrl(), itemId, &waitSem);
 
 	// Add Properties edit window to DragScroll managed windows
-    DragScrollEvent dsevt(wxEVT_DRAGSCROLL_EVENT , idDragScrollAddWindow);
+    sDragScrollEvent dsevt(wxEVT_S_DRAGSCROLL_EVENT , idDragScrollAddWindow);
     dsevt.SetEventObject((wxObject*)pdlg->m_SnippetEditCtrl);
     GetConfig()->GetDragScrollEvtHandler()->AddPendingEvent( dsevt );
 
@@ -2246,7 +2246,9 @@ void CodeSnippetsTreeCtrl::SaveDataAndCloseEditorFrame(EditSnippetFrame* pEdFram
         // else an edit frame is done, save any changed data
         int retcode = aEdFrameRetcodes.Item(i);
         EditSnippetFrame* pEdFrame = (EditSnippetFrame*)m_aEdFramePtrs.Item(i);
+#if !wxCHECK_VERSION(2,9,0)
         pEdFrame->MakeModal(false);
+#endif
 		if (retcode == wxID_OK)
 		{
             // If XML text snippet, just save back to XML file

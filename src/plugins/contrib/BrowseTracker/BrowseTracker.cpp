@@ -296,6 +296,9 @@ void BrowseTracker::OnAttach()
 
     ReadUserOptions( m_CfgFilenameStr );
 
+    if (m_pJumpTracker)
+        m_pJumpTracker->SetWrapJumpEntries(m_WrapJumpEntries);
+
     switch(m_UserMarksStyle)
     {
         case BrowseMarksStyle:
@@ -562,6 +565,7 @@ void BrowseTracker::ReadUserOptions(wxString configFullPath)
 	cfgFile.Read( wxT("BrowseMarksToggleKey"),      &m_ToggleKey, Left_Mouse ) ;
 	cfgFile.Read( wxT("LeftMouseDelay"),            &m_LeftMouseDelay, 200 ) ;
 	cfgFile.Read( wxT("BrowseMarksClearAllMethod"), &m_ClearAllKey, ClearAllOnSingleClick ) ;
+	cfgFile.Read( wxT("WrapJumpEntries"),           &m_WrapJumpEntries, 0 ) ;
 
 }
 // ----------------------------------------------------------------------------
@@ -582,6 +586,7 @@ void BrowseTracker::SaveUserOptions(wxString configFullPath)
     cfgFile.Write( wxT("BrowseMarksToggleKey"),     m_ToggleKey ) ;
     cfgFile.Write( wxT("LeftMouseDelay"),           m_LeftMouseDelay ) ;
     cfgFile.Write( wxT("BrowseMarksClearAllMethod"),m_ClearAllKey ) ;
+	cfgFile.Write( wxT("WrapJumpEntries"),          m_WrapJumpEntries ) ;
 
     cfgFile.Flush();
 
@@ -720,7 +725,7 @@ void BrowseTracker::SetSelection(int index)
     {
         Manager::Get()->GetEditorManager()->SetActiveEditor(eb);
         #if defined(LOGGING)
-        LOGIT( _T("BT SetSelection[%d] editor[%p][%s]"), index, eb, eb->GetShortName().c_str() );
+        LOGIT( _T("BT SetSelection[%d] editor[%p][%s]"), index, eb, eb->GetShortName().wx_str() );
         #endif
 
         // Tell OnIdle to focus the new editor. CB sdk editorManager::OnUpdateUI used to
@@ -955,7 +960,6 @@ void BrowseTracker::OnConfigApply( )
 // ----------------------------------------------------------------------------
 {
     // Called from OnApply() of BrowseTrackerConfPanel
-
     // reset options according to user responses
 
     // Don't allow set and clear_all key to be the same
@@ -985,6 +989,10 @@ void BrowseTracker::OnConfigApply( )
             evt.SetEditor(eb);
             OnEditorActivated(evt);
         }
+    }
+    if (m_pJumpTracker)
+    {
+        m_pJumpTracker->SetWrapJumpEntries(m_WrapJumpEntries);
     }
 }
 // ----------------------------------------------------------------------------
@@ -1329,7 +1337,7 @@ void BrowseTracker::OnMenuTrackerDump(wxCommandEvent& WXUNUSED(event))
         for (int i=0;i<MaxEntries ;++i )
         {
             wxString edName = GetPageFilename(i);
-            LOGIT( _T("BT Index[%d]Editor[%p]Name[%s]"), i, GetEditor(i), edName.c_str()  );;
+            LOGIT( _T("BT Index[%d]Editor[%p]Name[%s]"), i, GetEditor(i), edName.wx_str()  );;
         }
         return; //FIXME: remove this line to get rest of diagnostics
         for (EbBrowse_MarksHash::iterator it = m_EbBrowse_MarksHash.begin(); it != m_EbBrowse_MarksHash.end(); ++it)
@@ -1692,12 +1700,12 @@ void BrowseTracker::OnEditorOpened(CodeBlocksEvent& event)
         cbEditor* cbed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(eb);
         if (not cbed) return;
 
-        cbStyledTextCtrl* control = 0;
-        if (cbed) control = cbed->GetControl();
         // validate cbProject has been set
         cbProject* pcbProject = GetProject( eb );
         #if defined(LOGGING)
-         LOGIT( _T("BT OnEditorOpen ebase[%p]cbed[%p]stc[%p]proj[%p][%s]"), eb, cbed, control, pcbProject, eb->GetShortName().c_str() );
+        cbStyledTextCtrl* control = 0;
+        if (cbed) control = cbed->GetControl();
+        LOGIT( _T("BT OnEditorOpen ebase[%p]cbed[%p]stc[%p]proj[%p][%s]"), eb, cbed, control, pcbProject, eb->GetShortName().c_str() );
         #endif
 
         // stow opened editor info in the ProjectData class
@@ -2223,7 +2231,7 @@ void BrowseTracker::OnProjectActivatedEvent(CodeBlocksEvent& event)
         #if defined(LOGGING)
         if (m_UpdateUIFocusEditor)
         {   LOGIT( _T("BT OnProjectActivated m_nProjectClosingFileCount[%d]"), m_nProjectClosingFileCount);
-            LOGIT( _T("BT OnProjectActivated setting Next Ed[%s]"), m_UpdateUIFocusEditor->GetShortName().c_str());
+            LOGIT( _T("BT OnProjectActivated setting Next Ed[%s]"), m_UpdateUIFocusEditor->GetShortName().wx_str());
         }
         #endif
         m_nProjectClosingFileCount = 0;
@@ -2411,7 +2419,7 @@ void BrowseTracker::AddBook_Mark(EditorBase* eb, int /*line*/ /*=-1*/)
             EdBook_Marks.RecordMark(pos);
             #if defined(LOGGING)
             LOGIT( _T("BT AddBook_Mark: pos[%d]line[%d]eb[%p][%s]"),
-                pos, m_CurrScrLine, eb, eb->GetShortName().c_str() );
+                pos, m_CurrScrLine, eb, eb->GetShortName().wx_str() );
             ///EdBook_Marks.Dump();
             #endif
         }while(false);//if do
@@ -2427,7 +2435,7 @@ void BrowseTracker::AddBook_Mark(EditorBase* eb, int /*line*/ /*=-1*/)
             EdBrowse_Marks.RecordMark(pos);
             #if defined(LOGGING)
             LOGIT( _T("BT AddBrowseMarkByEb: pos[%d]line[%d]eb[%p][%s]"),
-                pos, m_CurrScrLine, eb, eb->GetShortName().c_str() );
+                pos, m_CurrScrLine, eb, eb->GetShortName().wx_str() );
             #endif
         }while(false);//if do
 
@@ -2458,7 +2466,7 @@ void BrowseTracker::ToggleBook_Mark(EditorBase* eb)
             EdBook_Marks.RecordMark(pos);
             #if defined(LOGGING)
             LOGIT( _T("BT RecordBook_Mark: pos[%d]line[%d]eb[%p][%s]"),
-                pos, m_CurrScrLine, eb, eb->GetShortName().c_str() );
+                pos, m_CurrScrLine, eb, eb->GetShortName().wx_str() );
             ///EdBook_Marks.Dump();
             #endif
         }while(false);//if do
@@ -2480,7 +2488,7 @@ void BrowseTracker::ToggleBook_Mark(EditorBase* eb)
             EdBrowse_Marks.RecordMark(pos);
             #if defined(LOGGING)
             LOGIT( _T("BT RecordBrowseMarkByEb: pos[%d]line[%d]eb[%p][%s]"),
-                pos, m_CurrScrLine, eb, eb->GetShortName().c_str() );
+                pos, m_CurrScrLine, eb, eb->GetShortName().wx_str() );
             #endif
         }while(false);//if do
 

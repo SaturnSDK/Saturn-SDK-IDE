@@ -19,6 +19,7 @@
 #include "projectmanager.h"
 
 #include <map>
+#include <vector>
 
 // forward decl
 class cbProject;
@@ -81,9 +82,9 @@ class DLLIMPORT FileTreeData : public MiscTreeItemData
   */
 enum PCHMode
 {
-    pchSourceDir = 0,   /// In a dir (named by the PCH) on the same level as the source header (default).
-    pchObjectDir,       /// In the objects output dir, along with other object files.
-    pchSourceFile,      /// In a file alongside the source header (with .gch appended).
+    pchSourceDir = 0, /// In a dir (named by the PCH) on the same level as the source header (default).
+    pchObjectDir,     /// In the objects output dir, along with other object files.
+    pchSourceFile     /// In a file alongside the source header (with .gch appended).
 };
 
 /** @brief Represents a Code::Blocks project.
@@ -102,7 +103,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
 
         /** @return True if the project fully loaded, false if not. */
         bool IsLoaded() const { return m_Loaded; }
-#ifndef CB_FOR_CONSOLE
 
         /** (Re)build the project tree.
           * @param tree The wxTreeCtrl to use.
@@ -111,7 +111,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @param fgam If not NULL, use these file groups and masks for virtual folders.
           */
         void BuildTree(cbTreeCtrl* tree, const wxTreeItemId& root, int ptvs, FilesGroupsAndMasks* fgam = 0L);
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** This resets the project to a clear state. Like it's just been new'ed. */
         void ClearAllProperties();
@@ -226,7 +225,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           */
         ProjectBuildTarget* AddBuildTarget(const wxString& targetName);
 
-#ifndef CB_FOR_CONSOLE
         /** Rename a build target.
           * @param index The build target's index to rename.
           * @param targetName The new name for the build target.
@@ -295,7 +293,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * The number of array elements must be equal to GetBuildTargetsCount().
           */
         void ReOrderTargets(const wxArrayString& nameOrder);
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Set the active build target.
           * @param name The build target name to set as active. If @c name does
@@ -318,7 +315,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
 
         void SetCompilerID(const wxString& id); // overriden
 
-#ifndef CB_FOR_CONSOLE
         /** @return The root item of this project in the project manager's tree. */
         wxTreeItemId GetProjectNode(){ return m_ProjectNode; }
 
@@ -331,39 +327,38 @@ class DLLIMPORT cbProject : public CompileTargetBase
         /** Close all project files.
           * @param dontsave If true, no project file will be saved even if modified.
           * If false, any modified file will be saved (default).
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool CloseAllFiles(bool dontsave=false);
 
         /** Save all project files.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool SaveAllFiles();
 
         /** Save the project.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool Save();
 
         /** Save the project under a different name.
           * A dialog pops up for the user to choose a new filename for the project.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool SaveAs();
 
         /** Save the project's layout.
           * Layout is the list of open project files, which one is active,
           * where the cursor is located on each one of those, etc.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool SaveLayout();
 
         /** Load the project's layout.
           * @see SaveLayout() for info.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool LoadLayout();
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Notify that file(s) will be added shortly.
           * This function should be called before calling AddFile().
@@ -430,7 +425,24 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @return True if @c pf was a valid project file, false if not.
           */
         bool RemoveFile(ProjectFile* pf);
-#ifndef CB_FOR_CONSOLE
+
+        struct Glob
+        {
+            wxString m_Path;
+            wxString m_WildCard;
+            bool m_Recursive;
+            Glob(const wxString& path, const wxString& wildCard, bool recursive) : m_Path(path), m_WildCard(wildCard), m_Recursive(recursive) {}
+        };
+
+        /** Set the globs to the project, this are directory paths do retrieve files from to be added to the project, the path can be searched recursively
+          * @param globs the globs to add to the project.
+        */
+        void SetGlobs(const std::vector<Glob>& globs);
+
+        /** Retrieve the current globs from the project
+          * @return globs the globs to add to the project.
+        */
+        std::vector<Glob> GetGlobs() const;
 
         /** Display the project options dialog.
           * @return True if the dialog was closed with "OK", false if closed with "Cancel".
@@ -457,7 +469,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @param tree The tree control to restore its expanded state to a previously saved.
           */
         void RestoreTreeState(wxTreeCtrl* tree);
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Displays a target selection dialog.
           * When invoked, a selection dialog is presented to the user so that he/she
@@ -470,13 +481,11 @@ class DLLIMPORT cbProject : public CompileTargetBase
           */
         int SelectTarget(int initial = -1, bool evenIfOne = false);
 
-#ifndef CB_FOR_CONSOLE
         /** Rename the project's title in the tree.
           * @param newname The new title for the project.
           * @note This does *not* actually alter the project's title. It just changes it on the tree.
           */
         void RenameInTree(const wxString &newname);
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Get a pointer to the currently compiling target.
           * @return While the project is being built, this function returns the currently building
@@ -555,7 +564,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           */
         bool CanAddToVirtualBuildTarget(const wxString& alias, const wxString& target);
 
-#ifndef CB_FOR_CONSOLE
         /** Request if a specific tree node can be dragged.
           *
           * @note Called by ProjectManager.
@@ -586,7 +594,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
 
         /** Set the virtual folders list. Normally used by the project loader only. */
         void SetVirtualFolders(const wxArrayString& folders);
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Returns the last modification time for the file. Used to detect modifications outside the Program. */
         wxDateTime GetLastModificationTime() const { return m_LastModified; }
@@ -614,7 +621,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           */
         bool GetExtendedObjectNamesGeneration() const;
 
-#ifndef CB_FOR_CONSOLE
         /** Set notes on the project.
           *
           * @param notes Simple text notes about the project.
@@ -647,7 +653,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @note If @c editable is true, the @c nonEmptyOnly parameter is ignored...
           */
         void ShowNotes(bool nonEmptyOnly, bool editable = false);
-#endif // #ifndef CB_FOR_CONSOLE
 
         /** Changes project title
           *
@@ -700,21 +705,15 @@ class DLLIMPORT cbProject : public CompileTargetBase
     private:
         void Open();
         void ExpandVirtualBuildTargetGroup(const wxString& alias, wxArrayString& result) const;
-#ifndef CB_FOR_CONSOLE
         wxTreeItemId AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, FileTreeData::FileTreeDataKind folders_kind, bool compiles, int image, FileTreeData* data = 0L);
         wxTreeItemId FindNodeToInsertAfter(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool in_folders); // alphabetical sorting
-#endif // #ifndef CB_FOR_CONSOLE
         ProjectBuildTarget* AddDefaultBuildTarget();
         int IndexOfBuildTargetName(const wxString& targetName) const;
-#ifndef CB_FOR_CONSOLE
         wxString CreateUniqueFilename();
-#endif // #ifndef CB_FOR_CONSOLE
         void NotifyPlugins(wxEventType type, const wxString& targetName = wxEmptyString, const wxString& oldTargetName = wxEmptyString);
-#ifndef CB_FOR_CONSOLE
         void CopyTreeNodeRecursively(wxTreeCtrl* tree, const wxTreeItemId& item, const wxTreeItemId& new_parent);
         bool VirtualFolderDragged(wxTreeCtrl* tree, wxTreeItemId from, wxTreeItemId to);
         void SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent);
-#endif // #ifndef CB_FOR_CONSOLE
 
         // properties
         VirtualBuildTargetsMap m_VirtualTargets;
@@ -726,14 +725,13 @@ class DLLIMPORT cbProject : public CompileTargetBase
         bool                   m_CustomMakefile;
         mutable wxString       m_MakefileExecutionDir;
 
-        FilesList        m_Files;
-        ProjectFileArray m_FileArray;
-        wxArrayString    m_ExpandedNodes;
-        wxArrayString    m_SelectedNodes;
-        bool             m_Loaded;
-#ifndef CB_FOR_CONSOLE
-        wxTreeItemId     m_ProjectNode;
-#endif // #ifndef CB_FOR_CONSOLE
+        std::vector<Glob> m_Globs;
+        FilesList         m_Files;
+        ProjectFileArray  m_FileArray;
+        wxArrayString     m_ExpandedNodes;
+        wxArrayString     m_SelectedNodes;
+        bool              m_Loaded;
+        wxTreeItemId      m_ProjectNode;
 
         wxArrayString m_VirtualFolders; // not saved, just used throughout cbProject's lifetime
 

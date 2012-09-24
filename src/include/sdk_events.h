@@ -37,36 +37,36 @@ class EVTIMPORT CodeBlocksEvent : public wxCommandEvent
 			m_Y(event.m_Y) {}
 		virtual wxEvent *Clone() const { return new CodeBlocksEvent(*this); }
 
-		cbProject* GetProject() const { return m_pProject; }
-		void SetProject(cbProject* project){ m_pProject = project; }
+		cbProject* GetProject() const             { return m_pProject;    }
+		void       SetProject(cbProject* project) { m_pProject = project; }
 
-		EditorBase* GetEditor() const { return m_pEditor; }
-		void SetEditor(EditorBase* editor){ m_pEditor = editor; }
+		EditorBase* GetEditor() const             { return m_pEditor;   }
+		void        SetEditor(EditorBase* editor) { m_pEditor = editor; }
 
-		EditorBase* GetOldEditor() const { return m_pOldEditor; }
-		void SetOldEditor(EditorBase* editor){ m_pOldEditor = editor; }
+		EditorBase* GetOldEditor() const             { return m_pOldEditor;   }
+		void        SetOldEditor(EditorBase* editor) { m_pOldEditor = editor; }
 
-		cbPlugin* GetPlugin() const { return m_pPlugin; }
-		void SetPlugin(cbPlugin* plugin){ m_pPlugin = plugin; }
+		cbPlugin* GetPlugin() const           { return m_pPlugin;   }
+		void      SetPlugin(cbPlugin* plugin) { m_pPlugin = plugin; }
 
-		int GetX() const { return m_X; }
-		void SetX(int x) { m_X = x; }
+		int  GetX() const { return m_X; }
+		void SetX(int x)  { m_X = x;    }
 
-		int GetY() const { return m_Y; }
-		void SetY(int y){ m_Y = y; }
+		int  GetY() const { return m_Y; }
+		void SetY(int y)  { m_Y = y;    }
 
-		const wxString& GetBuildTargetName() const { return m_TargetName; }
-		void SetBuildTargetName(const wxString& target){ m_TargetName = target; }
+		const wxString& GetBuildTargetName() const                 { return m_TargetName;   }
+		void            SetBuildTargetName(const wxString& target) { m_TargetName = target; }
 
 		// the following two functions are only valid for EVT_BUILDTARGET_RENAMED
 		// and EVT_BUILDTARGET_SELECTED events
-		const wxString& GetOldBuildTargetName() const { return m_OldTargetName; }
-		void SetOldBuildTargetName(const wxString& target){ m_OldTargetName = target; }
+		const wxString& GetOldBuildTargetName() const                 { return m_OldTargetName;   }
+		void            SetOldBuildTargetName(const wxString& target) { m_OldTargetName = target; }
 	protected:
-		cbProject* m_pProject;
+		cbProject*  m_pProject;
 		EditorBase* m_pEditor;
 		EditorBase* m_pOldEditor;
-		cbPlugin* m_pPlugin;
+		cbPlugin*   m_pPlugin;
 		// for some editor events
 		int m_X;
 		int m_Y;
@@ -89,7 +89,7 @@ class EVTIMPORT CodeBlocksDockEvent : public wxEvent
             dsTop,
             dsBottom,
             dsFloating,
-            dsUndefined,
+            dsUndefined
         };
 
         CodeBlocksDockEvent(wxEventType commandType = wxEVT_NULL, int id = 0)
@@ -281,6 +281,8 @@ extern EVTIMPORT const wxEventType cbEVT_PROJECT_TARGETS_MODIFIED;
 #define EVT_PROJECT_TARGETS_MODIFIED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PROJECT_TARGETS_MODIFIED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 extern EVTIMPORT const wxEventType cbEVT_PROJECT_RENAMED;
 #define EVT_PROJECT_RENAMED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PROJECT_RENAMED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
+extern EVTIMPORT const wxEventType cbEVT_PROJECT_OPTIONS_CHANGED;
+#define EVT_PROJECT_OPTIONS_CHANGED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PROJECT_OPTIONS_CHANGED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 extern EVTIMPORT const wxEventType cbEVT_WORKSPACE_CHANGED;
 #define EVT_WORKSPACE_CHANGED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_WORKSPACE_CHANGED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 extern EVTIMPORT const wxEventType cbEVT_WORKSPACE_LOADING_COMPLETE;
@@ -361,6 +363,8 @@ extern EVTIMPORT const wxEventType cbEVT_CLEAN_PROJECT_STARTED;
 #define EVT_CLEAN_PROJECT_STARTED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_CLEAN_PROJECT_STARTED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 extern EVTIMPORT const wxEventType cbEVT_CLEAN_WORKSPACE_STARTED;
 #define EVT_CLEAN_WORKSPACE_STARTED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_CLEAN_WORKSPACE_STARTED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
+extern EVTIMPORT const wxEventType cbEVT_COMPILER_SETTINGS_CHANGED;
+#define EVT_COMPILER_SETTINGS_CHANGED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_COMPILER_SETTINGS_CHANGED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 
 // request app to compile a single file
 extern EVTIMPORT const wxEventType cbEVT_COMPILE_FILE_REQUEST;

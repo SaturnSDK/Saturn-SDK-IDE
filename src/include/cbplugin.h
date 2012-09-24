@@ -36,9 +36,9 @@
 
 // this is the plugins SDK version number
 // it will change when the SDK interface breaks
-#define PLUGIN_SDK_VERSION_MAJOR 1
-#define PLUGIN_SDK_VERSION_MINOR 13
-#define PLUGIN_SDK_VERSION_RELEASE 3
+#define PLUGIN_SDK_VERSION_MAJOR   1
+#define PLUGIN_SDK_VERSION_MINOR   13
+#define PLUGIN_SDK_VERSION_RELEASE 9
 
 // class decls
 class wxMenuBar;
@@ -46,11 +46,10 @@ class wxMenu;
 class wxToolBar;
 class wxPanel;
 class wxWindow;
+
 class cbBreakpoint;
 class cbConfigurationPanel;
-#ifndef CB_FOR_CONSOLE
 class cbDebuggerConfiguration;
-#endif // #ifndef CB_FOR_CONSOLE
 class cbEditor;
 class cbProject;
 class cbStackFrame;
@@ -61,8 +60,9 @@ class Compiler;
 class CompileTargetBase;
 class ConfigManagerWrapper;
 class FileTreeData;
-struct PluginInfo;
 class ProjectBuildTarget;
+
+struct PluginInfo;
 
 // Define basic groups for plugins' configuration.
 static const int cgCompiler         = 0x01; ///< Compiler related.
@@ -167,7 +167,11 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
           * @return The plugin should return true if it needed the toolbar, false if not
           */
         virtual bool BuildToolBar(wxToolBar* toolBar) = 0;
-        virtual bool BuildToolBar(wxToolBar* toolBar, int &priority) { priority = 50; return BuildToolBar(toolBar); }
+
+        /** This method return the priority of the plugin's toolbar, the less value
+          * indicates a more preceding position when C::B starts with no configuration file
+          */
+        virtual int GetToolBarPriority() { return 50; }
 
 #if wxUSE_STATUSBAR
         /** This method is called by Code::Blocks and is used by the plugin
@@ -232,8 +236,7 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
         bool m_IsAttached;
 
     private:
-        friend class PluginManager; // the plugin manager has access here
-        friend class PluginManagerBase; // the base part of it also
+        friend class PluginManager; // only the plugin manager has access here
 
         /** Attach is <b>not</b> a virtual function, so you can't override it.
           * The default implementation hooks the plugin to Code::Block's
@@ -371,9 +374,9 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
     private:
 };
 
+
 class wxScintillaEvent;
 
-#ifndef CB_FOR_CONSOLE
 struct cbDebuggerFeature
 {
     enum Flags
@@ -390,6 +393,7 @@ struct cbDebuggerFeature
         SetNextStatement
     };
 };
+
 /** @brief Base class for debugger plugins
   *
   * This plugin type must offer some pre-defined debug facilities, on top
@@ -398,7 +402,7 @@ struct cbDebuggerFeature
 class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 {
     public:
-        cbDebuggerPlugin(const wxString &guiName, const wxString &settingsName);
+        cbDebuggerPlugin(const wxString& guiName, const wxString& settingsName);
 
     public:
         virtual void OnAttach();
@@ -433,13 +437,14 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         int GetIndexOfActiveConfig() const;
 
         /** @brief Called when the user clicks OK in Settings -> Debugger... */
-        virtual void OnConfigurationChange(bool isActive) {}
+        virtual void OnConfigurationChange(bool isActive) { wxUnusedVar(isActive); };
 
         /** @brief Start a new debugging process. */
         virtual bool Debug(bool breakOnEntry) = 0;
 
         /** @brief Continue running the debugged program. */
         virtual void Continue() = 0;
+
         /** @brief Run the debugged program until it reaches the cursor at the current editor */
         virtual bool RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
 
@@ -448,6 +453,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Execute the next instruction and return control to the debugger. */
         virtual void Next() = 0;
+
         /** @brief Execute the next instruction and return control to the debugger. */
         virtual void NextInstruction() = 0;
 
@@ -456,6 +462,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
         virtual void Step() = 0;
+
         /** @brief Execute the next instruction, stepping out of function calls if needed, and return control to the debugger. */
         virtual void StepOut() = 0;
 
@@ -467,6 +474,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Is the plugin currently debugging? */
         virtual bool IsRunning() const = 0;
+
         /** @brief Is the plugin stopped on breakpoint? */
         virtual bool IsStopped() const = 0;
 
@@ -475,6 +483,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Get the exit code of the last debug process. */
         virtual int GetExitCode() const = 0;
+
         // stack frame calls;
         virtual int GetStackFrameCount() const = 0;
         virtual cb::shared_ptr<const cbStackFrame> GetStackFrame(int index) const = 0;
@@ -512,7 +521,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void DeleteWatch(cb::shared_ptr<cbWatch> watch) = 0;
         virtual bool HasWatch(cb::shared_ptr<cbWatch> watch) = 0;
         virtual void ShowWatchProperties(cb::shared_ptr<cbWatch> watch) = 0;
-        virtual bool SetWatchValue(cb::shared_ptr<cbWatch> watch, const wxString &value) = 0;
+        virtual bool SetWatchValue(cb::shared_ptr<cbWatch> watch, const wxString& value) = 0;
         virtual void ExpandWatch(cb::shared_ptr<cbWatch> watch) = 0;
         virtual void CollapseWatch(cb::shared_ptr<cbWatch> watch) = 0;
 
@@ -520,11 +529,11 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         {
             enum
             {
-                Empty      = 0,
-                Rename     = 1 << 0,
-                Properties = 1 << 1,
-                Delete     = 1 << 2,
-                DeleteAll  = 1 << 3,
+                Empty        = 0,
+                Rename       = 1 << 0,
+                Properties   = 1 << 1,
+                Delete       = 1 << 2,
+                DeleteAll    = 1 << 3,
                 AddDataBreak = 1 << 4
             };
         };
@@ -532,7 +541,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         /**
           * @param[out] disabledMenus A combination of WatchesDisabledMenuItems, which controls which of the default menu items are disabled
           */
-        virtual void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property, int &disabledMenus) {};
+        virtual void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property, int &disabledMenus)
+        { wxUnusedVar(menu); wxUnusedVar(watch); wxUnusedVar(property); wxUnusedVar(disabledMenus); };
 
         virtual void SendCommand(const wxString& cmd, bool debugLog) = 0;
 
@@ -540,10 +550,10 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void DetachFromProcess() = 0;
         virtual bool IsAttachedToProcess() const = 0;
 
-        virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
+        virtual void GetCurrentPosition(wxString& filename, int &line) = 0;
 
 
-        virtual void OnValueTooltip(const wxString &token, const wxRect &evalRect);
+        virtual void OnValueTooltip(const wxString& token, const wxRect &evalRect);
         virtual bool ShowValueTooltip(int style);
     private:
         void RegisterValueTooltip();
@@ -568,7 +578,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
           * @param startType it is the same value given to the Debug method, when the debugger session was started.
           * @return True if debug session is start, false if there are any errors or the users canceled the session.
         */
-        virtual bool CompilerFinished(bool compilerFailed, StartType startType) { return false; }
+        virtual bool CompilerFinished(bool compilerFailed, StartType startType)
+        { wxUnusedVar(compilerFailed); wxUnusedVar(startType); return false; }
     public:
         enum DebugWindows
         {
@@ -615,11 +626,11 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void SwitchToDebuggingLayout();
         void SwitchToPreviousLayout();
 
-        bool GetDebuggee(wxString &pathToDebuggee, wxString &workingDirectory, ProjectBuildTarget* target);
+        bool GetDebuggee(wxString& pathToDebuggee, wxString& workingDirectory, ProjectBuildTarget* target);
         bool EnsureBuildUpToDate(StartType startType);
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }
 
-        int RunNixConsole(wxString &consoleTty);
+        int RunNixConsole(wxString& consoleTty);
         void MarkAsStopped();
 
     private:
@@ -647,7 +658,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         bool m_lastLineWasNormal;
         wxString m_guiName, m_settingsName;
 };
-#endif // #ifndef CB_FOR_CONSOLE
 
 /** @brief Base class for tool plugins
   *

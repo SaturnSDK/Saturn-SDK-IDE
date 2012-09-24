@@ -77,7 +77,7 @@ wxsItemEditor::wxsItemEditor(wxWindow* parent,wxsItemRes* Resource):
 wxsItemEditor::~wxsItemEditor()
 {
     delete m_Data;
-	m_AllEditors.erase(this);
+    m_AllEditors.erase(this);
 }
 
 void wxsItemEditor::InitializeResourceData()
@@ -216,15 +216,18 @@ void wxsItemEditor::RebuildPreview()
         BackgroundSizer->Fit(m_PreviewBackground);
         wxSizer* NewSizer = new wxGridSizer(1);
         NewSizer->Add(m_PreviewBackground,0,wxALL,10);
+#if !wxCHECK_VERSION(2, 9, 0)
         m_Content->SetVirtualSizeHints(1,1);
+#endif
         m_Content->SetSizer(NewSizer);
-        NewSizer->SetVirtualSizeHints(m_Content);
+#if wxCHECK_VERSION(2, 9, 0)
         NewSizer->FitInside(m_Content);
+#else
+        NewSizer->SetVirtualSizeHints(m_Content);
+#endif
         m_PreviewBackground->Layout();
         m_Content->Layout();
         m_HorizSizer->Layout();
-        m_VertSizer->Layout();
-        Layout();
     }
 
     m_ToolSpace->AfterPreviewChanged();
@@ -238,8 +241,9 @@ void wxsItemEditor::RebuildPreview()
     }
     m_VertSizer->Layout();
 
+    Layout();
     Thaw();
-    Update();
+    Refresh();
 
     // Updating all informations in Content
     m_Content->AfterPreviewChanged();
@@ -293,12 +297,12 @@ bool wxsItemEditor::Save()
         // TODO: Some message here please
     }
     UpdateModified();
-	return true;
+    return true;
 }
 
 bool wxsItemEditor::GetModified() const
 {
-	return m_Data ? m_Data->GetModified() : false;
+    return m_Data ? m_Data->GetModified() : false;
 }
 
 void wxsItemEditor::UpdateModified()
@@ -315,12 +319,12 @@ void wxsItemEditor::UpdateModified()
 
 bool wxsItemEditor::CanUndo() const
 {
-	return m_Data ? m_Data->CanUndo() : false;
+    return m_Data ? m_Data->CanUndo() : false;
 }
 
 bool wxsItemEditor::CanRedo() const
 {
-	return m_Data ? m_Data->CanRedo() : false;
+    return m_Data ? m_Data->CanRedo() : false;
 }
 
 void wxsItemEditor::Undo()
@@ -715,7 +719,11 @@ void wxsItemEditor::BuildPalette(wxNotebook* Palette)
             }
         }
         CurrentPanel->SetSizer(RowSizer);
+#if wxCHECK_VERSION(2, 9, 0)
+        RowSizer->FitInside(CurrentPanel);
+#else
         RowSizer->SetVirtualSizeHints(CurrentPanel);
+#endif
     }
 }
 

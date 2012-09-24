@@ -368,7 +368,7 @@ void MouseSap::DetachAll()
 {
 	// delete all handlers
     #if defined(LOGGING)
-	LOGIT(wxT("MMSap:DetachAll - detaching all [%d] targets"),m_EditorPtrs.GetCount() );
+	LOGIT(wxT("MMSap:DetachAll - detaching all [%lu] targets"), static_cast<unsigned long>(m_EditorPtrs.GetCount()) );
     #endif
 
     // Detach from memorized windows and remove event handlers
@@ -563,8 +563,8 @@ void MMSapEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
     // differentiate window, left, right split window
     cbEditor* ed = 0;
     cbStyledTextCtrl* pControl = 0;
-    cbStyledTextCtrl* pLeftSplitWin = 0;
-    cbStyledTextCtrl* pRightSplitWin = 0;
+    /*cbStyledTextCtrl* pLeftSplitWin = 0;
+    cbStyledTextCtrl* pRightSplitWin = 0;*/
 
     ed  = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if ( not ed ) { event.Skip(); return; }
@@ -574,8 +574,8 @@ void MMSapEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
     if ( pControl not_eq wxWindow::FindFocus()  )
         { event.Skip(); return; }
 
-    pLeftSplitWin = ed->GetLeftSplitViewControl();
-    pRightSplitWin = ed->GetRightSplitViewControl();
+    /*pLeftSplitWin = ed->GetLeftSplitViewControl();
+    pRightSplitWin = ed->GetRightSplitViewControl();*/
 
     #if defined(LOGGING)
     //LOGIT(_T("OnMouseSap[%d]"), eventType);

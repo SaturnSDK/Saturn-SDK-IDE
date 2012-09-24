@@ -1,8 +1,8 @@
 SUBDIRS = scripting tinyxml
 
 if PRECOMPILE_HEADERS
-BUILT_SOURCES = $(top_srcdir)/src/include/sdk.h.gch \
-		$(top_srcdir)/src/include/sdk_precomp.h.gch
+BUILT_SOURCES = $(top_builddir)/src/include/sdk.h.gch \
+		$(top_builddir)/src/include/sdk_precomp.h.gch
 else
 BUILT_SOURCES = 
 endif
@@ -24,7 +24,6 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 sdkdir=$(includedir)/codeblocks
 
 ALLHEADERS = annoyingdialog.h \
-				annoyingdialog_base.h \
 				autodetectcompilers.h \
 				backgroundthread.h \
 				base64.h \
@@ -36,7 +35,6 @@ ALLHEADERS = annoyingdialog.h \
 				cbexception.h \
 				cbfunctor.h \
 				cbplugin.h \
-				cbplugin_base.h \
 				cbproject.h \
 				cbstatusbar.h \
 				cbstyledtextctrl.h \
@@ -44,6 +42,7 @@ ALLHEADERS = annoyingdialog.h \
 				cbthreadpool.h \
 				cbthreadpool_extras.h \
 				cbtool.h \
+				cbtreectrl.h \
 				cbworkspace.h \
 				compileoptionsbase.h \
 				compiler.h \
@@ -75,18 +74,16 @@ ALLHEADERS = annoyingdialog.h \
 				filefilters.h \
 				filegroupsandmasks.h \
 				filemanager.h \
-				finddlg.h \
+				findreplacedlg.h \
 				findreplacebase.h \
 				genericmultilinenotesdlg.h \
 				globals.h \
-				globals_base.h \
 				ibaseloader.h \
 				ibaseworkspaceloader.h \
 				id.h \
 				importers_globals.h \
 				incrementalselectlistdlg.h \
 				infowindow.h \
-				infowindow_base.h \
 				licenses.h \
 				logger.h \
 				loggers.h \
@@ -101,7 +98,6 @@ ALLHEADERS = annoyingdialog.h \
 				personalitymanager.h \
 				pipedprocess.h \
 				pluginmanager.h \
-				pluginmanager_base.h \
 				pluginsconfigurationdlg.h \
 				prep.h \
 				printing_types.h \
@@ -116,10 +112,8 @@ ALLHEADERS = annoyingdialog.h \
 				projectoptionsdlg.h \
 				projectsfilemasksdlg.h \
 				projecttemplateloader.h \
-				replacedlg.h \
 				safedelete.h \
 				scriptingmanager.h \
-				scriptingmanager_base.h \
 				scriptsecuritywarningdlg.h \
 				scrollingdialog.h \
 				sdk.h \
@@ -163,16 +157,16 @@ ALLHEADERS = annoyingdialog.h \
 
 sdk_HEADERS = $(ALLHEADERS)
 
-$(top_srcdir)/src/include/sdk.h.gch: $(top_srcdir)/src/include/sdk_precomp.h.gch $(ALLHEADERS)
-	-rm -f $(top_srcdir)/src/include/sdk.h.gch
-	$(CXXCOMPILE) -o $(top_srcdir)/src/include/sdk.h.gch -xc++-header $(srcdir)/sdk.h
+$(top_builddir)/src/include/sdk.h.gch: $(top_builddir)/src/include/sdk_precomp.h.gch $(ALLHEADERS)
+	-rm -f $(top_builddir)/src/include/sdk.h.gch
+	$(CXXCOMPILE) -o $(top_builddir)/src/include/sdk.h.gch -xc++-header $(srcdir)/sdk.h
 
-$(top_srcdir)/src/include/sdk_precomp.h.gch: $(ALLHEADERS)
-	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch
-	$(CXXCOMPILE) -o $(top_srcdir)/src/include/sdk_precomp.h.gch -xc++-header $(srcdir)/sdk_precomp.h
+$(top_builddir)/src/include/sdk_precomp.h.gch: $(ALLHEADERS)
+	-rm -f $(top_builddir)/src/include/sdk_precomp.h.gch
+	$(CXXCOMPILE) -o $(top_builddir)/src/include/sdk_precomp.h.gch -xc++-header $(srcdir)/sdk_precomp.h
 
 clean-local:
-	-rm -f $(top_srcdir)/src/include/sdk.h.gch
-	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch
+	-rm -f $(top_builddir)/src/include/sdk.h.gch
+	-rm -f $(top_builddir)/src/include/sdk_precomp.h.gch
 
 EXTRA_DIST = autorevision.h
