@@ -76,71 +76,6 @@ namespace ScriptBindings
                 return dlg.GetPath();
             return wxEmptyString;
         }
-//<<<<<<< HEAD
-//
-//        wxString ReadFileContents(const wxString& filename)
-//        {
-//            wxFileName fname(Manager::Get()->GetMacrosManager()->ReplaceMacros(filename));
-//            NormalizePath(fname, wxEmptyString);
-//            wxFile f(fname.GetFullPath());
-//            return cbReadFileContents(f);
-//        }
-//
-//        bool WriteFileContents(const wxString& filename, const wxString& contents)
-//        {
-//            wxFileName fname(Manager::Get()->GetMacrosManager()->ReplaceMacros(filename));
-//            NormalizePath(fname, wxEmptyString);
-//            if (!SecurityAllows(_T("CreateFile"), fname.GetFullPath()))
-//                return false;
-//            wxFile f(fname.GetFullPath(), wxFile::write);
-//            return cbWrite(f, contents);
-//        }
-//
-//        int Execute(const wxString& command)
-//        {
-//            if (!SecurityAllows(_T("Execute"), command))
-//                return -1;
-//            wxArrayString output;
-//            return wxExecute(command, output, wxEXEC_NODISABLE);
-//        }
-//
-//        wxString ExecuteAndGetOutput(const wxString& command)
-//        {
-//            if (!SecurityAllows(_T("Execute"), command))
-//                return wxEmptyString;
-//
-//            wxArrayString output;
-//            wxExecute(command, output, wxEXEC_NODISABLE);
-//
-//            return GetStringFromArray(output, _T("\n"));
-//        }
-//
-//        wxString ExecuteAndGetOutputAndError(const wxString& command, bool prepend_error = true)
-//        {
-//            if (!SecurityAllows(_T("Execute"), command))
-//                return wxEmptyString;
-//
-//            wxArrayString output;
-//            wxArrayString error;
-//            wxExecute(command, output, error, wxEXEC_NODISABLE);
-//
-//            wxString str_out;
-//
-//            if ( prepend_error && !error.IsEmpty())
-//                str_out += GetStringFromArray(error,  _T("\n"));
-//
-//            if (!output.IsEmpty())
-//                str_out += GetStringFromArray(output, _T("\n"));
-//
-//            if (!prepend_error && !error.IsEmpty())
-//                str_out += GetStringFromArray(error,  _T("\n"));
-//
-//            return  str_out;
-//        }
-//
-//
-//=======
-//>>>>>>> * initial commit for new console branch; old one was broken because of too much merges and remerges in trunk
     } // namespace IOLib
 } // namespace ScriptBindings
 
@@ -151,37 +86,7 @@ namespace ScriptBindings
     void Register_IO()
     {
         SqPlus::SQClassDef<IONamespace>("IO").
-//<<<<<<< HEAD
-//
-//                #ifndef NO_INSECURE_SCRIPTS
-//                staticFunc(&IOLib::CreateDirRecursively,        "CreateDirectory").
-//                staticFunc(&IOLib::RemoveDir,                   "RemoveDirectory").
-//                staticFunc(&IOLib::CopyFile,                    "CopyFile").
-//                staticFunc(&IOLib::RenameFile,                  "RenameFile").
-//                staticFunc(&IOLib::RemoveFile,                  "RemoveFile").
-//                staticFunc(&IOLib::WriteFileContents,           "WriteFileContents").
-//                staticFunc(&IOLib::Execute,                     "Execute").
-//                staticFunc(&IOLib::ExecuteAndGetOutput,         "ExecuteAndGetOutput").
-//                staticFunc(&IOLib::ExecuteAndGetOutputAndError, "ExecuteAndGetOutputAndError").
-//                #endif // NO_INSECURE_SCRIPTS
-//
-//                staticFunc(&IOLib::GetCwd, "GetCwd").
-//                staticFunc(&IOLib::SetCwd, "SetCwd").
-//
-//                staticFunc(&IOLib::DirectoryExists,  "DirectoryExists").
-//                staticFunc(&IOLib::ChooseDir,        "SelectDirectory").
-//                staticFunc(&IOLib::FileExists,       "FileExists").
-//                staticFunc(&IOLib::ChooseFile,       "SelectFile").
-//                staticFunc(&IOLib::ReadFileContents, "ReadFileContents");
-//
-//        #ifndef NO_INSECURE_SCRIPTS
-//        SqPlus::BindConstant(true,  "allowInsecureScripts");
-//        #else
-//        SqPlus::BindConstant(false, "allowInsecureScripts");
-//        #endif // NO_INSECURE_SCRIPTS
-//=======
                 staticFunc(&IOLib::ChooseDir,        "SelectDirectory").
                 staticFunc(&IOLib::ChooseFile,       "SelectFile");
-//>>>>>>> * initial commit for new console branch; old one was broken because of too much merges and remerges in trunk
     }
 } // namespace ScriptBindings
