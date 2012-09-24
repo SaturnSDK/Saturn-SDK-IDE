@@ -6,6 +6,8 @@
 #ifndef SCRIPTBINDINGS_H
 #define SCRIPTBINDINGS_H
 
+#include "scriptbindings_base.h"
+
 namespace ScriptBindings
 {
     void RegisterBindings();

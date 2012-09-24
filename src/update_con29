@@ -1,0 +1,56 @@
+#!/bin/sh
+
+if [ "x$MSYSTEM" != "x" ] ; then
+  EXEEXT=".exe"
+  LIBEXT="dll"
+else
+  EXEEXT=""
+  LIBEXT="so"
+fi
+
+echo Creating output directory tree
+
+mkdir -p output29/share/codeblocks/plugins
+mkdir -p devel29/share/codeblocks/plugins
+
+ZIPCMD="zip"
+RESDIR="devel29/share/codeblocks"
+echo Compressing core UI resources
+echo Compressing plugins UI resources
+${ZIPCMD} -jqu9 ${RESDIR}/con_compiler.zip plugins/compilergcc/resources/manifest.xml > /dev/null
+
+echo Copying files
+# Create an exclude pattern file
+echo .svn > excludes.txt
+echo Makefile >> excludes.txt
+echo Makefile.am >> excludes.txt
+echo Makefile.in >> excludes.txt
+cp -fu ${RESDIR}/*.zip output29/share/codeblocks > /dev/null
+cp -fu devel29/codeblocks_con${EXEEXT} output29 > /dev/null
+cp -fu devel29/*.${LIBEXT} output > /dev/null
+cp -fu ${RESDIR}/plugins/*.${LIBEXT} output29/share/codeblocks/plugins > /dev/null
+# Now remove the exclude pattern file
+rm excludes.txt
+
+echo Stripping debug info from output tree
+strip output29/codeblocks_con${EXEEXT}
+strip output29/*.${LIBEXT}
+strip output29/share/codeblocks/plugins/*.${LIBEXT}
+
+if [ "x$MSYSTEM" = "x" ] ; then
+  echo "#!/bin/sh" > output29/run_con.sh
+  echo 'APP_DIR=`dirname "$0"`' >> output29/run_con.sh
+  echo 'APP_DIR=`( cd "$APP_DIR" && pwd )`' >> output29/run_con.sh
+  echo "export LD_LIBRARY_PATH=\$APP_DIR:\$LD_LIBRARY_PATH" >> output29/run_con.sh
+  echo "\$APP_DIR/codeblocks_con \$@" >> output29/run_con.sh
+  chmod +x output29/run_con.sh
+  echo "#!/bin/sh" > devel29/run_con.sh
+  echo 'APP_DIR=`dirname "$0"`' >> devel29/run_con.sh
+  echo 'APP_DIR=`( cd "$APP_DIR" && pwd )`' >> devel29/run_con.sh
+  echo "export LD_LIBRARY_PATH=\$APP_DIR:\$LD_LIBRARY_PATH" >> devel29/run_con.sh
+  echo "\$APP_DIR/codeblocks_con \$@" >> devel29/run_con.sh
+  chmod +x devel29/run_con.sh
+fi
+
+ZIPCMD=
+RESDIR=

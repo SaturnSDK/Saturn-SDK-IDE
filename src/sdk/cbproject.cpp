@@ -24,14 +24,22 @@
 
     #include "cbproject.h" // class's header file
     #include "cbeditor.h"
+    #ifndef CB_FOR_CONSOLE
     #include "cbtreectrl.h"
+    #endif // #ifndef CB_FOR_CONSOLE
     #include "compiler.h" // GetSwitches
     #include "compilerfactory.h"
     #include "configmanager.h"
+    #ifndef CB_FOR_CONSOLE
     #include "editormanager.h"
+    #endif // #ifndef CB_FOR_CONSOLE
     #include "filemanager.h"
     #include "globals.h"
+    #ifndef CB_FOR_CONSOLE
     #include "infowindow.h"
+    #else // #ifndef CB_FOR_CONSOLE
+    #include "infowindow_base.h"
+    #endif // #ifndef CB_FOR_CONSOLE
     #include "logmanager.h"
     #include "macrosmanager.h"
     #include "manager.h"
@@ -43,14 +51,20 @@
 #endif
 
 #include <map>
+#ifndef CB_FOR_CONSOLE
 #include "projectoptionsdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 #include "projectloader.h"
+#ifndef CB_FOR_CONSOLE
 #include "projectlayoutloader.h"
 #include "selecttargetdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 #include "filegroupsandmasks.h"
 #include "filefilters.h"
 #include "annoyingdialog.h"
+#ifndef CB_FOR_CONSOLE
 #include "genericmultilinenotesdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 
 // class constructor
 cbProject::cbProject(const wxString& filename)
@@ -79,6 +93,7 @@ cbProject::cbProject(const wxString& filename)
         m_BasePath = GetBasePath();
         Open();
     }
+#ifndef CB_FOR_CONSOLE
     else
     {
         // new project
@@ -105,6 +120,7 @@ cbProject::cbProject(const wxString& filename)
 //            NotifyPlugins(cbEVT_PROJECT_OPEN);
         }
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 // class destructor
@@ -200,6 +216,7 @@ void cbProject::SetMakefileCustom(bool custom)
     }
 }
 
+#ifndef CB_FOR_CONSOLE
 wxString cbProject::CreateUniqueFilename()
 {
     const wxString prefix = _("Untitled");
@@ -232,6 +249,7 @@ wxString cbProject::CreateUniqueFilename()
     }
     return tmp << _T(".") << FileFilters::CODEBLOCKS_EXT;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::ClearAllProperties()
 {
@@ -354,7 +372,6 @@ void cbProject::CalculateCommonTopLevelPath()
 
     m_CommonTopLevelPath = base.GetFullPath();
     Manager::Get()->GetLogManager()->DebugLog(_T("Project's common toplevel path: ") + m_CommonTopLevelPath);
-
     for (FilesList::iterator it = m_Files.begin(); it != m_Files.end(); ++it)
     {
         ProjectFile* f = (*it);
@@ -378,6 +395,7 @@ void cbProject::Touch()
     m_LastModified = wxDateTime::Now();
 }
 
+#ifndef CB_FOR_CONSOLE
 bool cbProject::SaveAs()
 {
     wxFileName fname;
@@ -521,6 +539,7 @@ bool cbProject::LoadLayout()
     }
     return result;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::BeginAddFiles()
 {
@@ -749,10 +768,12 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     SetModified(true);
     m_ProjectFilesMap[UnixFilename(pf->relativeFilename)] = pf; // add to hashmap
 
+#ifndef CB_FOR_CONSOLE
     if (!wxFileExists(fullFilename))
         pf->SetFileState(fvsMissing);
     else if (!wxFile::Access(fullFilename.c_str(), wxFile::write)) // readonly
         pf->SetFileState(fvsReadOnly);
+#endif // #ifndef CB_FOR_CONSOLE
 
     if (!GenFilesHackMap.empty())
     {
@@ -794,7 +815,9 @@ bool cbProject::RemoveFile(ProjectFile* pf)
     if (!pf)
         return false;
     m_ProjectFilesMap.erase(UnixFilename(pf->relativeFilename)); // remove from hashmap
+#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetEditorManager()->Close(pf->file.GetFullPath());
+#endif // #ifndef CB_FOR_CONSOLE
 
     FilesList::iterator it = m_Files.find(pf);
     if (it == m_Files.end())
@@ -831,6 +854,7 @@ bool cbProject::RemoveFile(ProjectFile* pf)
     return true;
 }
 
+#ifndef CB_FOR_CONSOLE
 void cbProject::SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent)
 {
     wxTreeItemIdValue cookie = 0;
@@ -1568,6 +1592,7 @@ void cbProject::RestoreTreeState(wxTreeCtrl* tree)
 {
     ::RestoreTreeState(tree, m_ProjectNode, m_ExpandedNodes, m_SelectedNodes);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 const wxString& cbProject::GetMakefile()
 {
@@ -1659,6 +1684,7 @@ ProjectFile* cbProject::GetFileByFilename(const wxString& filename, bool isRelat
     return m_ProjectFilesMap[UnixFilename(tmp)];
 }
 
+#ifndef CB_FOR_CONSOLE
 bool cbProject::QueryCloseAllFiles()
 {
     FilesList::iterator it = m_Files.begin();
@@ -1729,17 +1755,20 @@ bool cbProject::ShowOptions()
     }
     return false;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 int cbProject::SelectTarget(int initial, bool evenIfOne)
 {
     if (!evenIfOne && GetBuildTargetsCount() == 1)
         return 0;
 
+#ifndef CB_FOR_CONSOLE
     SelectTargetDlg dlg(0L, this, initial);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
         return dlg.GetSelection();
 
+#endif // #ifndef CB_FOR_CONSOLE
     return -1;
 }
 
@@ -1778,6 +1807,7 @@ ProjectBuildTarget* cbProject::AddBuildTarget(const wxString& targetName)
     return target;
 }
 
+#ifndef CB_FOR_CONSOLE
 bool cbProject::RenameBuildTarget(int index, const wxString& targetName)
 {
     ProjectBuildTarget* target = GetBuildTarget(index);
@@ -1925,6 +1955,7 @@ bool cbProject::RemoveBuildTarget(const wxString& targetName)
 {
     return RemoveBuildTarget(IndexOfBuildTargetName(targetName));
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 int cbProject::IndexOfBuildTargetName(const wxString& targetName) const
 {
@@ -2007,6 +2038,7 @@ ProjectBuildTarget* cbProject::GetBuildTarget(const wxString& targetName)
     return GetBuildTarget(idx);
 }
 
+#ifndef CB_FOR_CONSOLE
 void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
 {
     LogManager* msgMan = Manager::Get()->GetLogManager();
@@ -2045,6 +2077,7 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
     }
     SetModified(true);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::SetCurrentlyCompilingTarget(ProjectBuildTarget* bt)
 {
@@ -2193,6 +2226,7 @@ bool cbProject::GetExtendedObjectNamesGeneration() const
     return m_ExtendedObjectNamesGeneration;
 }
 
+#ifndef CB_FOR_CONSOLE
 void cbProject::SetNotes(const wxString& notes)
 {
     if (m_Notes != notes)
@@ -2237,6 +2271,7 @@ void cbProject::ShowNotes(bool nonEmptyOnly, bool editable)
             SetNotes(dlg.GetNotes());
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void cbProject::SetTitle(const wxString& title)
 {

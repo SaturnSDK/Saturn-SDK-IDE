@@ -44,7 +44,6 @@
 #endif
 
 
-
 cbPlugin::cbPlugin()
     : m_Type(ptNone),
     m_IsAttached(false)
@@ -60,12 +59,14 @@ void cbPlugin::Attach()
 {
     if (m_IsAttached)
         return;
+#ifndef CB_FOR_CONSOLE
     wxWindow* window = Manager::Get()->GetAppWindow();
     if (window)
     {
         // push ourself in the application's event handling chain...
         window->PushEventHandler(this);
     }
+#endif // #ifndef CB_FOR_CONSOLE
     m_IsAttached = true;
     OnAttach();
     SetEvtHandlerEnabled(true);
@@ -95,12 +96,14 @@ void cbPlugin::Release(bool appShutDown)
     if (appShutDown)
         return; // nothing more to do, if the app is shutting down
 
+#ifndef CB_FOR_CONSOLE
     wxWindow* window = Manager::Get()->GetAppWindow();
     if (window)
     {
         // remove ourself from the application's event handling chain...
         window->RemoveEventHandler(this);
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void cbPlugin::NotImplemented(const wxString& log) const
@@ -117,6 +120,7 @@ cbCompilerPlugin::cbCompilerPlugin()
     m_Type = ptCompiler;
 }
 
+#ifndef CB_FOR_CONSOLE
 /////
 ///// cbDebuggerPlugin
 /////
@@ -136,7 +140,6 @@ cbDebuggerPlugin::cbDebuggerPlugin(const wxString &guiName, const wxString &sett
 {
     m_Type = ptDebugger;
 }
-
 
 void cbDebuggerPlugin::OnAttach()
 {
@@ -975,6 +978,9 @@ void cbDebuggerPlugin::CancelValueTooltip(CodeBlocksEvent& event)
 {
     Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->HideValueTooltip();
 }
+
+#endif // #ifndef CB_FOR_CONSOLE
+
 /////
 ///// cbToolPlugin
 /////

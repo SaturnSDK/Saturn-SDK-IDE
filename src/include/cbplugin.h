@@ -46,10 +46,11 @@ class wxMenu;
 class wxToolBar;
 class wxPanel;
 class wxWindow;
-
 class cbBreakpoint;
 class cbConfigurationPanel;
+#ifndef CB_FOR_CONSOLE
 class cbDebuggerConfiguration;
+#endif // #ifndef CB_FOR_CONSOLE
 class cbEditor;
 class cbProject;
 class cbStackFrame;
@@ -236,7 +237,8 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
         bool m_IsAttached;
 
     private:
-        friend class PluginManager; // only the plugin manager has access here
+        friend class PluginManager; // the plugin manager has access here
+        friend class PluginManagerBase; // the base part of it also
 
         /** Attach is <b>not</b> a virtual function, so you can't override it.
           * The default implementation hooks the plugin to Code::Block's
@@ -374,9 +376,9 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
     private:
 };
 
-
 class wxScintillaEvent;
 
+#ifndef CB_FOR_CONSOLE
 struct cbDebuggerFeature
 {
     enum Flags
@@ -393,7 +395,6 @@ struct cbDebuggerFeature
         SetNextStatement
     };
 };
-
 /** @brief Base class for debugger plugins
   *
   * This plugin type must offer some pre-defined debug facilities, on top
@@ -444,7 +445,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Continue running the debugged program. */
         virtual void Continue() = 0;
-
         /** @brief Run the debugged program until it reaches the cursor at the current editor */
         virtual bool RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
 
@@ -453,7 +453,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Execute the next instruction and return control to the debugger. */
         virtual void Next() = 0;
-
         /** @brief Execute the next instruction and return control to the debugger. */
         virtual void NextInstruction() = 0;
 
@@ -462,7 +461,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
         virtual void Step() = 0;
-
         /** @brief Execute the next instruction, stepping out of function calls if needed, and return control to the debugger. */
         virtual void StepOut() = 0;
 
@@ -474,7 +472,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Is the plugin currently debugging? */
         virtual bool IsRunning() const = 0;
-
         /** @brief Is the plugin stopped on breakpoint? */
         virtual bool IsStopped() const = 0;
 
@@ -483,7 +480,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         /** @brief Get the exit code of the last debug process. */
         virtual int GetExitCode() const = 0;
-
         // stack frame calls;
         virtual int GetStackFrameCount() const = 0;
         virtual cb::shared_ptr<const cbStackFrame> GetStackFrame(int index) const = 0;
@@ -658,6 +654,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         bool m_lastLineWasNormal;
         wxString m_guiName, m_settingsName;
 };
+#endif // #ifndef CB_FOR_CONSOLE
 
 /** @brief Base class for tool plugins
   *

@@ -9,14 +9,18 @@
 
 #include <sdk.h>
 
+#ifndef CB_FOR_CONSOLE
 #include <wx/frame.h> // GetMenuBar
 #include <wx/gauge.h> // Needs to be before compilergcc.h if NOPCH on wxMSW
 #include <wx/listctrl.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <wx/xrc/xmlres.h>
+#ifndef CB_FOR_CONSOLE
 #include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/stattext.h>
 #include <wx/statline.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <wx/ffile.h>
 #include <wx/utils.h>
 #include <wx/uri.h>
@@ -32,25 +36,41 @@
 #include <sdk_events.h>
 #include <pipedprocess.h>
 #include <configmanager.h>
+#ifndef CB_FOR_CONSOLE
 #include <debuggermanager.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <logmanager.h>
 #include <macrosmanager.h>
 #include <projectmanager.h>
+#ifndef CB_FOR_CONSOLE
 #include <editormanager.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <scriptingmanager.h>
+#ifndef CB_FOR_CONSOLE
 #include <configurationpanel.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <pluginmanager.h>
+#ifndef CB_FOR_CONSOLE
 #include <cbeditor.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <annoyingdialog.h>
 #include <filefilters.h>
 #include <infowindow.h>
 
 #include "compilergcc.h"
+#ifndef CB_FOR_CONSOLE
 #include "compileroptionsdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 #include "directcommands.h"
 #include "globals.h"
 #include "cbworkspace.h"
+#ifndef CB_FOR_CONSOLE
 #include "cbstyledtextctrl.h"
+#endif // #ifndef CB_FOR_CONSOLE
+
+#ifdef CB_FOR_CONSOLE
+#include <wx/app.h>
+#endif // #ifdef CB_FOR_CONSOLE
 
 
 #include "compilerMINGW.h"
@@ -98,6 +118,7 @@ namespace ScriptBindings
 
 const int idBuildLog = wxNewId();
 
+#ifndef CB_FOR_CONSOLE
 class BuildLogger : public TextCtrlLogger
 {
     wxPanel* panel;
@@ -166,6 +187,7 @@ public:
             wxLaunchDefaultBrowser(url);
     }
 };
+#endif // #ifndef CB_FOR_CONSOLE
 
 namespace
 {
@@ -232,6 +254,7 @@ int idGCCProcess15                                 = wxNewId();
 int idGCCProcess16                                 = wxNewId();
 
 BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
+#ifndef CB_FOR_CONSOLE
     EVT_UPDATE_UI(idMenuCompile,                       CompilerGCC::OnUpdateUI)
     EVT_UPDATE_UI(idMenuCompileTarget,                 CompilerGCC::OnUpdateUI)
     EVT_UPDATE_UI(idMenuCompileFromProjectManager,     CompilerGCC::OnUpdateUI)
@@ -259,10 +282,12 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_UPDATE_UI(idMenuSettings,                      CompilerGCC::OnUpdateUI)
     EVT_UPDATE_UI(idToolTarget,                        CompilerGCC::OnUpdateUI)
     EVT_UPDATE_UI(idToolTargetLabel,                   CompilerGCC::OnUpdateUI)
+#endif // #ifndef CB_FOR_CONSOLE
 
     EVT_IDLE(                                       CompilerGCC::OnIdle)
     EVT_TIMER(idTimerPollCompiler,                  CompilerGCC::OnTimer)
 
+#ifndef CB_FOR_CONSOLE
     EVT_MENU(idMenuRun,                             CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompileAndRun,                   CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompile,                         CompilerGCC::Dispatcher)
@@ -284,6 +309,7 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_MENU(idMenuPreviousError,                   CompilerGCC::Dispatcher)
     EVT_MENU(idMenuClearErrors,                     CompilerGCC::Dispatcher)
     EVT_MENU(idMenuSettings,                        CompilerGCC::Dispatcher)
+#endif // #ifndef CB_FOR_CONSOLE
 
     EVT_TEXT_URL(idBuildLog,                        CompilerGCC::TextURL)
 
@@ -307,8 +333,10 @@ CompilerGCC::CompilerGCC() :
     m_pProject(0L),
     m_pTbar(0L),
     m_pLog(0L),
+#ifndef CB_FOR_CONSOLE
     m_pListLog(0L),
     m_pToolTarget(0L),
+#endif // #ifndef CB_FOR_CONSOLE
     m_RunAfterCompile(false),
     m_LastExitCode(0),
     m_NotifiedMaxErrors(false),
@@ -326,8 +354,13 @@ CompilerGCC::CompilerGCC() :
     m_IsCompileFileRequest(false),
     m_LogBuildProgressPercentage(false)
 {
+#ifndef CB_FOR_CONSOLE
     if (!Manager::LoadResource(_T("compiler.zip")))
         NotifyMissingFile(_T("compiler.zip"));
+#else // #ifndef CB_FOR_CONSOLE
+    if(!Manager::LoadResource(_T("con_compiler.zip")))
+        NotifyMissingFile(_T("con_compiler.zip"));
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 CompilerGCC::~CompilerGCC()
@@ -348,7 +381,9 @@ void CompilerGCC::OnAttach()
     m_pProject = 0L;
     m_pTbar = 0L;
     m_pLog = 0L;
+#ifndef CB_FOR_CONSOLE
     m_pListLog = 0L;
+#endif // #ifndef CB_FOR_CONSOLE
     m_pToolTarget = 0L;
     m_RunAfterCompile = false;
     m_LastExitCode = 0;
@@ -404,6 +439,7 @@ void CompilerGCC::OnAttach()
 
     AllocProcesses();
 
+#ifndef CB_FOR_CONSOLE
     LogManager* msgMan = Manager::Get()->GetLogManager();
 
     // create compiler's log
@@ -446,6 +482,9 @@ void CompilerGCC::OnAttach()
     bool hasBuildProg = Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/build_progress/bar"), false);
     if (hasBuildProg)
         m_pLog->AddBuildProgressBar();
+#else
+    m_PageIndex = 0;
+#endif // #ifndef CB_FOR_CONSOLE
 
     // set default compiler for new projects
     CompilerFactory::SetDefaultCompiler(Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/default_compiler"), _T("gcc")));
@@ -478,6 +517,7 @@ void CompilerGCC::OnRelease(bool appShutDown)
 
     SaveOptions();
     Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/default_compiler"), CompilerFactory::GetDefaultCompilerID());
+#ifndef CB_FOR_CONSOLE
     if (Manager::Get()->GetLogManager())
     {
         // for batch builds, the log is deleted by the manager
@@ -493,6 +533,7 @@ void CompilerGCC::OnRelease(bool appShutDown)
         Manager::Get()->ProcessEvent(evt);
         m_pListLog = 0;
     }
+#endif // #ifndef CB_FOR_CONSOLE
 
     // let wx handle this on shutdown ( if we return here Valgrind will be sad :'( )
     if (!appShutDown)
@@ -507,6 +548,7 @@ void CompilerGCC::OnRelease(bool appShutDown)
 
 int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
 {
+#ifndef CB_FOR_CONSOLE
     cbConfigurationDialog dlg(Manager::Get()->GetAppWindow(), wxID_ANY, _("Project build options"));
     cbConfigurationPanel* panel = new CompilerOptionsDlg(&dlg, this, project, target);
     panel->SetParentDialog(&dlg);
@@ -524,9 +566,11 @@ int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
             m_pLog->RemoveBuildProgressBar();
     }
 //    delete panel;
+#endif // #ifndef CB_FOR_CONSOLE
     return 0;
 }
 
+#ifndef CB_FOR_CONSOLE
 cbConfigurationPanel* CompilerGCC::GetConfigurationPanel(wxWindow* parent)
 {
     CompilerOptionsDlg* dlg = new CompilerOptionsDlg(parent, this, 0, 0);
@@ -537,12 +581,14 @@ void CompilerGCC::OnConfig(wxCommandEvent& /*event*/)
 {
     Configure(NULL);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::BuildMenu(wxMenuBar* menuBar)
 {
     if (!IsAttached())
         return;
 
+#ifndef CB_FOR_CONSOLE
     m_Menu = Manager::Get()->LoadMenu(_T("compiler_menu"),true);
 
     // target selection menu
@@ -582,12 +628,14 @@ void CompilerGCC::BuildMenu(wxMenuBar* menuBar)
         prj->Insert(propsPos, idMenuProjectCompilerOptions, _("Build options..."), _("Set the project's build options"));
         prj->InsertSeparator(propsPos);
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
 {
     if (!IsAttached())
         return;
+#ifndef CB_FOR_CONSOLE
     // we 're only interested in project manager's menus
     if (type != mtProjectManager || !menu || IsRunning())
         return;
@@ -613,7 +661,6 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
         menu->Append(idMenuCleanFromProjectManager,   _("Clean"));
         menu->AppendSeparator();
         menu->Append(idMenuProjectCompilerOptionsFromProjectManager, _("Build options..."));
-
         cbPlugin *otherRunning = Manager::Get()->GetProjectManager()->GetIsRunning();
         if (otherRunning && otherRunning != this)
         {
@@ -633,10 +680,12 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
             menu->Append(idMenuCompileFileFromProjectManager, _("Build file"));
         }
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 bool CompilerGCC::BuildToolBar(wxToolBar* toolBar)
 {
+#ifndef CB_FOR_CONSOLE
     if (!IsAttached() || !toolBar)
         return false;
 
@@ -647,9 +696,11 @@ bool CompilerGCC::BuildToolBar(wxToolBar* toolBar)
     toolBar->Realize();
     toolBar->SetInitialSize();
     DoRecreateTargetMenu(); // make sure the tool target combo is up-to-date
+#endif // #ifndef CB_FOR_CONSOLE
     return true;
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::Dispatcher(wxCommandEvent& event)
 {
     int eventId = event.GetId();
@@ -703,12 +754,15 @@ void CompilerGCC::Dispatcher(wxCommandEvent& event)
     if ( (ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor()) )
         ed->GetControl()->SetFocus();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::TextURL(wxTextUrlEvent& event)
 {
+#ifndef CB_FOR_CONSOLE
     if (event.GetId() == idBuildLog && event.GetMouseEvent().ButtonDown(wxMOUSE_BTN_LEFT))
         m_pLog->OpenLink(event.GetURLStart(), event.GetURLEnd());
     else
+#endif // #ifndef CB_FOR_CONSOLE
         event.Skip();
 }
 
@@ -828,6 +882,7 @@ void CompilerGCC::SetupEnvironment()
 
 bool CompilerGCC::StopRunningDebugger()
 {
+#ifndef CB_FOR_CONSOLE
     cbDebuggerPlugin *dbg = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     // is the debugger running?
     if (dbg && dbg->IsRunning())
@@ -852,6 +907,7 @@ bool CompilerGCC::StopRunningDebugger()
         }
     }
 
+#endif // #ifndef CB_FOR_CONSOLE
     return true;
 }
 
@@ -883,6 +939,7 @@ void CompilerGCC::SwitchCompiler(const wxString& id)
     SetupEnvironment();
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::PrepareCompileFilePM(wxFileName& file)
 {
     // we 're called from a menu in ProjectManager
@@ -918,6 +975,7 @@ void CompilerGCC::PrepareCompileFile(wxFileName& file)
         }
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool CompilerGCC::CheckProject()
 {
@@ -940,6 +998,7 @@ void CompilerGCC::AskForActiveProject()
                 : Manager::Get()->GetProjectManager()->GetActiveProject();
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::StartCompileFile(wxFileName file)
 {
     if (m_pProject)
@@ -954,6 +1013,7 @@ void CompilerGCC::StartCompileFile(wxFileName file)
     if (!fname.IsEmpty())
         CompileFile( UnixFilename(fname) );
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 wxString CompilerGCC::ProjectMakefile()
 {
@@ -973,13 +1033,16 @@ void CompilerGCC::ClearLog()
     if (IsProcessRunning())
         return;
 
+#ifndef CB_FOR_CONSOLE
     CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, m_pLog);
     Manager::Get()->ProcessEvent(evtSwitch);
 
     if (m_pLog)
         m_pLog->Clear();
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
+#ifndef CB_FOR_CONSOLE
 FileTreeData* CompilerGCC::DoSwitchProjectTemporarily()
 {
     ProjectManager* manager = Manager::Get()->GetProjectManager();
@@ -996,6 +1059,7 @@ FileTreeData* CompilerGCC::DoSwitchProjectTemporarily()
 
     return newFtd;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
 {
@@ -1047,11 +1111,13 @@ void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
         }
     }
 
+#ifndef CB_FOR_CONSOLE
     if (m_pLog->progress)
     {
         m_pLog->progress->SetRange(m_MaxProgress);
         m_pLog->progress->SetValue(m_CurrentProgress);
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void CompilerGCC::AllocProcesses()
@@ -1215,11 +1281,17 @@ int CompilerGCC::DoRunQueue()
     wxString oldLibPath; // keep old PATH/LD_LIBRARY_PATH contents
     wxGetEnv(CB_LIBRARY_ENVVAR, &oldLibPath);
 
+#ifndef CB_FOR_CONSOLE
     bool pipe = true;
     int flags = wxEXEC_ASYNC;
+#else
+    int flags = wxEXEC_SYNC;
+#endif // #ifndef CB_FOR_CONSOLE
     if (cmd->isRun)
     {
+#ifndef CB_FOR_CONSOLE
         pipe = false; // no need to pipe output channels...
+#endif // #ifndef CB_FOR_CONSOLE
         flags |= wxEXEC_NOHIDE;
         dir = m_CdRun;
 
@@ -1248,6 +1320,7 @@ int CompilerGCC::DoRunQueue()
     m_CompilerProcessList.at(procIndex).OutputFile =
         (cmd->isLink && cmd->target) ? cmd->target->GetOutputFilename()
                                      : wxString(wxEmptyString);
+#ifndef CB_FOR_CONSOLE
     m_CompilerProcessList.at(procIndex).pProcess =
         new PipedProcess(&(m_CompilerProcessList.at(procIndex).pProcess), this, idGCCProcess1 + procIndex, pipe, dir);
     m_CompilerProcessList.at(procIndex).PID     =
@@ -1264,16 +1337,59 @@ int CompilerGCC::DoRunQueue()
     }
     else
         m_timerIdleWakeUp.Start(100);
+#else // #ifndef CB_FOR_CONSOLE
+    wxArrayString output, error;
+    // we need to use wxExecute here, even if the returned exitcode has to be treaten as if
+    // we run system() directly, because we need to be able to write the (error)output to a
+    // possibly used html-log.
+    m_CompilerProcessList.at(procIndex).PID = wxExecute(cmd->command, output, error, flags);
+    // The returned value can be too large and therefore can not be used directly as returnvalue
+    // of the app (it seems that values larger than 255 are treated as zero).
+    if(WIFEXITED(m_CompilerProcessList.at(procIndex).PID))
+    {
+        m_CompilerProcessList.at(procIndex).PID = WEXITSTATUS(m_CompilerProcessList.at(procIndex).PID);
+    }
+    else
+    {
+        m_CompilerProcessList.at(procIndex).PID = -1;
+    }
+    if ( m_CompilerProcessList.at(procIndex).PID == -1 )
+    {
+        Delete(m_CompilerProcessList.at(procIndex).pProcess);
+        m_CommandQueue.Clear();
+        ResetBuildState();
+    }
+    else
+    {
+        m_timerIdleWakeUp.Start(100);
+    }
+    LogMessage(_(""));
+    for(size_t i = 0; i < output.GetCount(); i++)
+    {
+        AddOutputLine(output[i]);
+    }
+    for(size_t i = 0; i < error.GetCount(); i++)
+    {
+        AddOutputLine(error[i]);
+    }
+    OnJobEnd(procIndex, m_CompilerProcessList.at(procIndex).PID);
+#endif // #ifndef CB_FOR_CONSOLE
 
     // restore dynamic linker path
     wxSetEnv(CB_LIBRARY_ENVVAR, oldLibPath);
 
     delete cmd;
+#ifdef CB_FOR_CONSOLE
+    // if nothing more to do, leave or we always get a "Nothing to be done" at the end
+    if(m_BuildState == bsNone && m_NextBuildState == bsNone)
+        return 0;
+#endif // #ifdef CB_FOR_CONSOLE
     return DoRunQueue();
 }
 
 void CompilerGCC::DoClearTargetMenu()
 {
+#ifndef CB_FOR_CONSOLE
     if (m_TargetMenu)
     {
         wxMenuItemList& items = m_TargetMenu->GetMenuItems();
@@ -1289,6 +1405,7 @@ void CompilerGCC::DoClearTargetMenu()
 //        items.Clear();
 //        items.DeleteContents(olddelete);
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 bool CompilerGCC::IsValidTarget(const wxString &target) const
@@ -1313,12 +1430,14 @@ void CompilerGCC::DoRecreateTargetMenu()
 {
     if (!IsAttached())
         return;
+#ifndef CB_FOR_CONSOLE
 
     if (m_pToolTarget)
         m_pToolTarget->Freeze();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
     if (mbar)
         mbar->Freeze();
+#endif // #ifndef CB_FOR_CONSOLE
 
     do
     {
@@ -1350,6 +1469,7 @@ void CompilerGCC::DoRecreateTargetMenu()
               wsp->SetPreferredTarget(tgtStr);
         }
 
+#ifndef CB_FOR_CONSOLE
         // fill the menu and combo
         for (size_t x = 0; x < m_Targets.GetCount(); ++x)
         {
@@ -1370,6 +1490,7 @@ void CompilerGCC::DoRecreateTargetMenu()
                 wxEVT_COMMAND_MENU_SELECTED,
                 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
                 &CompilerGCC::OnSelectTarget );
+#endif // #ifndef CB_FOR_CONSOLE
 
         // housekeeping
         m_TargetIndex = m_Targets.Index(tgtStr);
@@ -1388,14 +1509,17 @@ void CompilerGCC::DoRecreateTargetMenu()
     }
     while (false);
 
+#ifndef CB_FOR_CONSOLE
     if (mbar)
         mbar->Thaw();
+#endif // #ifndef CB_FOR_CONSOLE
     if (m_pToolTarget)
         m_pToolTarget->Thaw();
 }
 
 void CompilerGCC::DoUpdateTargetMenu(int targetIndex)
 {
+#ifndef CB_FOR_CONSOLE
     // update indices
     m_TargetIndex = targetIndex;
     m_RealTargetIndex = m_TargetIndex - m_RealTargetsStartIndex;
@@ -1424,6 +1548,7 @@ void CompilerGCC::DoUpdateTargetMenu(int targetIndex)
     // can't set it here, because this function is called by the
     // tool combo's event handler
 //    DBGLOG(_T("m_TargetIndex=%d, m_pToolTarget->GetCurrentSelection()=%d, m_RealTargetsStartIndex=%d"), m_TargetIndex, m_pToolTarget->GetCurrentSelection(), m_RealTargetsStartIndex);
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void CompilerGCC::UpdateProjectTargets(cbProject* project)
@@ -1471,8 +1596,10 @@ void CompilerGCC::DoPrepareQueue(bool clearLog)
         CodeBlocksEvent evt(cbEVT_COMPILER_STARTED, 0, m_pProject, 0, this);
         Manager::Get()->ProcessEvent(evt);
 
+#ifndef CB_FOR_CONSOLE
         if (clearLog)
             ClearLog();
+#endif // #ifndef CB_FOR_CONSOLE
         DoClearErrors();
         // wxStartTimer();
         m_StartTime = wxGetLocalTimeMillis();
@@ -1583,6 +1710,7 @@ void CompilerGCC::PrintBanner(BuildAction action, cbProject* prj, ProjectBuildTa
     LogMessage(banner, cltNormal, ltAll, false, true);
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::DoGotoNextError()
 {
     m_Errors.Next();
@@ -1594,14 +1722,18 @@ void CompilerGCC::DoGotoPreviousError()
     m_Errors.Previous();
     m_pListLog->FocusError(m_Errors.GetFocusedError());
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::DoClearErrors()
 {
     m_Errors.Clear();
+#ifndef CB_FOR_CONSOLE
     m_pListLog->Clear();
     m_NotifiedMaxErrors = false;
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
+#ifndef CB_FOR_CONSOLE
 int CompilerGCC::RunSingleFile(const wxString& filename)
 {
     wxFileName fname(filename);
@@ -1660,6 +1792,7 @@ int CompilerGCC::RunSingleFile(const wxString& filename)
     m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, 0, 0, true));
     return 0;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 int CompilerGCC::Run(const wxString& target)
 {
@@ -1670,6 +1803,7 @@ int CompilerGCC::Run(const wxString& target)
 
 int CompilerGCC::Run(ProjectBuildTarget* target)
 {
+#ifndef CB_FOR_CONSOLE
     bool commandIsQuoted = false; // remeber if we quoted the command, avoid uneeded quotes, because they break execution with "konsole" under KDE
     if (!CheckProject())
     {
@@ -1867,8 +2001,8 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
     m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_pProject, target, true));
 
     m_pProject->SetCurrentlyCompilingTarget(0);
-
     Manager::Get()->GetProjectManager()->SetIsRunning(this);
+#endif // #ifndef CB_FOR_CONSOLE
     return 0;
 }
 
@@ -1953,9 +2087,11 @@ int CompilerGCC::DistClean(const wxString& target)
 
 int CompilerGCC::DistClean(ProjectBuildTarget* target)
 {
+#ifndef CB_FOR_CONSOLE
     // make sure all project files are saved
     if (m_pProject && !m_pProject->SaveAllFiles())
         Manager::Get()->GetLogManager()->Log(_("Could not save all files..."));
+#endif // #ifndef CB_FOR_CONSOLE
 
     if (!m_IsWorkspaceOperation)
         DoPrepareQueue();
@@ -2161,7 +2297,11 @@ void CompilerGCC::BuildStateManagement()
 
     if (m_pBuildingProject != m_pLastBuildingProject || bt != m_pLastBuildingTarget)
     {
+#ifndef CB_FOR_CONSOLE
         Manager::Get()->GetMacrosManager()->RecalcVars(m_pBuildingProject, Manager::Get()->GetEditorManager()->GetActiveEditor(), bt);
+#else
+        Manager::Get()->GetMacrosManager()->RecalcVars(m_pBuildingProject, 0l, bt);
+#endif // #ifndef CB_FOR_CONSOLE
         if (bt)
             SwitchCompiler(bt->GetCompilerID());
 
@@ -2483,6 +2623,7 @@ int CompilerGCC::DoBuild(bool clean, bool build)
     if (!bj.project)
         return -2;
 
+#ifndef CB_FOR_CONSOLE
     // make sure all project files are saved
     if (    bj.project
         && (bj.project != m_pBuildingProject)
@@ -2490,6 +2631,7 @@ int CompilerGCC::DoBuild(bool clean, bool build)
     {
         Manager::Get()->GetLogManager()->Log(_("Could not save all files..."));
     }
+#endif // #ifndef CB_FOR_CONSOLE
 
     m_pBuildingProject = bj.project;
     m_BuildingTargetName = bj.targetName;
@@ -2575,9 +2717,11 @@ int CompilerGCC::DoBuild(const wxString& target, bool clean, bool build, bool cl
 
     if (!CheckProject())
     {
+#ifndef CB_FOR_CONSOLE
         // no active project
         if (Manager::Get()->GetEditorManager()->GetActiveEditor())
             return CompileFile(Manager::Get()->GetEditorManager()->GetActiveEditor()->GetFilename());
+#endif // #ifndef CB_FOR_CONSOLE
         return -1;
     }
 
@@ -2655,9 +2799,11 @@ int CompilerGCC::DoWorkspaceBuild(const wxString& target, bool clean, bool build
     {
         for (size_t i = 0; i < arr->GetCount(); ++i)
         {
+#ifndef CB_FOR_CONSOLE
             cbProject* prj = arr->Item(i);
             if (prj && !prj->SaveAllFiles())
                 Manager::Get()->GetLogManager()->Log(F(_("Could not save all files of %s..."), prj->GetTitle().wx_str()), m_PageIndex);
+#endif // #ifndef CB_FOR_CONSOLE
         }
     }
 
@@ -2716,7 +2862,9 @@ int CompilerGCC::KillProcess()
 
         // Close input pipe
         m_CompilerProcessList.at(i).pProcess->CloseOutput();
+#ifndef CB_FOR_CONSOLE
         ((PipedProcess*) m_CompilerProcessList.at(i).pProcess)->ForfeitStreams();
+#endif // #ifndef CB_FOR_CONSOLE
 
         ret = wxProcess::Kill(m_CompilerProcessList.at(i).PID, wxSIGTERM);
 
@@ -2739,7 +2887,6 @@ int CompilerGCC::KillProcess()
             }
         }
     }
-
     ProjectManager *projectManager = Manager::Get()->GetProjectManager();
     if (projectManager->GetIsRunning() == this)
         projectManager->SetIsRunning(NULL);
@@ -2813,8 +2960,10 @@ int CompilerGCC::CompileFile(const wxString& file)
 
 int CompilerGCC::CompileFileWithoutProject(const wxString& file)
 {
+#ifndef CB_FOR_CONSOLE
     // compile single file not belonging to a project
     Manager::Get()->GetEditorManager()->Save(file);
+#endif // #ifndef CB_FOR_CONSOLE
 
     // switch to the default compiler
     SwitchCompiler(CompilerFactory::GetDefaultCompilerID());
@@ -2890,13 +3039,16 @@ void CompilerGCC::OnCompile(wxCommandEvent& event)
     {
         // we 're called from a menu in ProjectManager
         // let's check the selected project...
+#ifndef CB_FOR_CONSOLE
         DoSwitchProjectTemporarily();
+#endif // #ifndef CB_FOR_CONSOLE
     }
     ProjectBuildTarget* target = 0;
     Build(target);
     m_RealTargetIndex = bak;
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::OnCompileFile(wxCommandEvent& event)
 {
     // TODO (Rick#1#): Clean the file so it will always recompile
@@ -2908,6 +3060,7 @@ void CompilerGCC::OnCompileFile(wxCommandEvent& event)
 
     StartCompileFile(file);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::OnRebuild(wxCommandEvent& event)
 {
@@ -2930,7 +3083,9 @@ void CompilerGCC::OnRebuild(wxCommandEvent& event)
     {
         // we 're called from a menu in ProjectManager
         // let's check the selected project...
+#ifndef CB_FOR_CONSOLE
         DoSwitchProjectTemporarily();
+#endif // #ifndef CB_FOR_CONSOLE
     }
     ProjectBuildTarget* target = 0;
     Rebuild(target);
@@ -3003,13 +3158,16 @@ void CompilerGCC::OnClean(wxCommandEvent& event)
     {
         // we 're called from a menu in ProjectManager
         // let's check the selected project...
+#ifndef CB_FOR_CONSOLE
         DoSwitchProjectTemporarily();
+#endif // #ifndef CB_FOR_CONSOLE
     }
     ProjectBuildTarget* target = 0;
     Clean(target);
     m_RealTargetIndex = bak;
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::OnProjectCompilerOptions(wxCommandEvent& /*event*/)
 {
     ProjectManager* manager = Manager::Get()->GetProjectManager();
@@ -3043,6 +3201,7 @@ void CompilerGCC::OnProjectCompilerOptions(wxCommandEvent& /*event*/)
             Configure(prj);
     }
 } // end of OnProjectCompilerOptions
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::OnTargetCompilerOptions(wxCommandEvent& /*event*/)
 {
@@ -3055,7 +3214,9 @@ void CompilerGCC::OnTargetCompilerOptions(wxCommandEvent& /*event*/)
         m_RealTargetIndex = idx; // TODO: check
 
     // let's check the selected project...
+#ifndef CB_FOR_CONSOLE
     DoSwitchProjectTemporarily();
+#endif // #ifndef CB_FOR_CONSOLE
 
     ProjectBuildTarget* target = 0;
     m_RealTargetIndex = bak;
@@ -3084,6 +3245,7 @@ void CompilerGCC::OnSelectTarget(wxCommandEvent& event)
     }
 } // end of OnSelectTarget
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::OnNextError(wxCommandEvent& /*event*/)
 {
     DoGotoNextError();
@@ -3093,19 +3255,20 @@ void CompilerGCC::OnPreviousError(wxCommandEvent& /*event*/)
 {
     DoGotoPreviousError();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::OnClearErrors(wxCommandEvent& /*event*/)
 {
     DoClearErrors();
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
 {
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
     bool running = IsRunning();
-
     cbPlugin *runningPlugin = Manager::Get()->GetProjectManager()->GetIsRunning();
     bool otherRunning = runningPlugin && runningPlugin != this;
     if (mbar)
@@ -3154,6 +3317,7 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
     // *very* important! don't forget it...
     event.Skip();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerGCC::OnProjectActivated(CodeBlocksEvent& event)
 {
@@ -3338,6 +3502,7 @@ void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColour)
 void CompilerGCC::LogWarningOrError(CompilerLineType lt, cbProject* prj, const wxString& filename, const wxString& line, const wxString& msg)
 {
     // add build message
+#ifndef CB_FOR_CONSOLE
     wxArrayString errors;
     errors.Add(filename);
     errors.Add(line);
@@ -3350,6 +3515,10 @@ void CompilerGCC::LogWarningOrError(CompilerLineType lt, cbProject* prj, const w
         lv = Logger::warning;
 
     m_pListLog->Append(errors, lv);
+//#else // #ifndef CB_FOR_CONSOLE
+//    LogMessage(msg);
+#endif // #ifndef CB_FOR_CONSOLE
+
 //    m_pListLog->GetListControl()->SetColumnWidth(2, wxLIST_AUTOSIZE);
 
     // add to error keeping struct
@@ -3410,11 +3579,13 @@ void CompilerGCC::LogMessage(const wxString& message, CompilerLineType lt, LogTa
                 float p = (float)(m_CurrentProgress * 100.0f) / (float)m_MaxProgress;
                 progressMsg.Printf(_T("[%5.1f%%] "), p);
             }
+#ifndef CB_FOR_CONSOLE
             if (m_pLog->progress)
             {
                 m_pLog->progress->SetRange(m_MaxProgress);
                 m_pLog->progress->SetValue(m_CurrentProgress);
             }
+#endif // #ifndef CB_FOR_CONSOLE
         }
 
         Manager::Get()->GetLogManager()->Log(progressMsg + message, m_PageIndex, lv);
@@ -3620,6 +3791,7 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
                 CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
                 Manager::Get()->ProcessEvent(evtShow);
             }
+#ifndef CB_FOR_CONSOLE
             CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, m_pListLog);
             Manager::Get()->ProcessEvent(evtSwitch);
 
@@ -3627,6 +3799,7 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
             // Build is not completed, so clear the progress bar
             if (m_pLog->progress)
                 m_pLog->progress->SetValue(0);
+#endif // #ifndef CB_FOR_CONSOLE
         }
         else
         {
@@ -3636,6 +3809,7 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
                 if (Run() == 0)
                     DoRunQueue();
             }
+#ifndef CB_FOR_CONSOLE
             else if (!Manager::IsBatchBuild())
             {
                 // don't close the message manager (if auto-hiding), if warnings are required to keep it open
@@ -3654,14 +3828,17 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
                     Manager::Get()->ProcessEvent(evtShow);
                 }
             }
+#endif // #ifndef CB_FOR_CONSOLE
         }
 
         m_RunAfterCompile = false;
 
+#ifndef CB_FOR_CONSOLE
         // no matter what happened with the build, return the focus to the active editor
         cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(Manager::Get()->GetEditorManager()->GetActiveEditor());
         if (ed)
             ed->GetControl()->SetFocus();
+#endif // #ifndef CB_FOR_CONSOLE
     }
 }
 
@@ -3671,8 +3848,16 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
         return;
 
     m_BuildJob = bjIdle;
+#ifdef CB_FOR_CONSOLE
+    static bool one_time_only = false;
+    if (one_time_only)
+        return;
+#endif
     if (showNothingToBeDone)
     {
+#ifdef CB_FOR_CONSOLE
+        one_time_only = true;
+#endif
         LogMessage(m_Clean ? _("Done.\n") : _("Nothing to be done (all items are up-to-date).\n"));
         // if message manager is auto-hiding, unlock it (i.e. close it)
         CodeBlocksLogEvent evtShow(cbEVT_HIDE_LOG_MANAGER);
@@ -3684,7 +3869,6 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
         ProjectManager *manager = Manager::Get()->GetProjectManager();
         if (manager->GetIsRunning() == this)
             manager->SetIsRunning(NULL);
-
         CodeBlocksEvent evt(cbEVT_COMPILER_FINISHED, 0, m_pProject, 0, this);
         evt.SetInt(m_LastExitCode);
         Manager::Get()->ProcessEvent(evt);

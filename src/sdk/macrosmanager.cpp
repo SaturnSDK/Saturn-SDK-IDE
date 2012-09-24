@@ -175,6 +175,7 @@ void MacrosManager::ClearProjectKeys()
 
 wxString GetSelectedText()
 {
+#ifndef CB_FOR_CONSOLE
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
     {
@@ -191,6 +192,7 @@ wxString GetSelectedText()
             }
         }
     }
+#endif // #ifndef CB_FOR_CONSOLE
 
     return wxEmptyString;
 }
@@ -201,6 +203,7 @@ void MacrosManager::RecalcVars(cbProject* project, EditorBase* editor, ProjectBu
     m_ActiveEditorLine     = -1;            // invalidate
     m_ActiveEditorColumn   = -1;            // invalidate
 
+#ifndef CB_FOR_CONSOLE
     if (editor)
     {
       // don't use pointer to editor here, because this might be the same,
@@ -222,6 +225,7 @@ void MacrosManager::RecalcVars(cbProject* project, EditorBase* editor, ProjectBu
           }
       }
     }
+#endif // #ifndef CB_FOR_CONSOLE
 
     if (!project)
     {
@@ -432,7 +436,9 @@ void MacrosManager::ReplaceMacros(wxString& buffer, ProjectBuildTarget* target, 
     cbProject* project = target
                         ? target->GetParentProject()
                         : Manager::Get()->GetProjectManager()->GetActiveProject();
+#ifndef CB_FOR_CONSOLE
     EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+#endif // #ifndef CB_FOR_CONSOLE
 
     if (!target)
     {
@@ -446,8 +452,13 @@ void MacrosManager::ReplaceMacros(wxString& buffer, ProjectBuildTarget* target, 
                 target = project->GetBuildTarget(project->GetActiveBuildTarget());
         }
     }
+#ifndef CB_FOR_CONSOLE
     if (project != m_LastProject || target != m_LastTarget || (editor && (editor->GetFilename() != m_ActiveEditorFilename)) )
         RecalcVars(project, editor, target);
+#else // #ifndef CB_FOR_CONSOLE
+    if (project != m_LastProject || target != m_LastTarget )
+        RecalcVars(project, 0l, target);
+#endif // #ifndef CB_FOR_CONSOLE
 
     wxString search;
     wxString replace;

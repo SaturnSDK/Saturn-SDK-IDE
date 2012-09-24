@@ -10,9 +10,17 @@ INCLUDES = $(WX_CXXFLAGS) \
  			-I$(top_srcdir)/src/include/scripting/sqplus \
 			-I$(top_srcdir)/src/include/mozilla_chardet
 
-lib_LTLIBRARIES = libcodeblocks.la
+lib_LTLIBRARIES = libcodeblocks.la libcodeblocks_con.la
+
+libcodeblocks_con_la_CXXFLAGS = @CXXFLAGS@ -U CB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch
+
+libcodeblocks_la_CXXFLAGS = @CXXFLAGS@
+
+CXXFLAGS =
 
 libcodeblocks_la_LDFLAGS = -version-info @CODEBLOCKS_VERSION_INFO@
+
+libcodeblocks_con_la_LDFLAGS = -version-info @CODEBLOCKS_VERSION_INFO@
 
 libcodeblocks_la_LIBADD =  $(WX_LIBS) \
 			scripting/bindings/libsqbindings.la \
@@ -22,6 +30,13 @@ libcodeblocks_la_LIBADD =  $(WX_LIBS) \
 			../base/tinyxml/libtinyxml.la \
 			wxscintilla/libwxscintilla.la \
 			$(WXPROPGRID_LIB)
+
+libcodeblocks_con_la_LIBADD =  $(WX_LIBS) \
+			scripting/bindings/libsqbindings_con.la \
+			scripting/sqplus/libsqplus.la \
+			scripting/sqstdlib/libsqstdlib.la \
+			scripting/squirrel/libsquirrel.la \
+			../base/tinyxml/libtinyxml.la
 
 libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						autodetectcompilers.cpp \
@@ -73,6 +88,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						findreplacedlg.cpp \
 						genericmultilinenotesdlg.cpp \
 						globals.cpp \
+						globals_base.cpp \
 						importers_globals.cpp \
 						incrementalselectlistdlg.cpp \
 						infowindow.cpp \
@@ -87,6 +103,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						personalitymanager.cpp \
 						pipedprocess.cpp \
 						pluginmanager.cpp \
+						pluginmanager_base.cpp \
 						pluginsconfigurationdlg.cpp \
 						printing_types.cpp \
 						projectbuildtarget.cpp \
@@ -101,6 +118,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						projectsfilemasksdlg.cpp \
 						projecttemplateloader.cpp \
 						scriptingmanager.cpp \
+						scriptingmanager_base.cpp \
 						scriptsecuritywarningdlg.cpp \
 						scrollingdialog.cpp \
 						sdk_events.cpp \
@@ -137,6 +155,48 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						mozilla_chardet/src/nsSJISProber.cpp \
 						mozilla_chardet/src/nsUniversalDetector.cpp \
 						mozilla_chardet/src/nsUTF8Prober.cpp
+
+
+libcodeblocks_con_la_SOURCES = annoyingdialog_base.cpp \
+						base64.cpp \
+						blockallocated.cpp \
+						cbexception.cpp \
+						cbplugin.cpp \
+						cbproject.cpp \
+						cbthreadpool.cpp \
+						cbworkspace.cpp \
+						compileoptionsbase.cpp \
+						compiler.cpp \
+						compilercommandgenerator.cpp \
+						compilerfactory.cpp \
+						compileroptions.cpp \
+						compiletargetbase.cpp \
+						configmanager.cpp \
+						configmanager-revision.cpp \
+						crc32.cpp \
+						filefilters.cpp \
+						filegroupsandmasks.cpp \
+						filemanager.cpp \
+						globals_base.cpp \
+						importers_globals.cpp \
+						infowindow_base.cpp \
+						loggers.cpp \
+						logmanager.cpp \
+						macrosmanager.cpp \
+						managedthread.cpp \
+						manager.cpp \
+						personalitymanager.cpp \
+						pluginmanager_base.cpp \
+						projectbuildtarget.cpp \
+						projectfile.cpp \
+						projectloader.cpp \
+						projectloader_hooks.cpp \
+						projectmanager.cpp \
+						projecttemplateloader.cpp \
+						scriptingmanager_base.cpp \
+						sdk_events.cpp \
+						uservarmanager.cpp \
+						workspaceloader.cpp
 
 EXTRA_DIST =  	mozilla_chardet/src/Big5Freq.tab \
 		mozilla_chardet/src/EUCKRFreq.tab \

@@ -1,4 +1,4 @@
-pkgdata_DATA = compiler.zip
+pkgdata_DATA = compiler.zip con_compiler.zip
 CLEANFILES = $(pkgdata_DATA)
 
 EXTRA_DIST = advanced_compiler_options.xrc \
@@ -21,3 +21,5 @@ EXTRA_DIST = advanced_compiler_options.xrc \
 compiler.zip: $(EXTRA_DIST)
 	PWD=`pwd` cd $(srcdir) && zip $(PWD)/compiler.zip manifest.xml *.xrc images/*.png images/16x16/*.png > /dev/null
 
+con_compiler.zip:
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/con_compiler.zip manifest.xml > /dev/null

@@ -66,11 +66,13 @@ class ProjectFile
           * @param targetName The build target's name to remove this file from. */
         void RemoveBuildTarget(const wxString& targetName);
 
+#ifndef CB_FOR_CONSOLE
         /** Show the file properties dialog.
           * @param parent The parent window for the dialog (can be NULL).
           * @return True if the user closed the dialog with "OK", false if closed it with "Cancel".
           */
         bool ShowOptions(wxWindow* parent);
+#endif // #ifndef CB_FOR_CONSOLE
 
         // take as example the relative file sdk/cbProject.cpp
         /** @return The relative (to the project) filename without extension. */
@@ -95,12 +97,14 @@ class ProjectFile
           * @return The details for this project file for the specified build target. */
         const pfDetails& GetFileDetails(ProjectBuildTarget* target);
 
+#ifndef CB_FOR_CONSOLE
         /** Set the visual state (modified, read-only, etc).
           * @param state The new visual state. */
         void SetFileState(FileVisualState state);
 
         /** @return The visual state (modified, read-only, etc). */
         FileVisualState GetFileState() const;
+#endif // #ifndef CB_FOR_CONSOLE
 
         /** Modify 'Use custom command to build this file' for a compilerId. */
         void SetUseCustomBuildCommand(const wxString& compilerId, bool useCustomBuildCommand);

@@ -9,10 +9,8 @@
 # $HeadURL$
 #
 
-
 # make sure [git-]svn answers in english
 export LC_ALL="C"
-
 REV_FILE=./revision.m4
 
 # let's import OLD_REV (if there)

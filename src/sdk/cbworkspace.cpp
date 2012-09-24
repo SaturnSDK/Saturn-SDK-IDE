@@ -91,14 +91,16 @@ void cbWorkspace::Load()
 
         delete pWsp;
     }
-
     // load workspace layout file
     LoadLayout();
 
     m_Filename.SetExt(FileFilters::WORKSPACE_EXT);
+#ifndef CB_FOR_CONSOLE
     SetModified(false);
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
+#ifndef CB_FOR_CONSOLE
 bool cbWorkspace::Save(bool force)
 {
     if (m_Filename.GetFullPath().IsEmpty())
@@ -143,19 +145,24 @@ bool cbWorkspace::SaveAs(const wxString& /*filename*/)
 
     return Save(true);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void cbWorkspace::SetTitle(const wxString& title)
 {
     m_Title = title;
+#ifndef CB_FOR_CONSOLE
     SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
+#ifndef CB_FOR_CONSOLE
 void cbWorkspace::SetModified(bool modified)
 {
     m_Modified = modified;
     // Manager::Get()->GetLogManager()->DebugLog(F(_T("Setting workspace to modified = \"%s\""), modified ? _T("true") : _T("false")));
 }
 
+#endif // #ifndef CB_FOR_CONSOLE
 void cbWorkspace::SetPreferredTarget(const wxString &target)
 {
     if ( !target.IsEmpty() )

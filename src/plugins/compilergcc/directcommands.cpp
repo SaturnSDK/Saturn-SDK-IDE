@@ -68,10 +68,12 @@ DirectCommands::~DirectCommands()
         fname.SetExt(_T("depend"));
         depsCacheWrite(fname.GetFullPath().mb_str());
     }
+#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetLogManager()->DebugLog(
         F(_("Scanned %ld files for #includes, cache used %ld, cache updated %ld"),
         stats.scanned, stats.cache_used, stats.cache_updated));
 
+#endif // #ifndef CB_FOR_CONSOLE
     depsDone();
 }
 

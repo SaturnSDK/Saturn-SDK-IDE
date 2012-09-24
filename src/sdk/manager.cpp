@@ -18,10 +18,14 @@
     #include "sdk_events.h"
     #include "cbexception.h"
     #include "projectmanager.h"
+#ifndef CB_FOR_CONSOLE
     #include "editormanager.h"
+#endif // #ifndef CB_FOR_CONSOLE
     #include "logmanager.h"
     #include "pluginmanager.h"
+#ifndef CB_FOR_CONSOLE
     #include "toolsmanager.h"
+#endif // #ifndef CB_FOR_CONSOLE
     #include "macrosmanager.h"
     #include "configmanager.h"
     #include "scriptingmanager.h"
@@ -37,7 +41,9 @@
 #include <wx/toolbar.h>
 #include <wx/fs_mem.h>
 
+#ifndef CB_FOR_CONSOLE
 #include "debuggermanager.h"
+#endif // #ifndef CB_FOR_CONSOLE
 
 static Manager* s_ManagerInstance = 0;
 
@@ -84,12 +90,14 @@ Manager::~Manager()
         }
     }
 
+
 //    Shutdown();
     CfgMgrBldr::Free(); // only terminate config at the very last moment
 //    FileManager::Free();
 }
 
 
+#ifndef CB_FOR_CONSOLE
 Manager* Manager::Get(wxFrame *appWindow)
 {
     if (appWindow)
@@ -105,6 +113,7 @@ Manager* Manager::Get(wxFrame *appWindow)
     }
     return Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 Manager* Manager::Get()
 {
@@ -155,12 +164,16 @@ void Manager::Shutdown()
 {
     m_AppShuttingDown = true;
 
+#ifndef CB_FOR_CONSOLE
     ToolsManager::Free();
     TemplateManager::Free();
+#endif // #ifndef CB_FOR_CONSOLE
     PluginManager::Free();
     ScriptingManager::Free();
     ProjectManager::Free();
+#ifndef CB_FOR_CONSOLE
     EditorManager::Free();
+#endif // #ifndef CB_FOR_CONSOLE
     PersonalityManager::Free();
     MacrosManager::Free();
     UserVariableManager::Free();
@@ -233,6 +246,7 @@ bool Manager::IsAppStartedUp()
     return m_AppStartedUp;
 }
 
+#ifndef CB_FOR_CONSOLE
 void Manager::InitXRC(bool force)
 {
     static bool xrcok = false;
@@ -294,7 +308,6 @@ wxToolBar* Manager::CreateEmptyToolbar()
 
     return toolbar;
 }
-
 void Manager::AddonToolBar(wxToolBar* toolBar,wxString resid)
 {
     if (!toolBar)
@@ -318,16 +331,19 @@ wxWindow* Manager::GetAppWindow() const
 {
     return (wxWindow*)m_pAppWindow;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 ProjectManager* Manager::GetProjectManager() const
 {
     return ProjectManager::Get();
 }
 
+#ifndef CB_FOR_CONSOLE
 EditorManager* Manager::GetEditorManager() const
 {
     return EditorManager::Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 LogManager* Manager::GetLogManager() const
 {
@@ -339,10 +355,12 @@ PluginManager* Manager::GetPluginManager() const
     return PluginManager::Get();
 }
 
+#ifndef CB_FOR_CONSOLE
 ToolsManager* Manager::GetToolsManager() const
 {
     return ToolsManager::Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 MacrosManager* Manager::GetMacrosManager() const
 {
@@ -374,10 +392,12 @@ FileManager* Manager::GetFileManager() const
     return FileManager::Get();
 }
 
+#ifndef CB_FOR_CONSOLE
 DebuggerManager* Manager::GetDebuggerManager() const
 {
     return DebuggerManager::Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool Manager::LoadResource(const wxString& file)
 {

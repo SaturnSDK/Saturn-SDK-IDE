@@ -24,6 +24,7 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 sdkdir=$(includedir)/codeblocks
 
 ALLHEADERS = annoyingdialog.h \
+				annoyingdialog_base.h \
 				autodetectcompilers.h \
 				backgroundthread.h \
 				base64.h \
@@ -35,6 +36,7 @@ ALLHEADERS = annoyingdialog.h \
 				cbexception.h \
 				cbfunctor.h \
 				cbplugin.h \
+				cbplugin_base.h \
 				cbproject.h \
 				cbstatusbar.h \
 				cbstyledtextctrl.h \
@@ -78,12 +80,14 @@ ALLHEADERS = annoyingdialog.h \
 				findreplacebase.h \
 				genericmultilinenotesdlg.h \
 				globals.h \
+				globals_base.h \
 				ibaseloader.h \
 				ibaseworkspaceloader.h \
 				id.h \
 				importers_globals.h \
 				incrementalselectlistdlg.h \
 				infowindow.h \
+				infowindow_base.h \
 				licenses.h \
 				logger.h \
 				loggers.h \
@@ -98,6 +102,7 @@ ALLHEADERS = annoyingdialog.h \
 				personalitymanager.h \
 				pipedprocess.h \
 				pluginmanager.h \
+				pluginmanager_base.h \
 				pluginsconfigurationdlg.h \
 				prep.h \
 				printing_types.h \
@@ -114,6 +119,7 @@ ALLHEADERS = annoyingdialog.h \
 				projecttemplateloader.h \
 				safedelete.h \
 				scriptingmanager.h \
+				scriptingmanager_base.h \
 				scriptsecuritywarningdlg.h \
 				scrollingdialog.h \
 				sdk.h \

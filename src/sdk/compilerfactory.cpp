@@ -247,7 +247,9 @@ void CompilerFactory::SaveSettings()
 
 void CompilerFactory::LoadSettings()
 {
+#ifndef CB_FOR_CONSOLE
     bool needAutoDetection = false;
+#endif // #ifndef CB_FOR_CONSOLE
     for (size_t i = 0; i < Compilers.GetCount(); ++i)
     {
         wxString baseKey = Compilers[i]->GetParentID().IsEmpty() ? _T("/sets") : _T("/user_sets");
@@ -259,10 +261,13 @@ void CompilerFactory::LoadSettings()
         event.SetClientData(static_cast<void*>(Compilers[i]));
         Manager::Get()->ProcessEvent(event);
 
+#ifndef CB_FOR_CONSOLE
         if (Compilers[i]->GetMasterPath().IsEmpty())
             needAutoDetection = true;
+#endif // #ifndef CB_FOR_CONSOLE
     }
 
+#ifndef CB_FOR_CONSOLE
     // auto-detect missing compilers
     if (needAutoDetection)
     {
@@ -270,6 +275,7 @@ void CompilerFactory::LoadSettings()
         PlaceWindow(&adc);
         adc.ShowModal();
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxString& preselectedID)
@@ -296,6 +302,7 @@ Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxStr
             }
         }
     }
+#ifndef CB_FOR_CONSOLE
     // now display a choice dialog
     wxSingleChoiceDialog dlg(0,
                              message,
@@ -307,6 +314,9 @@ Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxStr
     if (dlg.ShowModal() == wxID_OK)
         return Compilers[dlg.GetSelection()];
     return 0;
+#else // #ifndef CB_FOR_CONSOLE
+    return Compilers[selected];
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 wxString CompilerFactory::GetCompilerVersionString(const wxString& Id)

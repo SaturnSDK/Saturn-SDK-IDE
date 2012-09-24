@@ -136,12 +136,14 @@ void ProjectFile::RemoveBuildTarget(const wxString& targetName)
         generatedFiles[i]->RemoveBuildTarget(targetName);
 }
 
+#ifndef CB_FOR_CONSOLE
 bool ProjectFile::ShowOptions(wxWindow* parent)
 {
     ProjectFileOptionsDlg dlg(parent, this);
     PlaceWindow(&dlg);
     return dlg.ShowModal() == wxID_OK;
 }
+#endif //#ifndef CB_FOR_CONSOLE
 
 wxString ProjectFile::GetBaseName() const
 {
@@ -282,6 +284,7 @@ const pfDetails& ProjectFile::GetFileDetails(ProjectBuildTarget* target)
     return *pfd;
 }
 
+#ifndef CB_FOR_CONSOLE
 FileVisualState ProjectFile::GetFileState() const
 {
     return m_VisualState;
@@ -300,6 +303,7 @@ void ProjectFile::SetFileState(FileVisualState state)
         }
     }
 }
+#endif //#ifndef CB_FOR_CONSOLE
 
 void ProjectFile::SetUseCustomBuildCommand(const wxString& compilerId, bool useCustomBuildCommand)
 {

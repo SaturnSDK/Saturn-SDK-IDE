@@ -24,10 +24,12 @@ class DLLIMPORT IBaseLoader
           * @return True on success, false on failure. */
         virtual bool Open(const wxString& filename) = 0;
 
+#ifndef CB_FOR_CONSOLE
         /** Save a file.
           * @param filename The file to save.
           * @return True on success, false on failure. */
         virtual bool Save(const wxString& filename) = 0;
+#endif // #ifndef CB_FOR_CONSOLE
 };
 
 #endif // IBASELOADER_H

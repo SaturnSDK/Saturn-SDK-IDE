@@ -22,19 +22,27 @@
 #include "cbfunctor.h"
 
 // forward decls
+#ifndef CB_FOR_CONSOLE
 class wxFrame;
 class wxWindow;
+#endif // #ifndef CB_FOR_CONSOLE
 class ProjectManager;
+#ifndef CB_FOR_CONSOLE
 class EditorManager;
 class DebuggerManager;
+#endif // #ifndef CB_FOR_CONSOLE
 class LogManager;
 class PluginManager;
+#ifndef CB_FOR_CONSOLE
 class ToolsManager;
+#endif // #ifndef CB_FOR_CONSOLE
 class MacrosManager;
 class PersonalityManager;
+#ifndef CB_FOR_CONSOLE
 class wxMenu;
 class wxMenuBar;
 class wxToolBar;
+#endif // #ifndef CB_FOR_CONSOLE
 class UserVariableManager;
 class ScriptingManager;
 class ConfigManager;
@@ -81,8 +89,10 @@ public:
     /** Never, EVER, call this function! It is the last function called on shutdown.... */
     static void Free();
 
+#ifndef CB_FOR_CONSOLE
     wxFrame*  GetAppFrame()  const;
     wxWindow* GetAppWindow() const;
+#endif // #ifndef CB_FOR_CONSOLE
 
     static bool IsAppShuttingDown();
     static bool IsAppStartedUp();
@@ -108,17 +118,23 @@ public:
      */
 
     ProjectManager*      GetProjectManager()                          const;
+#ifndef CB_FOR_CONSOLE
     EditorManager*       GetEditorManager()                           const;
+#endif // #ifndef CB_FOR_CONSOLE
     LogManager*          GetLogManager()                              const;
     PluginManager*       GetPluginManager()                           const;
+#ifndef CB_FOR_CONSOLE
     ToolsManager*        GetToolsManager()                            const;
+#endif // #ifndef CB_FOR_CONSOLE
     MacrosManager*       GetMacrosManager()                           const;
     PersonalityManager*  GetPersonalityManager()                      const;
     UserVariableManager* GetUserVariableManager()                     const;
     ScriptingManager*    GetScriptingManager()                        const;
     ConfigManager*       GetConfigManager(const wxString& name_space) const;
     FileManager*         GetFileManager()                             const;
+#ifndef CB_FOR_CONSOLE
     DebuggerManager*     GetDebuggerManager()                         const;
+#endif // #ifndef CB_FOR_CONSOLE
 
 
 
@@ -129,6 +145,7 @@ public:
     static void LoadXRC(wxString relpath);
     static bool LoadResource(const wxString& file);
 
+#ifndef CB_FOR_CONSOLE
     /// Loads Menubar from XRC
     static wxMenuBar* LoadMenuBar(wxString resid, bool createonfailure = false);
     /// Loads Menu from XRC
@@ -142,6 +159,7 @@ public:
     wxToolBar* CreateEmptyToolbar();
     static void AddonToolBar(wxToolBar* toolBar,wxString resid);
     static bool isToolBar16x16(wxToolBar* toolBar);
+#endif // #ifndef CB_FOR_CONSOLE
 
     static wxCmdLineParser* GetCmdLineParser();
 

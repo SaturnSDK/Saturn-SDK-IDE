@@ -155,6 +155,40 @@
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
+			<Target title="sdk_con">
+				<Option output="devel/libcodeblocks_con.so" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel" />
+				<Option object_output=".objs_con" />
+				<Option external_deps="base/tinyxml/libtxml.a;sdk/scripting/lib/libsquirrel.a;sdk/scripting/lib/libsqstdlib.a;sdk/scripting/lib/libsqplus.a;" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option parameters="--debug-log --multiple-instance -ni" />
+				<Option createStaticLib="1" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-U CB_PRECOMP" />
+					<Add option="-fPIC" />
+					<Add option="-Wno-invalid-pch" />
+					<Add option="-DCB_FOR_CONSOLE" />
+					<Add directory="include" />
+					<Add directory="include/tinyxml" />
+					<Add directory="include/scripting/bindings" />
+					<Add directory="include/scripting/include" />
+					<Add directory="include/scripting/sqplus" />
+				</Compiler>
+				<Linker>
+					<Add library="txml" />
+					<Add library="sqplus" />
+					<Add library="sqstdlib" />
+					<Add library="squirrel" />
+					<Add directory="devel" />
+					<Add directory="sdk/scripting/lib" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="build_tools/autorevision/autorevision +wx +int +t . include/autorevision.h" />
+					<Mode after="always" />
+				</ExtraCommands>
+			</Target>
 			<Target title="src">
 				<Option output="devel/codeblocks" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="devel" />
@@ -176,6 +210,29 @@
 					<Add option="`pkg-config gtk+-2.0 --libs`" />
 					<Add library="codeblocks" />
 					<Add library="wxpropgrid" />
+					<Add directory="devel" />
+				</Linker>
+			</Target>
+			<Target title="src_con">
+				<Option output="devel/codeblocks_con" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel" />
+				<Option object_output=".objs_con" />
+				<Option external_deps="devel/libcodeblocks_con.so;" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-U CB_PRECOMP" />
+					<Add option="-fPIC" />
+					<Add option="-Wno-invalid-pch" />
+					<Add option="-DENABLE_BINRELOC" />
+					<Add option="-DCB_FOR_CONSOLE" />
+					<Add directory="include" />
+					<Add directory="include/scripting/include" />
+					<Add directory="include/scripting/sqplus" />
+				</Compiler>
+				<Linker>
+					<Add library="codeblocks_con" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -257,6 +314,32 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
+					<Add library="depslib" />
+					<Add directory="devel" />
+					<Add directory="plugins/compilergcc/depslib" />
+				</Linker>
+			</Target>
+			<Target title="Compiler_con">
+				<Option output="devel/share/codeblocks/plugins/libcon_compiler.so" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel/share/codeblocks/plugins" />
+				<Option object_output=".objs_con" />
+				<Option external_deps="devel/libcodeblocks_con.so;plugins/compilergcc/depslib/libdepslib.a;" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-U CB_PRECOMP" />
+					<Add option="-fPIC" />
+					<Add option="-Wno-invalid-pch" />
+					<Add option="-DCB_FOR_CONSOLE" />
+					<Add directory="include" />
+					<Add directory="plugins/compilergcc/depslib/src" />
+					<Add directory="include/scripting/include" />
+					<Add directory="include/scripting/sqplus" />
+				</Compiler>
+				<Linker>
+					<Add option="`wx-config --libs`" />
+					<Add library="codeblocks_con" />
 					<Add library="depslib" />
 					<Add directory="devel" />
 					<Add directory="plugins/compilergcc/depslib" />
@@ -427,9 +510,10 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;src;Abbreviations;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
-			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
+			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;sdk_con;src;src_con;Abbreviations;AStyle;Autosave;Compiler depslib;Compiler;Compiler_con;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
+			<Add alias="Core app &amp; plugins" targets="sdk;src;Abbreviations;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
 			<Add alias="Third-party libs" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;Compiler depslib;" />
+			<Add alias="console-app" targets="tinyXML;AutoRevision;Squirrel;Squirrel std lib;SqPlus;sdk_con;src_con;Compiler depslib;Compiler_con;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
@@ -441,7 +525,6 @@
 			<Add option="-Uunix" />
 			<Add option="-fPIC" />
 			<Add option="`wx-config --cflags`" />
-			<Add option="`pkg-config --cflags gtk+-2.0`" />
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
 			<Add directory="sdk/wxscintilla/include" />
@@ -449,9 +532,7 @@
 			<Add directory="include/tinyxml" />
 		</Compiler>
 		<Linker>
-			<Add option="`wx-config --libs`" />
-			<Add option="`wx-config --libs aui`" />
-			<Add option="`pkg-config --libs gtk+-2.0`" />
+			<Add option="`wx-config --libs std,aui`" />
 			<Add directory="base/tinyxml" />
 		</Linker>
 		<Unit filename="base/exchndl/exchndl.c">
@@ -475,6 +556,7 @@
 		</Unit>
 		<Unit filename="base/tinyxml/tinywxuni.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="base/tinyxml/tinyxml.cpp">
 			<Option target="tinyXML" />
@@ -490,18 +572,25 @@
 		</Unit>
 		<Unit filename="include/annoyingdialog.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
+		<Unit filename="include/annoyingdialog_base.h">
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/autodetectcompilers.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/backgroundthread.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/base64.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/blockallocated.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbauibook.h">
 			<Option target="sdk" />
@@ -514,18 +603,23 @@
 		</Unit>
 		<Unit filename="include/cbeditorprintout.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbexception.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbfunctor.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbplugin.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbproject.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbstatusbar.h">
 			<Option target="sdk" />
@@ -535,42 +629,54 @@
 		</Unit>
 		<Unit filename="include/cbthreadedtask.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbthreadpool.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbthreadpool_extras.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbtool.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/cbtreectrl.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/cbworkspace.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/compileoptionsbase.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/compiler.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/compilercommandgenerator.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/compilerfactory.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/compileroptions.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/compiletargetbase.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/configmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/configurationpanel.h">
 			<Option target="sdk" />
@@ -583,6 +689,7 @@
 		</Unit>
 		<Unit filename="include/crc32.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/debuggermanager.h">
 			<Option target="sdk" />
@@ -634,12 +741,15 @@
 		</Unit>
 		<Unit filename="include/filefilters.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/filegroupsandmasks.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/filemanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/findreplacebase.h">
 			<Option target="sdk" />
@@ -653,17 +763,25 @@
 		<Unit filename="include/globals.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include/globals_base.h">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="include/ibaseloader.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/ibaseworkspaceloader.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/id.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/importers_globals.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/incrementalselectlistdlg.h">
 			<Option target="sdk" />
@@ -671,26 +789,36 @@
 		<Unit filename="include/infowindow.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include/infowindow_base.h">
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="include/licenses.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/logger.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/loggers.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/logmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/macrosmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/managedthread.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/manager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/menuitemsmanager.h">
 			<Option target="sdk" />
@@ -775,45 +903,59 @@
 		</Unit>
 		<Unit filename="include/personalitymanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/pipedprocess.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/pluginmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
+		<Unit filename="include/pluginmanager_base.h">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/pluginsconfigurationdlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/prep.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/printing_types.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/projectbuildtarget.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/projectdepsdlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/projectfile.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/projectfileoptionsdlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/projectlayoutloader.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/projectloader.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/projectloader_hooks.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/projectmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/projectoptionsdlg.h">
 			<Option target="sdk" />
@@ -823,18 +965,25 @@
 		</Unit>
 		<Unit filename="include/projecttemplateloader.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/safedelete.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/scripting/bindings/sc_base_types.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/scripting/bindings/sc_plugin.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/scripting/bindings/scriptbindings.h">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/scripting/bindings/scriptbindings_base.h">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/scripting/include/sqdbgserver.h">
 			<Option target="Squirrel" />
@@ -943,6 +1092,11 @@
 		</Unit>
 		<Unit filename="include/scriptingmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
+		<Unit filename="include/scriptingmanager_base.h">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/scriptsecuritywarningdlg.h">
 			<Option target="sdk" />
@@ -960,6 +1114,7 @@
 		</Unit>
 		<Unit filename="include/sdk_events.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/sdk_precomp.h">
 			<Option compile="1" />
@@ -968,36 +1123,43 @@
 		</Unit>
 		<Unit filename="include/searchresultslog.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/selecttargetdlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/settings.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/templatemanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/tinyxml/tinystr.h">
 			<Option target="tinyXML" />
 		</Unit>
 		<Unit filename="include/tinyxml/tinywxuni.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/tinyxml/tinyxml.h">
 			<Option target="tinyXML" />
 		</Unit>
 		<Unit filename="include/toolsmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/uservarmanager.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/virtualbuildtargetsdlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/workspaceloader.h">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/xtra_res.h">
 			<Option target="sdk" />
@@ -1276,111 +1438,147 @@
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerBCC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerBCC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerCYGWIN.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerCYGWIN.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerDMC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerDMC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerDMD.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerDMD.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerG95.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerG95.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGDC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGDC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUARM.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUARM.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUAVR.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUAVR.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUFortran.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUFortran.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUMSP430.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUMSP430.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUPOWERPC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUPOWERPC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUTRICORE.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUTRICORE.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerICC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerICC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerLCC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerLCC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerLDC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerLDC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMINGW.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMINGW.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMINGWgenerator.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMINGWgenerator.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC10.cpp">
 			<Option target="Compiler" />
@@ -1390,63 +1588,81 @@
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC8.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC8.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerOW.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerOW.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerOWgenerator.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerOWgenerator.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerSDCC.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerSDCC.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerTcc.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerTcc.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compiler_defs.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compiler_defs.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilererrors.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilererrors.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilergcc.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilergcc.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilermessages.cpp">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilermessages.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compileroptionsdlg.cpp">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compileroptionsdlg.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/depslib/src/alloc.c">
 			<Option compilerVar="CC" />
@@ -1548,24 +1764,31 @@
 		</Unit>
 		<Unit filename="plugins/compilergcc/directcommands.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/directcommands.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/advanced_compiler_options.xrc">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compiler_menu.xrc">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compiler_options.xrc">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compiler_toolbar.xrc">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compiler_toolbar_16x16.xrc">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/debuggergdb/cdb_commands.h">
 			<Option target="Debugger" />
@@ -2001,6 +2224,7 @@
 		</Unit>
 		<Unit filename="scripts/startup.script">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="scripts/wx_help.script">
 			<Option target="src" />
@@ -2008,14 +2232,19 @@
 		<Unit filename="sdk/annoyingdialog.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/annoyingdialog_base.cpp">
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="sdk/autodetectcompilers.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/base64.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/blockallocated.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/cbauibook.cpp">
 			<Option target="sdk" />
@@ -2031,12 +2260,15 @@
 		</Unit>
 		<Unit filename="sdk/cbexception.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/cbplugin.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/cbproject.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/cbstatusbar.cpp">
 			<Option target="sdk" />
@@ -2046,37 +2278,47 @@
 		</Unit>
 		<Unit filename="sdk/cbthreadpool.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/cbtreectrl.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/cbworkspace.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/compileoptionsbase.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/compiler.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/compilercommandgenerator.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/compilerfactory.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/compileroptions.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/compiletargetbase.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/configmanager-revision.cpp">
 			<Option weight="10" />
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/configmanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/configurationpanel.cpp">
 			<Option target="sdk" />
@@ -2089,6 +2331,7 @@
 		</Unit>
 		<Unit filename="sdk/crc32.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/debuggermanager.cpp">
 			<Option target="sdk" />
@@ -2140,12 +2383,15 @@
 		</Unit>
 		<Unit filename="sdk/filefilters.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/filegroupsandmasks.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/filemanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/findreplacedlg.cpp">
 			<Option target="sdk" />
@@ -2156,8 +2402,13 @@
 		<Unit filename="sdk/globals.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/globals_base.cpp">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="sdk/importers_globals.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/incrementalselectlistdlg.cpp">
 			<Option target="sdk" />
@@ -2165,20 +2416,28 @@
 		<Unit filename="sdk/infowindow.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/infowindow_base.cpp">
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="sdk/loggers.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/logmanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/macrosmanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/managedthread.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/manager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/menuitemsmanager.cpp">
 			<Option target="sdk" />
@@ -2284,27 +2543,36 @@
 		</Unit>
 		<Unit filename="sdk/personalitymanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/pipedprocess.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/pluginmanager.cpp">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/pluginmanager_base.cpp">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/pluginsconfigurationdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/printing_types.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/projectbuildtarget.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/projectdepsdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/projectfile.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/projectfileoptionsdlg.cpp">
 			<Option target="sdk" />
@@ -2314,12 +2582,15 @@
 		</Unit>
 		<Unit filename="sdk/projectloader.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/projectloader_hooks.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/projectmanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/projectoptionsdlg.cpp">
 			<Option target="sdk" />
@@ -2329,57 +2600,75 @@
 		</Unit>
 		<Unit filename="sdk/projecttemplateloader.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/auto_detect_compilers.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/configure_tools.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/confirm_replace.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/confirm_replace_multiple.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_array_order.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_array_string.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_keywords.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_pair.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_path.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_tool.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/editor_configuration.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/editor_manager.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/external_deps.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/generic_multi_select.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/generic_multiline_notes.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/global_uservars.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/incremental_select_list.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/lexers/lexer_OgreCompositor.sample">
 			<Option target="scintilla" />
@@ -2557,36 +2846,47 @@
 		</Unit>
 		<Unit filename="sdk/resources/new_from_template.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/plugins_configuration.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/project_deps.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/project_manager_file_types.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/project_options.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/projectfile_options.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/findreplacedlg.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/scripting_security_dlg.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/select_target.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/resources/virtualbuildtargetsdlg.xrc">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/scripting/bindings/sc_consts.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/scripting/bindings/sc_dialog.cpp">
 			<Option target="sdk" />
@@ -2594,8 +2894,16 @@
 		<Unit filename="sdk/scripting/bindings/sc_globals.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/scripting/bindings/sc_globals_base.cpp">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="sdk/scripting/bindings/sc_io.cpp">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/scripting/bindings/sc_io_base.cpp">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/scripting/bindings/sc_plugin.cpp">
 			<Option target="sdk" />
@@ -2608,9 +2916,14 @@
 		</Unit>
 		<Unit filename="sdk/scripting/bindings/sc_wxtypes.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/scripting/bindings/scriptbindings.cpp">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/scripting/bindings/scriptbindings_base.cpp">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/scripting/sqplus/SqPlus.cpp">
 			<Option target="SqPlus" />
@@ -2692,6 +3005,10 @@
 		<Unit filename="sdk/scriptingmanager.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/scriptingmanager_base.cpp">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="sdk/scriptsecuritywarningdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
@@ -2700,6 +3017,7 @@
 		</Unit>
 		<Unit filename="sdk/sdk_events.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/searchresultslog.cpp">
 			<Option target="sdk" />
@@ -2715,12 +3033,14 @@
 		</Unit>
 		<Unit filename="sdk/uservarmanager.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/virtualbuildtargetsdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/workspaceloader.cpp">
 			<Option target="sdk" />
+			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/wxpropgrid/include/wx/propgrid/advprops.h">
 			<Option target="wxpropgrid" />
@@ -3285,15 +3605,19 @@
 		</Unit>
 		<Unit filename="src/app.cpp">
 			<Option target="src" />
+			<Option target="src_con" />
 		</Unit>
 		<Unit filename="src/app.h">
 			<Option target="src" />
+			<Option target="src_con" />
 		</Unit>
 		<Unit filename="src/appglobals.cpp">
 			<Option target="src" />
+			<Option target="src_con" />
 		</Unit>
 		<Unit filename="src/appglobals.h">
 			<Option target="src" />
+			<Option target="src_con" />
 		</Unit>
 		<Unit filename="src/associations.cpp">
 			<Option compile="0" />
@@ -3416,9 +3740,11 @@
 		</Unit>
 		<Unit filename="src/prefix.cpp">
 			<Option target="src" />
+			<Option target="src_con" />
 		</Unit>
 		<Unit filename="src/prefix.h">
 			<Option target="src" />
+			<Option target="src_con" />
 		</Unit>
 		<Unit filename="src/printdlg.cpp">
 			<Option target="src" />

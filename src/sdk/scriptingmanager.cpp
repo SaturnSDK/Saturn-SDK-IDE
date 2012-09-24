@@ -10,6 +10,7 @@
 #include <sdk_precomp.h>
 
 #ifndef CB_PRECOMP
+    #include "scriptingmanager_base.h"
     #include "scriptingmanager.h"
     #include "cbexception.h"
     #include "manager.h"
@@ -37,32 +38,6 @@
 template<> ScriptingManager* Mgr<ScriptingManager>::instance = 0;
 template<> bool  Mgr<ScriptingManager>::isShutdown = false;
 
-static wxString s_ScriptErrors;
-static wxString capture;
-
-static void ScriptsPrintFunc(HSQUIRRELVM /*v*/, const SQChar * s, ...)
-{
-    static SQChar temp[2048];
-    va_list vl;
-    va_start(vl,s);
-    scvsprintf( temp,s,vl);
-    wxString msg = cbC2U(temp);
-    Manager::Get()->GetLogManager()->DebugLog(msg);
-    va_end(vl);
-
-    s_ScriptErrors << msg;
-}
-
-static void CaptureScriptOutput(HSQUIRRELVM /*v*/, const SQChar * s, ...)
-{
-    static SQChar temp[2048];
-    va_list vl;
-    va_start(vl,s);
-    scvsprintf(temp,s,vl);
-    ::capture.append(cbC2U(temp));
-    va_end(vl);
-};
-
 BEGIN_EVENT_TABLE(ScriptingManager, wxEvtHandler)
 //
 END_EVENT_TABLE()
@@ -71,157 +46,7 @@ ScriptingManager::ScriptingManager()
     : m_AttachedToMainWindow(false),
     m_MenuItemsManager(false) // not auto-clear
 {
-    //ctor
-
-    // initialize but don't load the IO lib
-    SquirrelVM::Init((SquirrelInitFlags)(sqifAll & ~sqifIO));
-
-    if (!SquirrelVM::GetVMPtr())
-        cbThrow(_T("Can't create scripting engine!"));
-
-    sq_setprintfunc(SquirrelVM::GetVMPtr(), ScriptsPrintFunc);
-    sqstd_register_stringlib(SquirrelVM::GetVMPtr());
-
-    RefreshTrusts();
-
-    // register types
     ScriptBindings::RegisterBindings();
-}
-
-ScriptingManager::~ScriptingManager()
-{
-    //dtor
-    // save trusted scripts set
-    ConfigManagerContainer::StringToStringMap myMap;
-    int i = 0;
-    TrustedScripts::iterator it;
-    for (it = m_TrustedScripts.begin(); it != m_TrustedScripts.end(); ++it)
-    {
-        if (!it->second.permanent)
-            continue;
-        wxString key = wxString::Format(_T("trust%d"), i++);
-        wxString value = wxString::Format(_T("%s?%x"), it->first.c_str(), it->second.crc);
-        myMap.insert(myMap.end(), std::make_pair(key, value));
-    }
-    Manager::Get()->GetConfigManager(_T("security"))->Write(_T("/trusted_scripts"), myMap);
-
-    SquirrelVM::Shutdown();
-}
-
-void ScriptingManager::RegisterScriptFunctions()
-{
-    // done in scriptbindings.cpp
-}
-
-bool ScriptingManager::LoadScript(const wxString& filename)
-{
-//    wxCriticalSectionLocker c(cs);
-
-    wxLogNull ln; // own error checking implemented -> avoid debug warnings
-
-    wxString fname(filename);
-    wxFile f(fname); // try to open
-    if (!f.IsOpened())
-    {
-        bool found = false;
-
-        // check in same dir as currently running script (if any)
-        if (!m_CurrentlyRunningScriptFile.IsEmpty())
-        {
-            fname = wxFileName(m_CurrentlyRunningScriptFile).GetPath() + _T('/') + filename;
-            f.Open(fname);
-            found = f.IsOpened();
-        }
-
-        if (!found)
-        {
-            // check in standard script dirs
-            fname = ConfigManager::LocateDataFile(filename, sdScriptsUser | sdScriptsGlobal);
-            f.Open(fname);
-            if (!f.IsOpened())
-            {
-                Manager::Get()->GetLogManager()->DebugLog(_T("Can't open script ") + filename);
-                return false;
-            }
-        }
-    }
-    // read file
-    wxString contents = cbReadFileContents(f);
-    m_CurrentlyRunningScriptFile = fname;
-    bool ret = LoadBuffer(contents, fname);
-    m_CurrentlyRunningScriptFile.Clear();
-    return ret;
-}
-
-bool ScriptingManager::LoadBuffer(const wxString& buffer, const wxString& debugName)
-{
-    // includes guard to avoid recursion
-    wxString incName = UnixFilename(debugName);
-    if (m_IncludeSet.find(incName) != m_IncludeSet.end())
-    {
-        Manager::Get()->GetLogManager()->LogWarning(F(_T("Ignoring Include(\"%s\") because it would cause recursion..."), incName.wx_str()));
-        return true;
-    }
-    m_IncludeSet.insert(incName);
-
-//    wxCriticalSectionLocker c(cs);
-
-    s_ScriptErrors.Clear();
-
-    // compile script
-    SquirrelObject script;
-    try
-    {
-        script = SquirrelVM::CompileBuffer(cbU2C(buffer), cbU2C(debugName));
-    }
-    catch (SquirrelError e)
-    {
-        cbMessageBox(wxString::Format(_T("Filename: %s\nError: %s\nDetails: %s"), debugName.c_str(), cbC2U(e.desc).c_str(), s_ScriptErrors.c_str()), _("Script compile error"), wxICON_ERROR);
-        m_IncludeSet.erase(incName);
-        return false;
-    }
-
-    // run script
-    try
-    {
-        SquirrelVM::RunScript(script);
-    }
-    catch (SquirrelError e)
-    {
-        cbMessageBox(wxString::Format(_T("Filename: %s\nError: %s\nDetails: %s"), debugName.c_str(), cbC2U(e.desc).c_str(), s_ScriptErrors.c_str()), _("Script run error"), wxICON_ERROR);
-        m_IncludeSet.erase(incName);
-        return false;
-    }
-    m_IncludeSet.erase(incName);
-    return true;
-}
-
-
-wxString ScriptingManager::LoadBufferRedirectOutput(const wxString& buffer)
-{
-//    wxCriticalSectionLocker c(cs);
-
-    s_ScriptErrors.Clear();
-    ::capture.Clear();
-
-    sq_setprintfunc(SquirrelVM::GetVMPtr(), CaptureScriptOutput);
-    bool res = LoadBuffer(buffer);
-    sq_setprintfunc(SquirrelVM::GetVMPtr(), ScriptsPrintFunc);
-
-    return res ? ::capture : (wxString) wxEmptyString;
-}
-
-wxString ScriptingManager::GetErrorString(SquirrelError* exception, bool clearErrors)
-{
-    wxString msg;
-    if (exception)
-        msg << cbC2U(exception->desc);
-    msg << s_ScriptErrors;
-
-    if (clearErrors)
-        s_ScriptErrors.Clear();
-
-    return msg;
 }
 
 void ScriptingManager::DisplayErrors(SquirrelError* exception, bool clearErrors)
@@ -240,16 +65,6 @@ void ScriptingManager::DisplayErrors(SquirrelError* exception, bool clearErrors)
             dlg.ShowModal();
         }
     }
-}
-
-void ScriptingManager::InjectScriptOutput(const wxString& output)
-{
-    s_ScriptErrors << output;
-}
-
-int ScriptingManager::Configure()
-{
-    return -1;
 }
 
 bool ScriptingManager::RegisterScriptPlugin(const wxString& /*name*/, const wxArrayInt& ids)
@@ -318,88 +133,6 @@ bool ScriptingManager::UnRegisterAllScriptMenus()
 {
     m_MenuItemsManager.Clear();
     return true;
-}
-
-bool ScriptingManager::IsScriptTrusted(const wxString& script)
-{
-    TrustedScripts::iterator it = m_TrustedScripts.find(script);
-    if (it == m_TrustedScripts.end())
-        return false;
-    // check the crc too
-    wxUint32 crc = wxCrc32::FromFile(script);
-    if (crc == it->second.crc)
-        return true;
-    cbMessageBox(script + _T("\n\n") + _("The script was marked as \"trusted\" but it has been modified "
-                    "since then.\nScript not trusted anymore."),
-                _("Warning"), wxICON_WARNING);
-    m_TrustedScripts.erase(it);
-    return false;
-}
-
-bool ScriptingManager::IsCurrentlyRunningScriptTrusted()
-{
-    return IsScriptTrusted(m_CurrentlyRunningScriptFile);
-}
-
-void ScriptingManager::TrustScript(const wxString& script, bool permanently)
-{
-    // TODO: what should happen when script is empty()?
-
-    TrustedScripts::iterator it = m_TrustedScripts.find(script);
-    if (it != m_TrustedScripts.end())
-    {
-        // already trusted, remove it from the trusts (we recreate the trust below)
-        m_TrustedScripts.erase(it);
-    }
-
-    TrustedScriptProps props;
-    props.permanent = permanently;
-    props.crc = wxCrc32::FromFile(script);
-
-    m_TrustedScripts.insert(m_TrustedScripts.end(), std::make_pair(script, props));
-}
-
-void ScriptingManager::TrustCurrentlyRunningScript(bool permanently)
-{
-    TrustScript(m_CurrentlyRunningScriptFile, permanently);
-}
-
-bool ScriptingManager::RemoveTrust(const wxString& script)
-{
-    TrustedScripts::iterator it = m_TrustedScripts.find(script);
-    if (it != m_TrustedScripts.end())
-    {
-        // already trusted, remove it from the trusts (we recreate the trust below)
-        m_TrustedScripts.erase(it);
-        return true;
-    }
-    return false;
-}
-
-void ScriptingManager::RefreshTrusts()
-{
-    // reload trusted scripts set
-    m_TrustedScripts.clear();
-    ConfigManagerContainer::StringToStringMap myMap;
-    Manager::Get()->GetConfigManager(_T("security"))->Read(_T("/trusted_scripts"), &myMap);
-    ConfigManagerContainer::StringToStringMap::iterator it;
-    for (it = myMap.begin(); it != myMap.end(); ++it)
-    {
-        wxString key = it->second.BeforeFirst(_T('?'));
-        wxString value = it->second.AfterFirst(_T('?'));
-
-        TrustedScriptProps props;
-        props.permanent = true;
-        unsigned long tmp;
-        value.ToULong(&tmp, 16);
-        props.crc = tmp;
-        m_TrustedScripts.insert(m_TrustedScripts.end(), std::make_pair(key, props));
-    }
-}
-
-const ScriptingManager::TrustedScripts& ScriptingManager::GetTrustedScripts()
-{
-    return m_TrustedScripts;
 }
 
 void ScriptingManager::OnScriptMenu(wxCommandEvent& event)

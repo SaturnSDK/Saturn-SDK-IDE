@@ -453,7 +453,9 @@ void CompilerCommandGenerator::DoBuildScripts(cbProject* project, CompileTargetB
         }
         catch (SquirrelError& e)
         {
+#ifndef CB_FOR_CONSOLE
             Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+#endif // #ifndef CB_FOR_CONSOLE
             m_ScriptsWithErrors.Add(script_nomacro);
         }
     }
@@ -761,7 +763,6 @@ wxString CompilerCommandGenerator::SetupCompilerOptions(Compiler* compiler, Proj
     result << GetStringFromArray(compiler->GetCompilerOptions(), _T(' ')) << _T(" ");
 
     Manager::Get()->GetMacrosManager()->ReplaceMacros(result, target);
-
     wxString bt = ExpandBackticks(result);
     SearchDirsFromBackticks(compiler, target, bt);
 
@@ -788,7 +789,6 @@ wxString CompilerCommandGenerator::SetupLinkerOptions(Compiler* compiler, Projec
 
     // linker options
     result << GetStringFromArray(compiler->GetLinkerOptions(), _T(' '));
-
     Manager::Get()->GetMacrosManager()->ReplaceMacros(result, target);
 
     wxString bt = ExpandBackticks(result);

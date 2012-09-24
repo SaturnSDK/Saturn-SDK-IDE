@@ -466,9 +466,11 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
     m_pProject->SetCompilerID(compilerId);
     m_pProject->SetExtendedObjectNamesGeneration(extendedObjectNames);
     m_pProject->SetModeForPCH(pch_mode);
+#ifndef CB_FOR_CONSOLE
     m_pProject->SetVirtualFolders(vfolders);
     m_pProject->SetNotes(notes);
     m_pProject->SetShowNotesOnLoad(showNotes);
+#endif // #ifndef CB_FOR_CONSOLE
 
     DoMakeCommands(parentNode->FirstChildElement("MakeCommands"), m_pProject);
     DoVirtualTargets(parentNode->FirstChildElement("VirtualTargets"));
@@ -572,7 +574,6 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
         if (node->Attribute("def_file"))
             def_file = UnixFilename(cbC2U(node->Attribute("def_file")));
-
         if (node->Attribute("prefix_auto"))
             prefixPolicy = atoi(node->Attribute("prefix_auto")) == 1 ? tgfpPlatformDefault : tgfpNone;
 
@@ -1169,6 +1170,7 @@ void ProjectLoader::AddArrayOfElements(TiXmlElement* parent, const char* name, c
     }
 }
 
+#ifndef CB_FOR_CONSOLE
 // convenience function, used in Save()
 void ProjectLoader::SaveEnvironment(TiXmlElement* parent, CompileOptionsBase* base)
 {
@@ -1310,7 +1312,6 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
                 fname.ClearExt();
                 outputFileName = fname.GetFullPath();
             }
-
             if (   (prefixPolicy == tgfpPlatformDefault)
                 && (   (!platform::windows && target->GetTargetType() == ttDynamicLib)
                     || (target->GetTargetType() == ttStaticLib) ) )
@@ -1589,6 +1590,7 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
 
     return cbSaveTinyXMLDocument(&doc, filename);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 wxString ProjectLoader::GetValidCompilerID(const wxString& proposal, const wxString& scope)
 {
@@ -1611,6 +1613,7 @@ wxString ProjectLoader::GetValidCompilerID(const wxString& proposal, const wxStr
             compiler = CompilerFactory::GetCompiler(idx);
     }
 
+#ifndef CB_FOR_CONSOLE
     if (!compiler)
     {
         if(!(Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/ignore_invalid_targets"), true)))
@@ -1623,6 +1626,7 @@ wxString ProjectLoader::GetValidCompilerID(const wxString& proposal, const wxStr
             compiler = CompilerFactory::SelectCompilerUI(msg);
         }
     }
+#endif // #ifndef CB_FOR_CONSOLE
 
     if (!compiler)
     {

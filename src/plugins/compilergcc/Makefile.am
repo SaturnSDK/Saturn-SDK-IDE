@@ -11,11 +11,22 @@ AM_CXXFLAGS = -DDEPSLIB_UNIX
 
 pluginlibdir = $(pkglibdir)/plugins
 
-pluginlib_LTLIBRARIES = libcompiler.la
+pluginlib_LTLIBRARIES = libcompiler.la libcon_compiler.la
+
+libcon_compiler_la_CXXFLAGS = @CXXFLAGS@ -U CB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch
+
+libcompiler_la_CXXFLAGS = @CXXFLAGS@
+
+CXXFLAGS =
 
 libcompiler_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
+libcon_compiler_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
+
 libcompiler_la_LIBADD = $(PLUGIN_WX_LIBS) ../../sdk/libcodeblocks.la \
+				depslib/src/libdepslib.la
+
+libcon_compiler_la_LIBADD = $(PLUGIN_WX_LIBS) ../../sdk/libcodeblocks_con.la \
 				depslib/src/libdepslib.la
 
 libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
@@ -35,6 +46,33 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerMINGWgenerator.cpp \
 			compilerMSVC.cpp \
 			compileroptionsdlg.cpp \
+			compilerOW.cpp \
+			compilerOWgenerator.cpp \
+			compilerSDCC.cpp \
+			compilerG95.cpp \
+			compilerGNUARM.cpp \
+			compilerGNUAVR.cpp \
+			compilerGNUFortran.cpp \
+			compilerGNUMSP430.cpp \
+			compilerGNUPOWERPC.cpp \
+			compilerGNUTRICORE.cpp \
+			compilerTcc.cpp \
+			directcommands.cpp
+
+libcon_compiler_la_SOURCES = compilerBCC.cpp \
+			compiler_defs.cpp \
+			compilerCYGWIN.cpp \
+			compilerDMC.cpp \
+			compilerDMD.cpp \
+			compilererrors.cpp \
+			compilergcc.cpp \
+			compilerGDC.cpp \
+			compilerLDC.cpp \
+			compilerICC.cpp \
+			compilerLCC.cpp \
+			compilerMINGW.cpp \
+			compilerMINGWgenerator.cpp \
+			compilerMSVC.cpp \
 			compilerOW.cpp \
 			compilerOWgenerator.cpp \
 			compilerSDCC.cpp \

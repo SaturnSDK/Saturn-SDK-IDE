@@ -16,7 +16,11 @@
     #include "editormanager.h"
     #include "infowindow.h"
 #endif
+#ifndef CB_FOR_CONSOLE
 #include "cbstyledtextctrl.h"
+#else // #ifndef CB_FOR_CONSOLE
+#include "infowindow_base.h"
+#endif // #ifndef CB_FOR_CONSOLE
 
 #include <wx/url.h>
 #include <wx/encconv.h>
@@ -128,6 +132,7 @@ FileManager::~FileManager()
 //  urlLoaderThread.Die();
 }
 
+#ifndef CB_FOR_CONSOLE
 LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
 {
     if (reuseEditors)
@@ -170,6 +175,7 @@ LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
     fileLoaderThread.Queue(fl);
     return fl;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool FileManager::Save(const wxString& name, const char* data, size_t len)
 {

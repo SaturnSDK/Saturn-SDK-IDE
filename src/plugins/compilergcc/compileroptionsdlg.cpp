@@ -99,8 +99,10 @@ BEGIN_EVENT_TABLE(CompilerOptionsDlg, wxPanel)
     EVT_UPDATE_UI(            XRCID("btnIgnoreAdd"),                    CompilerOptionsDlg::OnUpdateUI)
     EVT_UPDATE_UI(            XRCID("btnIgnoreRemove"),                 CompilerOptionsDlg::OnUpdateUI)
     //
+#ifndef CB_FOR_CONSOLE
     EVT_TREE_SEL_CHANGED(      XRCID("tcScope"),                        CompilerOptionsDlg::OnTreeSelectionChange)
     EVT_TREE_SEL_CHANGING(     XRCID("tcScope"),                        CompilerOptionsDlg::OnTreeSelectionChanging)
+#endif // #ifndef CB_FOR_CONSOLE
     EVT_CHOICE(                XRCID("cmbCategory"),                    CompilerOptionsDlg::OnCategoryChanged)
     EVT_CHOICE(                XRCID("cmbCompiler"),                    CompilerOptionsDlg::OnCompilerChanged)
     EVT_LISTBOX_DCLICK(        XRCID("lstVars"),                        CompilerOptionsDlg::OnEditVarClick)
@@ -469,7 +471,6 @@ void CompilerOptionsDlg::DoFillCompilerPrograms()
             }
         }
     }
-
     XRCCTRL(*this, "txtResComp", wxTextCtrl)->SetValue(progs.WINDRES);
     XRCCTRL(*this, "txtMake", wxTextCtrl)->SetValue(progs.MAKE);
 
@@ -1122,6 +1123,7 @@ void CompilerOptionsDlg::ProjectTargetCompilerAdjust()
     m_NewProjectOrTargetCompilerId = wxEmptyString;
 } // ProjectTargetCompilerAdjust
 
+#ifndef CB_FOR_CONSOLE
 void CompilerOptionsDlg::OnTreeSelectionChange(wxTreeEvent& event)
 {
     if (m_BuildingTree)
@@ -1238,6 +1240,7 @@ void CompilerOptionsDlg::OnTreeSelectionChanging(wxTreeEvent& event)
         } // end switch
     }
 } // OnTreeSelectionChanging
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CompilerOptionsDlg::OnCompilerChanged(wxCommandEvent& /*event*/)
 {
