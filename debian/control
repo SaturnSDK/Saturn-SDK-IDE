@@ -116,6 +116,38 @@ Description: Code::Blocks debugging libraries
  This package contains the debugging libraries for the 'codeblocks' and the
  'libcodeblockso' package.
 
+Package: codeblocks-headless
+Architecture: any
+Depends: ${shlibs:Depends}
+ , ${misc:Depends}
+ , codeblocks-headless-common (= ${source:Version})
+Recommends:
+ gcc | g++
+Suggests:
+Description: non gui version of Code::Blocks
+ Code::Blocks is the open-source, cross-platform Integrated Development
+ Environment (IDE).
+ It is based on a self-developed plugin framework allowing unlimited
+ extensibility. Most of its functionality is already provided by plugins.
+ Plugins included in the base package are:
+    * Compiler frontend to many free compilers
+ .
+ This is the experimental headless (non-gui) version
+
+Package: codeblocks-headless-common
+Architecture: all
+Breaks: codeblocks-headless (<< ${binary:Version})
+Replaces: codeblocks-headless (<< ${binary:Version})
+Depends: ${misc:Depends}
+Description: common files for Code::Blocks IDE (non gui version)
+ Code::Blocks is the open-source, cross-platform Integrated Development
+ Environment (IDE).
+ It is based on a self-developed plugin framework allowing unlimited
+ extensibility. Most of its functionality is already provided by plugins.
+ .
+ This package contains the architecture-independent files of the experimental
+ headless (non gui) version of Code::Blocks.
+
 Package: codeblocks-contrib
 Architecture: any
 Depends: ${shlibs:Depends}

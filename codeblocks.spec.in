@@ -99,6 +99,8 @@ BuildRequires:              update-desktop-files
 %define pkgdatadir          %{_datadir}/%{name}
 %define pkglibdir           %{_libdir}/%{name}
 %define plugindir           %{pkglibdir}/plugins
+%define pkgdatadir_con      %{pkgdatadir}_con
+%define plugindir_con       %{pkglibdir}_con/plugins
 
 %description
 Code::Blocks is the open-source, cross-platform Integrated Development Environment (IDE).
@@ -180,6 +182,22 @@ Requires:                   %{name}-contrib%{?_isa} = %{version}
 
 %description contrib-devel
 This package contains the development libraries and headers needed to build wxSmith-pluhǵins and to use the wxContribItems in own programs.
+
+%package headless
+Summary:                    Non gui version of Code::Blocks
+Group:                      Development/Tools/IDE
+
+%description headless
+Code::Blocks is the open-source, cross-platform Integrated Development Environment (IDE).
+
+It is based on a self-developed plugin framework allowing unlimited extensibility. Most of its functionality is already provided by plugins.
+
+This package contains the eperimental headless (non gui) version of Code::Blocks
+
+ Plugins included in the base package are:
+  * Compiler frontend to many free compilers
+
+
  
 %{?debugrpm:%debug_package}
 
@@ -227,6 +245,7 @@ This package contains the development libraries and headers needed to build wxSm
   rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
   rm -f $RPM_BUILD_ROOT%{pkglibdir}/wxContribItems/*.la
   rm -f $RPM_BUILD_ROOT%{plugindir}/*.la
+  rm -f $RPM_BUILD_ROOT%{plugindir_con}/*.la
 
 %post
   if [ -x /usr/bin/update-mime-database ]; then
@@ -422,7 +441,17 @@ This package contains the development libraries and headers needed to build wxSm
 %{_libdir}/pkgconfig/wxsmith-contrib.pc
 %{_includedir}/wxsmith/*
 
+%files headless
+%defattr(-,root,root)
+%{_bindir}/codeblocks_con
+%{plugindir_con}/libcompiler.so
+%{_libdir}/libcodeblocks_con.so*
+%{pkgdatadir_con}/scripts/*
+%{pkgdatadir_con}/compiler.zip
+
 %changelog
+* Thu Sep 27 2012 jens <jens@codeblocks.org>
+- created experimental headless (non gui) package
 * Fri Jun 08 2012 jens <jens@codeblocks.org>
 - partly reverted last change, to keep the package layout more clear
 - do not try to build NassiShneiderman-plugin on CentOS/RedHat < 6, because the

@@ -1,0 +1,3 @@
+usr/bin/codeblocks_con
+usr/lib/libcodeblocks_con.so.*
+usr/lib/codeblocks_con/plugins/*.so
