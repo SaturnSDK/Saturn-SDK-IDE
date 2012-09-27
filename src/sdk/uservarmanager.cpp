@@ -17,13 +17,12 @@
     #include "macrosmanager.h"
     #include "manager.h"
     #include "cbexception.h"
-#ifndef CB_FOR_CONSOLE
     #include "infowindow.h"
+    #include <wx/splitter.h>
 
+#ifndef CB_FOR_CONSOLE
     #include <wx/button.h>
     #include "scrollingdialog.h"
-#else // #ifndef CB_FOR_CONSOLE
-    #include "infowindow_base.h"
 #endif // #ifndef CB_FOR_CONSOLE
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>

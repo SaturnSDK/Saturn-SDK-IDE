@@ -1,3 +1,9 @@
+if BUILD_COMPILER
+MAYBE_COMPILER=compilergcc
+endif
+
+if BUILD_GUI
+
 if BUILD_ASTYLE
 MAYBE_ASTYLE=astyle
 endif
@@ -12,10 +18,6 @@ endif
 
 if BUILD_CODECOMPLETION
 MAYBE_CODECOMPLETION=codecompletion
-endif
-
-if BUILD_COMPILER
-MAYBE_COMPILER=compilergcc
 endif
 
 if BUILD_DEBUGGER
@@ -48,6 +50,8 @@ endif
 
 if BUILD_MANIFEST
 MAYBE_MANIFEST=xpmanifest
+endif
+
 endif
 
 SUBDIRS=$(MAYBE_ASTYLE) \

@@ -130,7 +130,8 @@ case $WX_BASENAME in
 		dnl only do this if it is really needed
 		dnl AM_CONDITIONAL adds _TRUE and _FALSE to the appropriate variables
 		dnl if the condition is true, the *_TRUE variable is empty (!)
-		if test "x$BUILD_FILEMANAGER_TRUE" = "x" -o \
+		if test "x$BUILD_GUI_TRUE" = "x" -o \
+				"x$BUILD_FILEMANAGER_TRUE" = "x" -o \
 				"x$BUILD_SPELLCHECKER_TRUE" = "x" -o \
 				"x$BUILD_MOUSESAP_TRUE" = "x" -o \
 				"x$GTK_NOTEBOOK_TRUE" = "x" ; then
@@ -334,6 +335,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/compilergcc/Makefile
 	src/plugins/compilergcc/depslib/Makefile
 	src/plugins/compilergcc/depslib/src/Makefile
+	src/plugins/compilergcc/headless/Makefile
 	src/plugins/compilergcc/resources/Makefile
 	src/plugins/debuggergdb/Makefile
 	src/plugins/debuggergdb/resources/Makefile

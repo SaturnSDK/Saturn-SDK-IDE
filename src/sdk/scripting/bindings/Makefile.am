@@ -1,4 +1,8 @@
+if BUILD_GUI
 noinst_LTLIBRARIES = libsqbindings.la libsqbindings_con.la
+else
+noinst_LTLIBRARIES = libsqbindings_con.la
+endif
 
 INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include \
@@ -7,11 +11,9 @@ INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include/scripting/bindings \
 			-I$(top_srcdir)/src/include/scripting/sqplus
 
-libsqbindings_con_la_CXXFLAGS = @CXXFLAGS@ -U CB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch
-
 libsqbindings_la_CXXFLAGS = @CXXFLAGS@
 
-CXXFLAGS =
+if BUILD_GUI
 
 libsqbindings_la_SOURCES = scriptbindings.cpp \
                             scriptbindings_base.cpp \
@@ -25,6 +27,10 @@ libsqbindings_la_SOURCES = scriptbindings.cpp \
                             sc_progress.cpp \
                             sc_util_dialogs.cpp \
                             sc_wxtypes.cpp
+endif
+
+CXXFLAGS =
+libsqbindings_con_la_CXXFLAGS = @HEADLESS_CXXFLAGS@
 
 libsqbindings_con_la_SOURCES = scriptbindings_base.cpp \
                             sc_consts.cpp \
@@ -32,3 +38,4 @@ libsqbindings_con_la_SOURCES = scriptbindings_base.cpp \
                             sc_io_base.cpp \
                             sc_progress.cpp \
                             sc_wxtypes.cpp
+

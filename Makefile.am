@@ -9,8 +9,10 @@ endif
 
 am__tar = @am__tar@ $(ADDITIONAL_MAKE_DIST_OPTIONS)
 
+if BUILD_GUI
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = codeblocks.pc
+endif
 
 EXTRA_DIST = $(top_srcdir)/bootstrap \
 		codeblocks.spec \

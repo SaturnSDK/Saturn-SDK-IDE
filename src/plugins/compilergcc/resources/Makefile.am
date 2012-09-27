@@ -1,7 +1,18 @@
-pkgdata_DATA = compiler.zip con_compiler.zip
-CLEANFILES = $(pkgdata_DATA)
+if BUILD_GUI
+plugindatadir = $(datadir)/@PACKAGE@
+plugindata_DATA = compiler.zip
+endif
 
-EXTRA_DIST = advanced_compiler_options.xrc \
+conplugindatadir = $(datadir)/@PACKAGE@_con
+
+
+conplugindata_DATA = compiler.zip
+
+CLEANFILES = $(plugindata_DATA) $(conplugindata_DATA)
+
+if BUILD_GUI
+
+    EXTRA_DIST = advanced_compiler_options.xrc \
 	compiler_menu.xrc \
 	compiler_options.xrc \
 	compiler_toolbar_16x16.xrc \
@@ -21,5 +32,9 @@ EXTRA_DIST = advanced_compiler_options.xrc \
 compiler.zip: $(EXTRA_DIST)
 	PWD=`pwd` cd $(srcdir) && zip $(PWD)/compiler.zip manifest.xml *.xrc images/*.png images/16x16/*.png > /dev/null
 
-con_compiler.zip:
-	PWD=`pwd` cd $(srcdir) && zip $(PWD)/con_compiler.zip manifest.xml > /dev/null
+else
+
+compiler.zip:
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/compiler.zip manifest.xml > /dev/null
+
+endif

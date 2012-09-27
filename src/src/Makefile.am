@@ -1,4 +1,6 @@
+if BUILD_GUI
 SUBDIRS = resources
+endif
 
 INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/sdk/wxscintilla/include \
@@ -17,13 +19,15 @@ AM_CPPFLAGS = -DENABLE_BINRELOC -DAPP_PREFIX="\"@prefix@\"" $(WX_GTK2_CFLAGS) $(
 endif
 
 
+if BUILD_GUI
 bin_PROGRAMS = codeblocks codeblocks_con
-
-codeblocks_con_CXXFLAGS = @CXXFLAGS@ -U CB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch
-
 codeblocks_CXXFLAGS = @CXXFLAGS@
+else
+bin_PROGRAMS = codeblocks_con
+endif
 
 CXXFLAGS =
+codeblocks_con_CXXFLAGS = @HEADLESS_CXXFLAGS@
 
 # wxMac resource fork/unbundled app
 install-exec-hook:
@@ -34,12 +38,11 @@ install-exec-hook:
 # wxAUI uses GTK+ libraries on wxGTK
 # codeblocks_LDFLAGS = $(WX_GTK2_LIBS)
 
+if BUILD_GUI
+
 codeblocks_LDADD =  -L../sdk -lcodeblocks \
 			$(WX_LIBS) \
 			$(WX_GTK2_LIBS)
-
-codeblocks_con_LDADD =  -L../sdk -lcodeblocks_con \
-			$(WX_LIBS)
 
 codeblocks_SOURCES = app.cpp \
 			appglobals.cpp \
@@ -70,6 +73,10 @@ codeblocks_SOURCES = app.cpp \
 			switcherdlg.cpp \
 			threadsdlg.cpp \
 			watchesdlg.cpp
+endif
+
+codeblocks_con_LDADD =  -L../sdk -lcodeblocks_con \
+			$(WX_LIBS)
 
 codeblocks_con_SOURCES = app.cpp \
 			appglobals.cpp \

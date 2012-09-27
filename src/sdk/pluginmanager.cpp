@@ -19,7 +19,6 @@
     #include "pluginmanager.h"
     #include "cbexception.h"
     #include "cbplugin.h"
-    #include "infowindow.h"
     #include "logmanager.h"
     #include "macrosmanager.h"
     #include "manager.h"

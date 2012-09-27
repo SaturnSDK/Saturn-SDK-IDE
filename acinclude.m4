@@ -80,6 +80,23 @@ fi
 dnl check what settings to enable
 AC_DEFUN([CODEBLOCKS_ENABLE_SETTINGS],
 [
+AC_MSG_CHECKING(whether to build only non-gui application)
+headless_default="no"
+AC_ARG_ENABLE(gui, [AC_HELP_STRING([--disable-gui], [build only non-gui application(default is OFF)])],,
+                       disable_gui=$headless_default)
+AM_CONDITIONAL([BUILD_GUI], [test "x$disable_gui" = "xno"])
+if test "x$disable_gui" = "xyes"; then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+HEADLESS_CFLAGS="$CFLAGS -UCB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch"
+HEADLESS_CXXFLAGS="$CXXFLAGS -UCB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch"
+AC_SUBST(HEADLESS_CFLAGS)
+AC_SUBST(HEADLESS_CXXFLAGS)
+
+
 AC_MSG_CHECKING(whether to build the source formatter plugin)
 astyle_default="yes"
 AC_ARG_ENABLE(source-formatter, [AC_HELP_STRING([--enable-source-formatter], [build the source formatter plugin (default YES)])],,
@@ -627,39 +644,41 @@ AC_SUBST(BUILD_WXSMITHAUI)
 
 GCC_PCH=0
 PCH_FLAGS=
-pch_default="yes"
-AM_CONDITIONAL([PRECOMPILE_HEADERS], [false])
-AC_ARG_ENABLE(pch, [AC_HELP_STRING([--enable-pch], [use precompiled headers if available (default YES)])],,
+if test "x$BUILD_HEADLESS_FALSE" = "x" ; then
+	pch_default="yes"
+	AM_CONDITIONAL([PRECOMPILE_HEADERS], [false])
+	AC_ARG_ENABLE(pch, [AC_HELP_STRING([--enable-pch], [use precompiled headers if available (default YES)])],,
                        enable_pch=$pch_default)
-if test "x$enable_pch" = "x" -o "x$enable_pch" = "xyes" ; then
-    if test "x$GCC" = "xyes"; then
-        dnl test if we have gcc-3.4:
-        AC_MSG_CHECKING([if the compiler supports precompiled headers])
-        AC_TRY_COMPILE([],
-            [
-                #if !defined(__GNUC__) || !defined(__GNUC_MINOR__)
-                    #error "no pch support"
-                #endif
-                #if (__GNUC__ < 3)
-                    #error "no pch support"
-                #endif
-                #if (__GNUC__ == 3) && \
-                   ((!defined(__APPLE_CC__) && (__GNUC_MINOR__ < 4)) || \
-                   ( defined(__APPLE_CC__) && (__GNUC_MINOR__ < 3)))
-                    #error "no pch support"
-                #endif
-            ],
-            [
-                AC_MSG_RESULT([yes])
-                GCC_PCH=1
-                PCH_FLAGS="-DCB_PRECOMP -Winvalid-pch"
-            ],
-            [
-                AC_MSG_RESULT([no])
-            ])
-        AM_CONDITIONAL([PRECOMPILE_HEADERS], [test $GCC_PCH = 1])
-    fi
+	if test "x$enable_pch" = "x" -o "x$enable_pch" = "xyes" ; then
+	    if test "x$GCC" = "xyes"; then
+	        dnl test if we have gcc-3.4:
+	        AC_MSG_CHECKING([if the compiler supports precompiled headers])
+	        AC_TRY_COMPILE([],
+	            [
+	                #if !defined(__GNUC__) || !defined(__GNUC_MINOR__)
+	                    #error "no pch support"
+	                #endif
+	                #if (__GNUC__ < 3)
+	                    #error "no pch support"
+	                #endif
+	                #if (__GNUC__ == 3) && \
+	                   ((!defined(__APPLE_CC__) && (__GNUC_MINOR__ < 4)) || \
+	                   ( defined(__APPLE_CC__) && (__GNUC_MINOR__ < 3)))
+	                    #error "no pch support"
+	                #endif
+	            ],
+	            [
+	                AC_MSG_RESULT([yes])
+	                GCC_PCH=1
+	                PCH_FLAGS="-DCB_PRECOMP -Winvalid-pch"
+	            ],
+	            [
+	                AC_MSG_RESULT([no])
+	            ])
+	    fi
+	fi
 fi
+AM_CONDITIONAL([PRECOMPILE_HEADERS], [test $GCC_PCH = 1])
 
 ])
 
