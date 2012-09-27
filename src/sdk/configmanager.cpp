@@ -18,6 +18,7 @@
     #include <wx/file.h>
     #include <wx/dir.h>
     #include <wx/log.h> // for wxSafeShowMessage()
+    #include <wx/app.h>
 #endif
 
 #include "crc32.h"
@@ -1454,12 +1455,12 @@ void ConfigManager::InitPaths()
             // It seems we can not longer rely on wxStandardPathsBase::Get().GetPluginsDir(),
             // because its behaviour has changed on some systems (at least Fedora 14 64-bit).
             // So we create the pathname manually
-            ConfigManager::plugin_path_global = ((const wxStandardPaths&)wxStandardPaths::Get()).GetInstallPrefix() + _T("/lib/codeblocks/plugins");
+            ConfigManager::plugin_path_global = ((const wxStandardPaths&)wxStandardPaths::Get()).GetInstallPrefix() + _T("/lib/") + wxTheApp->GetAppName() + _T("/plugins");
             // first assume, we use standard-paths
             if (!wxDirExists(ConfigManager::plugin_path_global) && wxIsPlatform64Bit())
             {
                 // if standard-path does not exist and we are on 64-bit system, use lib64 instead
-                ConfigManager::plugin_path_global = ((const wxStandardPaths&)wxStandardPaths::Get()).GetInstallPrefix() + _T("/lib64/codeblocks/plugins");
+                ConfigManager::plugin_path_global = ((const wxStandardPaths&)wxStandardPaths::Get()).GetInstallPrefix() + _T("/lib64/") + wxTheApp->GetAppName() + _T("/plugins");
             }
         }
     }

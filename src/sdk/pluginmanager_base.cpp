@@ -452,11 +452,7 @@ int PLUGIN_MANAGER_BASE::ScanForPlugins(const wxString& path)
             if(platform::windows)
                 bbplugins.Add(_T("compiler.dll"));
             else
-#ifndef CB_FOR_CONSOLE
                 bbplugins.Add(_T("libcompiler.so"));
-#else // #ifndef CB_FOR_CONSOLE
-                bbplugins.Add(_T("libcon_compiler.so"));
-#endif // #ifndef CB_FOR_CONSOLE
         }
     }
 
@@ -465,16 +461,6 @@ int PLUGIN_MANAGER_BASE::ScanForPlugins(const wxString& path)
     bool ok = dir.GetFirst(&filename, PluginsMask, wxDIR_FILES);
     while (ok)
     {
-#ifndef CB_FOR_CONSOLE
-        if (filename == _T("libcon_compiler.so"))
-        {
-            ok = dir.GetNext(&filename);
-            if (ok)
-                continue;
-            else
-                break;
-        }
-#endif // #ifndef CB_FOR_CONSOLE
         if (batch)
         {
             // for batch builds, we will load only those plugins that the
@@ -527,10 +513,6 @@ int PLUGIN_MANAGER_BASE::ScanForPlugins(const wxString& path)
 
 bool PLUGIN_MANAGER_BASE::LoadPlugin(const wxString& pluginName)
 {
-#ifndef CB_FOR_CONSOLE
-        if(pluginName.EndsWith(_T("libcon_compiler.so")))
-            return false;
-#endif // #ifndef CB_FOR_CONSOLE
     // clear registration temporary vector
     m_RegisteredPlugins.clear();
 

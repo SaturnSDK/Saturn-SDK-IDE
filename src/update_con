@@ -10,14 +10,16 @@ fi
 
 echo Creating output directory tree
 
-mkdir -p output/share/codeblocks/plugins
-mkdir -p devel/share/codeblocks/plugins
+mkdir -p output/share/codeblocks_con/plugins
+mkdir -p output/share/codeblocks_con/scripts
+mkdir -p devel/share/codeblocks_con/plugins
+mkdir -p devel/share/codeblocks_con/scripts
 
 ZIPCMD="zip"
-RESDIR="devel/share/codeblocks"
+RESDIR="devel/share/codeblocks_con"
 echo Compressing core UI resources
 echo Compressing plugins UI resources
-${ZIPCMD} -jqu9 ${RESDIR}/con_compiler.zip plugins/compilergcc/resources/manifest.xml > /dev/null
+${ZIPCMD} -jqu9 ${RESDIR}/compiler.zip plugins/compilergcc/resources/manifest.xml > /dev/null
 
 echo Copying files
 # Create an exclude pattern file
@@ -25,19 +27,22 @@ echo .svn > excludes.txt
 echo Makefile >> excludes.txt
 echo Makefile.am >> excludes.txt
 echo Makefile.in >> excludes.txt
-cp -fu ${RESDIR}/*.zip output/share/codeblocks > /dev/null
-cp -fu devel/codeblocks_con${EXEEXT} output > /dev/null
-cp -fu devel/*.${LIBEXT} output > /dev/null
-cp -fu ${RESDIR}/plugins/*.${LIBEXT} output/share/codeblocks/plugins > /dev/null
+cp -f ${RESDIR}/*.zip output/share/codeblocks_con > /dev/null
+cp -f scripts/*.script ${RESDIR}/scripts > /dev/null
+cp -f scripts/*.script output/share/codeblocks_con/scripts > /dev/null
+cp -f devel/codeblocks_con${EXEEXT} output > /dev/null
+cp -f devel/*.${LIBEXT} output > /dev/null
+cp -f ${RESDIR}/plugins/*.${LIBEXT} output/share/codeblocks_con/plugins > /dev/null
 # Now remove the exclude pattern file
 rm excludes.txt
 
 echo Stripping debug info from output tree
 strip output/codeblocks_con${EXEEXT}
 strip output/*.${LIBEXT}
-strip output/share/codeblocks/plugins/*.${LIBEXT}
+strip output/share/codeblocks_con/plugins/*.${LIBEXT}
 
 if [ "x$MSYSTEM" = "x" ] ; then
+  echo Creating launch-scripts
   echo "#!/bin/sh" > output/run_con.sh
   echo 'APP_DIR=`dirname "$0"`' >> output/run_con.sh
   echo 'APP_DIR=`( cd "$APP_DIR" && pwd )`' >> output/run_con.sh

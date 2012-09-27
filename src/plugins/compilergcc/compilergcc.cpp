@@ -354,13 +354,8 @@ CompilerGCC::CompilerGCC() :
     m_IsCompileFileRequest(false),
     m_LogBuildProgressPercentage(false)
 {
-#ifndef CB_FOR_CONSOLE
     if (!Manager::LoadResource(_T("compiler.zip")))
         NotifyMissingFile(_T("compiler.zip"));
-#else // #ifndef CB_FOR_CONSOLE
-    if(!Manager::LoadResource(_T("con_compiler.zip")))
-        NotifyMissingFile(_T("con_compiler.zip"));
-#endif // #ifndef CB_FOR_CONSOLE
 }
 
 CompilerGCC::~CompilerGCC()

@@ -319,8 +319,8 @@
 				</Linker>
 			</Target>
 			<Target title="Compiler_con">
-				<Option output="devel29/share/codeblocks/plugins/libcon_compiler.so" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="devel29/share/codeblocks/plugins" />
+				<Option output="devel29/share/codeblocks_con/plugins/libcompiler.so" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel29/share/codeblocks_con/plugins" />
 				<Option object_output=".objs_con29" />
 				<Option external_deps="devel29/libcodeblocks_con.so;plugins/compilergcc/depslib/libdepslib29.a;" />
 				<Option type="3" />

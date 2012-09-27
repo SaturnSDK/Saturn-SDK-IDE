@@ -361,7 +361,7 @@ bool CodeBlocksApp::LoadConfig()
             data = env;
     }
 
-    data.append(_T("/share/codeblocks"));
+    data.append(_T("/share/") + GetAppName());
 
     cfg->Write(_T("data_path"), data);
 
@@ -522,7 +522,12 @@ bool CodeBlocksApp::OnInit()
 {
     wxLog::EnableLogging(true);
 
+#ifndef CB_FOR_CONSOLE
     SetAppName(_T("codeblocks"));
+#else
+    SetAppName(_T("codeblocks_con"));
+#endif // #ifndef CB_FOR_CONSOLE
+
 
     s_Loading              = true;
 #ifndef CB_FOR_CONSOLE
@@ -908,10 +913,10 @@ int CodeBlocksApp::BatchJob()
     // find compiler plugin
 
 #ifdef CB_FOR_CONSOLE // code "stolen" from ScanForPlugins and OpenGeneric in MainFrame
-    ConfigManager *bbcfg = Manager::Get()->GetConfigManager(_T("plugins"));
-    wxArrayString bbplugins = bbcfg->ReadArrayString(_T("/batch_build_plugins"));
-    if(bbplugins.GetCount())
-        bbcfg->UnSet(_T("/batch_build_plugins")); // hack to make compiler-plugin, the only one that's found
+//    ConfigManager *bbcfg = Manager::Get()->GetConfigManager(_T("plugins"));
+//    wxArrayString bbplugins = bbcfg->ReadArrayString(_T("/batch_build_plugins"));
+//    if(bbplugins.GetCount())
+//        bbcfg->UnSet(_T("/batch_build_plugins")); // hack to make compiler-plugin, the only one that's found
 
     PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
 
@@ -932,7 +937,7 @@ int CodeBlocksApp::BatchJob()
         m_PluginManager->LoadAllPlugins();
     }
 
-    bbcfg->Write(_T("/batch_build_plugins"), bbplugins); // write back the saved batch-build-plugins
+//    bbcfg->Write(_T("/batch_build_plugins"), bbplugins); // write back the saved batch-build-plugins
 
     // load project or workspace
     if(m_HasProject)
