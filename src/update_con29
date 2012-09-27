@@ -31,7 +31,7 @@ cp -f ${RESDIR}/*.zip output29/share/codeblocks_con > /dev/null
 cp -f scripts/*.script ${RESDIR}/scripts > /dev/null
 cp -f scripts/*.script output29/share/codeblocks_con/scripts > /dev/null
 cp -f devel29/codeblocks_con${EXEEXT} output29 > /dev/null
-cp -f devel29/*.${LIBEXT} output > /dev/null
+cp -f devel29/*.${LIBEXT} output29 > /dev/null
 cp -f ${RESDIR}/plugins/*.${LIBEXT} output29/share/codeblocks_con/plugins > /dev/null
 # Now remove the exclude pattern file
 rm excludes.txt
