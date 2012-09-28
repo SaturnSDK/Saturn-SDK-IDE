@@ -96,7 +96,7 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
                 else if ( !path.IsEmpty() )
                 {
                     // Check, if the master path is valid:
-                    if ( wxFileName::DirExists(path_no_macros) )
+                    if ( wxFileName::DirExists(path_no_macros) && !(path == pathDetected || path_no_macros == pathDetected) )
                     {
                         list->SetItem(idx, 1, _("User-defined")); // OK
                         highlight = 0;
