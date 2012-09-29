@@ -1479,7 +1479,6 @@ struct SquirrelFunction {
   RT operator()(void) {
     sq_pushobject(v,func.GetObjectHandle());
     sq_pushobject(v,object.GetObjectHandle());
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,1,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1489,7 +1488,6 @@ struct SquirrelFunction {
     sq_pushobject(v,func.GetObjectHandle());
     sq_pushobject(v,object.GetObjectHandle());
     Push(v,p1);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,2,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1500,7 +1498,6 @@ struct SquirrelFunction {
     sq_pushobject(v,object.GetObjectHandle());
     Push(v,p1);
     Push(v,p2);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,3,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1512,7 +1509,6 @@ struct SquirrelFunction {
     Push(v,p1);
     Push(v,p2);
     Push(v,p3);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,4,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1525,7 +1521,6 @@ struct SquirrelFunction {
     Push(v,p2);
     Push(v,p3);
     Push(v,p4);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,5,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1539,7 +1534,6 @@ struct SquirrelFunction {
     Push(v,p3);
     Push(v,p4);
     Push(v,p5);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,6,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1554,7 +1548,6 @@ struct SquirrelFunction {
     Push(v,p4);
     Push(v,p5);
     Push(v,p6);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,7,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
@@ -1570,7 +1563,6 @@ struct SquirrelFunction {
     Push(v,p5);
     Push(v,p6);
     Push(v,p7);
-    printf("in %s::%s:%d\n", __FILE__,__PRETTY_FUNCTION__, __LINE__);
     SQPLUS_CHECK_FNCALL(sq_call(v,8,SQTrue,SQ_CALL_RAISE_ERROR));
     return GetRet(TypeWrapper<RT>(),v,-1);
   }
