@@ -17,6 +17,7 @@ INCLUDES = $(WX_CXXFLAGS) \
 if BUILD_GUI
 
 lib_LTLIBRARIES = libcodeblocks.la libcodeblocks_con.la
+libcodeblocks_la_CXXFLAGS = @CXXFLAGS@
 libcodeblocks_la_LDFLAGS = -version-info @CODEBLOCKS_VERSION_INFO@
 
 libcodeblocks_la_LIBADD =  $(WX_LIBS) \
