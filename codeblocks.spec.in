@@ -158,6 +158,7 @@ This package extends Code::Blocks functionality a great deal with the included p
  * NassiShneiderman
  * Regular expression testbed
  * Reopen last closed editor(s) via menu or hotkey
+ * Smartindent plugin (cpp, HDL, Fortran, Lua, Pascal)
  * Spellchecker plugin
  * Symbol table plugin
  * ThreadSearch
@@ -321,6 +322,7 @@ This package contains the eperimental headless (non gui) version of Code::Blocks
 %{plugindir}/libbyogames.so
 %{plugindir}/libCccc.so
 %{plugindir}/libCppCheck.so
+%{plugindir}/lib*SmartIndent.so
 %{plugindir}/libcb_koders.so
 %{plugindir}/libcodesnippets.so
 %{plugindir}/libcodestat.so
@@ -360,6 +362,7 @@ This package contains the eperimental headless (non gui) version of Code::Blocks
 %{pkgdatadir}/byogames.zip
 %{pkgdatadir}/Cccc.zip
 %{pkgdatadir}/CppCheck.zip
+%{pkgdatadir}/*SmartIndent.zip
 %{pkgdatadir}/cb_koders.zip
 %{pkgdatadir}/codesnippets.zip
 %{pkgdatadir}/codestat.zip
