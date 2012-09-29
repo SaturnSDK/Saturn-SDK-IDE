@@ -1019,6 +1019,7 @@ cbWizardPlugin::cbWizardPlugin()
     m_Type = ptWizard;
 }
 
+#ifndef CB_FOR_CONSOLE
 /////
 ///// cbSmartIndentPlugin
 /////
@@ -1329,3 +1330,4 @@ wxChar cbSmartIndentPlugin::GetNextNonWhitespaceCharOfLine(cbStyledTextCtrl* stc
 
     return 0;
 }
+#endif //#ifndef CB_FOR_CONSOLE
