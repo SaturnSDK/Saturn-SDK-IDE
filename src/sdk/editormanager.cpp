@@ -58,8 +58,8 @@
 template<> EditorManager* Mgr<EditorManager>::instance = 0;
 template<> bool  Mgr<EditorManager>::isShutdown = false;
 
-int ID_NBEditorManager = wxNewId();
-int ID_EditorManager = wxNewId();
+int ID_NBEditorManager        = wxNewId();
+int ID_EditorManager          = wxNewId();
 int idEditorManagerCheckFiles = wxNewId();
 
 // static
@@ -144,22 +144,35 @@ bool cbFindReplaceData::IsMultiLine()
     return  ((findText.Find(_T("\n")) != wxNOT_FOUND) || (findText.Find(_T("\r")) != wxNOT_FOUND));
 }
 
-static const int idNBTabSplitHorz = wxNewId();
-static const int idNBTabSplitVert = wxNewId();
-static const int idNBTabUnsplit = wxNewId();
-static const int idNBTabClose = wxNewId();
-static const int idNBTabCloseAll = wxNewId();
-static const int idNBTabCloseAllOthers = wxNewId();
-static const int idNBTabSave = wxNewId();
-static const int idNBTabSaveAll = wxNewId();
-static const int idNBSwapHeaderSource = wxNewId();
+// needed for initialization of variables
+int editormanager_RegisterId(int id)
+{
+    wxRegisterId(id);
+    return id;
+}
+
+static const int idNBTabSplitHorz            = wxNewId();
+static const int idNBTabSplitVert            = wxNewId();
+static const int idNBTabUnsplit              = wxNewId();
+static const int idNBTabClose                = wxNewId();
+static const int idNBTabCloseAll             = wxNewId();
+static const int idNBTabCloseAllOthers       = wxNewId();
+static const int idNBTabSave                 = wxNewId();
+static const int idNBTabSaveAll              = wxNewId();
+static const int idNBSwapHeaderSource        = wxNewId();
 static const int idNBTabOpenContainingFolder = wxNewId();
-static const int idNBTabTop = wxNewId();
-static const int idNBTabBottom = wxNewId();
-static const int idNBProperties = wxNewId();
-static const int idNBAddFileToProject = wxNewId();
-static const int idNBRemoveFileFromProject = wxNewId();
-static const int idNBShowFileInTree = wxNewId();
+static const int idNBTabTop                  = wxNewId();
+static const int idNBTabBottom               = wxNewId();
+static const int idNBProperties              = wxNewId();
+static const int idNBAddFileToProject        = wxNewId();
+static const int idNBRemoveFileFromProject   = wxNewId();
+static const int idNBShowFileInTree          = wxNewId();
+
+// The following lines reserve 255 consecutive id's
+static const int EditorMaxSwitchTo           = 255;
+static const int idNBSwitchFile1             = wxNewId();
+static const int idNBSwitchFileMax           = editormanager_RegisterId(idNBSwitchFile1 + EditorMaxSwitchTo - 1);
+
 
 /** *******************************************************
   * struct EditorManagerInternalData                      *
@@ -191,6 +204,7 @@ BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
     EVT_AUINOTEBOOK_PAGE_CHANGING(ID_NBEditorManager, EditorManager::OnPageChanging)
     EVT_AUINOTEBOOK_PAGE_CLOSE(ID_NBEditorManager, EditorManager::OnPageClose)
     EVT_AUINOTEBOOK_TAB_RIGHT_UP(ID_NBEditorManager, EditorManager::OnPageContextMenu)
+    EVT_MENU_RANGE(idNBSwitchFile1, idNBSwitchFileMax, EditorManager::OnGenericContextMenuHandler)
     EVT_MENU(idNBTabSplitHorz, EditorManager::OnGenericContextMenuHandler)
     EVT_MENU(idNBTabSplitVert, EditorManager::OnGenericContextMenuHandler)
     EVT_MENU(idNBTabUnsplit, EditorManager::OnGenericContextMenuHandler)
@@ -599,9 +613,7 @@ void EditorManager::SetActiveEditor(EditorBase* ed)
     }
 
     if (ed->IsBuiltinEditor())
-    {
         static_cast<cbEditor*>(ed)->GetControl()->SetFocus();
-    }
 }
 
 cbEditor* EditorManager::New(const wxString& newFileName)
@@ -2703,6 +2715,12 @@ void EditorManager::OnGenericContextMenuHandler(wxCommandEvent& event)
         ed->Split(cbEditor::stVertical);
     else if (id == idNBTabUnsplit && ed)
         ed->Unsplit();
+    else if (id >= idNBSwitchFile1 && id <= idNBSwitchFileMax)
+    {
+        EditorBase* ed = GetEditor(id - idNBSwitchFile1);
+        if (ed)
+            SetActiveEditor(ed);
+    }
 }
 
 void EditorManager::OnPageChanged(wxAuiNotebookEvent& event)
@@ -2815,6 +2833,28 @@ void EditorManager::OnPageContextMenu(wxAuiNotebookEvent& event)
 {
     if (event.GetSelection() == -1)
         return;
+
+    if (wxGetKeyState(WXK_CONTROL) && GetEditorsCount() > 1)
+    {
+        wxMenu* pop = new wxMenu;
+        EditorBase* current = GetActiveEditor();
+        for (int i = 0; i < EditorMaxSwitchTo && i < GetEditorsCount(); ++i)
+        {
+            EditorBase* other = GetEditor(i);
+            if (!other)
+                continue;
+            if (other == current)
+            {
+                pop->AppendCheckItem(wxID_ANY, other->GetShortName()); // do nothing if the current tab is selected
+                pop->FindItemByPosition(pop->GetMenuItemCount() - 1)->Check(); // and mark it as active
+            }
+            else
+                pop->Append(idNBSwitchFile1 + i, other->GetShortName());
+        }
+        m_pNotebook->PopupMenu(pop);
+        delete pop;
+        return;
+    }
 
     // select the notebook that sends the event, because the context menu-entries act on the actual selected tab
     m_pNotebook->SetSelection(event.GetSelection());
@@ -3212,7 +3252,11 @@ void EditorManager::CollectDefines(CodeBlocksEvent& event)
             defines.Add(wxT("__IA64__"));
         }
     }
-    m_Theme->SetKeywords(m_Theme->GetHighlightLanguage(wxT("C/C++")), 4, GetStringFromArray(MakeUniqueArray(defines, true), wxT(" "), false));
+    wxString keywords = GetStringFromArray(MakeUniqueArray(defines, true), wxT(" "), false);
+    m_Theme->SetKeywords(m_Theme->GetHighlightLanguage(wxT("C/C++")), 4, keywords);
+    wxString key = wxT("/colour_sets/") + m_Theme->GetName() + wxT("/cc/");
+    Manager::Get()->GetConfigManager(wxT("editor"))->Write(key + wxT("editor/keywords/set4"), keywords);
+    Manager::Get()->GetConfigManager(wxT("editor"))->Write(key + wxT("name"), wxT("C/C++"));
     event.Skip();
 }
 
