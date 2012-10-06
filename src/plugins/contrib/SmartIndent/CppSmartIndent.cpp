@@ -20,26 +20,6 @@ namespace
 {
     PluginRegistrant<CppSmartIndent> reg(_T("CppSmartIndent"));
 }
-
-
-bool CppSmartIndent::InComment(const wxString& LanguageName, int style ) const
-{
-    if ( LanguageName == _T("C/C++") )
-        return style == wxSCI_C_COMMENT ||
-               style == wxSCI_C_COMMENTDOC ||
-               style == wxSCI_C_COMMENTDOCKEYWORD ||
-               style == wxSCI_C_COMMENTDOCKEYWORDERROR ||
-               style == wxSCI_C_COMMENTLINE;
-    else //if ( LanguageName == _T("D") )
-        return style == wxSCI_D_COMMENT ||
-               style == wxSCI_D_COMMENTDOC ||
-               style == wxSCI_D_COMMENTDOCKEYWORD ||
-               style == wxSCI_D_COMMENTDOCKEYWORDERROR ||
-               style == wxSCI_D_COMMENTLINE ||
-               style == wxSCI_D_COMMENTLINEDOC ||
-               style == wxSCI_D_COMMENTNESTED;
-}
-
 void CppSmartIndent::OnEditorHook(cbEditor* ed, wxScintillaEvent& event) const
 {
 
@@ -74,7 +54,7 @@ void CppSmartIndent::OnEditorHook(cbEditor* ed, wxScintillaEvent& event) const
 
     const wxChar ch = event.GetKey();
 
-    if ( SelectionBraceCompletionEnabled() )
+    if ( SelectionBraceCompletionEnabled() || stc->IsBraceShortcutActive() )
         DoSelectionBraceCompletion(stc, ch);
 
     DoSmartIndent(ed, ch);
@@ -445,7 +425,6 @@ void CppSmartIndent::DoSmartIndent(cbEditor* ed, const wxChar &ch)const
     }
 
 }
-
 bool CppSmartIndent::BraceIndent(cbStyledTextCtrl *stc, wxString &indent)const
 {
     if ( BraceSmartIndentEnabled() )
@@ -461,10 +440,9 @@ bool CppSmartIndent::BraceIndent(cbStyledTextCtrl *stc, wxString &indent)const
     }
     return false;
 }
-
 void CppSmartIndent::DoSelectionBraceCompletion(cbStyledTextCtrl* control, const wxChar &ch)const
 {
-    if (( control->IsBraceShortcutActive()) && !control->GetLastSelectedText().IsEmpty())
+    if (!control->GetLastSelectedText().IsEmpty())
     {
 
         const int pos = control->GetCurrentPos();
@@ -569,7 +547,6 @@ void CppSmartIndent::DoSelectionBraceCompletion(cbStyledTextCtrl* control, const
         }
     } // SelectionBraceCompletion
 }
-
 void CppSmartIndent::DoBraceCompletion(cbStyledTextCtrl* control, const wxChar& ch)const
 {
     int pos = control->GetCurrentPos();
