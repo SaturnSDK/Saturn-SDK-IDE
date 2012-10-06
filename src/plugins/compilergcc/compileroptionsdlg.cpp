@@ -2777,7 +2777,11 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         Compiler* compiler = CompilerFactory::GetCompiler(m_CurrentCompilerIdx);
         wxTextEntryDialog dlg(this, wxT("List flags that will only be used during C compilation"),
                               wxT("C - only flags"), compiler->GetCOnlyFlags(), wxTextEntryDialogStyle|wxTE_MULTILINE|wxRESIZE_BORDER);
-        dlg.ShowModal();
+        if (dlg.GetSize().GetHeight() < 220)
+        {
+            dlg.SetSize(dlg.GetPosition().x, dlg.GetPosition().y - (220 - dlg.GetSize().GetHeight()) / 2,
+                        dlg.GetSize().GetWidth(), 220);
+        }        dlg.ShowModal();
         wxString flags = dlg.GetValue();
         flags.Replace(wxT("\n"), wxT(" "));
         flags.Replace(wxT("\r"), wxT(" "));
@@ -2795,6 +2799,11 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         Compiler* compiler = CompilerFactory::GetCompiler(m_CurrentCompilerIdx);
         wxTextEntryDialog dlg(this, wxT("List flags that will only be used during C++ compilation"),
                               wxT("C++ - only flags"), compiler->GetCPPOnlyFlags(), wxTextEntryDialogStyle|wxTE_MULTILINE|wxRESIZE_BORDER);
+        if (dlg.GetSize().GetHeight() < 220)
+        {
+            dlg.SetSize(dlg.GetPosition().x, dlg.GetPosition().y - (220 - dlg.GetSize().GetHeight()) / 2,
+                        dlg.GetSize().GetWidth(), 220);
+        }
         dlg.ShowModal();
         wxString flags = dlg.GetValue();
         flags.Replace(wxT("\n"), wxT(" "));
