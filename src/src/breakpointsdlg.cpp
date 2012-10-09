@@ -7,11 +7,12 @@
  * $HeadURL$
  */
 
-#include <set>
-
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
+#   include <algorithm>
+#   include <set>
+
 #   include "globals.h"
 #   include "manager.h"
 #   include "editormanager.h"
@@ -169,13 +170,9 @@ BreakpointsDlg::Items::iterator BreakpointsDlg::FindBreakpoint(const wxString &f
     return m_breakpoints.end();
 }
 
-bool BreakpointsDlg::AddBreakpoint(const wxString& filename, int line)
+bool BreakpointsDlg::AddBreakpoint(cbDebuggerPlugin *plugin, const wxString& filename, int line)
 {
-    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    if (!plugin)
-        return false;
-
-    if (plugin->AddBreakpoint(filename, line))
+    if (plugin && plugin->AddBreakpoint(filename, line))
     {
         Reload();
         return true;
@@ -184,9 +181,32 @@ bool BreakpointsDlg::AddBreakpoint(const wxString& filename, int line)
         return false;
 }
 
-bool BreakpointsDlg::RemoveBreakpoint(const wxString& filename, int line)
+struct FindBreakpointPred
 {
-    Items::iterator it = FindBreakpoint(filename, line);
+    FindBreakpointPred(cbDebuggerPlugin *plugin, const wxString &filename, int line) :
+        plugin(plugin),
+        filename(filename),
+        line(line)
+    {}
+    bool operator()(const BreakpointsDlg::Item &item) const
+    {
+        return plugin == item.plugin
+                && item.breakpoint->IsVisibleInEditor()
+                && item.breakpoint->GetLocation() == filename
+                && item.breakpoint->GetLine() == line;
+    }
+private:
+    cbDebuggerPlugin *plugin;
+    const wxString &filename;
+    int line;
+};
+
+bool BreakpointsDlg::RemoveBreakpoint(cbDebuggerPlugin *plugin, const wxString& filename, int line)
+{
+    if (!plugin)
+        return false;
+    Items::iterator it;
+    it = std::find_if(m_breakpoints.begin(), m_breakpoints.end(), FindBreakpointPred(plugin, filename, line));
     if (it != m_breakpoints.end())
     {
         it->plugin->DeleteBreakpoint(it->breakpoint);
@@ -197,20 +217,34 @@ bool BreakpointsDlg::RemoveBreakpoint(const wxString& filename, int line)
         return false;
 }
 
-void BreakpointsDlg::RemoveBreakpoint(int sel)
+void BreakpointsDlg::RemoveAllBreakpoints()
 {
-    if(sel < 0 || sel >= static_cast<int>(m_breakpoints.size()))
-        return;
-    Item const &item = m_breakpoints[sel];
+    std::set<cbDebuggerPlugin*> plugins;
+    std::set<cbEditor*> editors;
 
-    if (item.breakpoint->IsVisibleInEditor())
+    for (Items::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
     {
-        cbEditor* ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(item.breakpoint->GetLocation());
-        if (ed)
-            ed->RemoveBreakpoint(item.breakpoint->GetLine() - 1, false);
-    }
+        cbBreakpoint& b = *it->breakpoint;
 
-    item.plugin->DeleteBreakpoint(item.breakpoint);
+        if (b.IsVisibleInEditor())
+        {
+            cbEditor* ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(b.GetLocation());
+            if (ed)
+            {
+                plugins.insert(it->plugin);
+                editors.insert(ed);
+            }
+        }
+        else
+            plugins.insert(it->plugin);
+    }
+    for (std::set<cbDebuggerPlugin*>::iterator it = plugins.begin(); it != plugins.end(); ++it)
+        (*it)->DeleteAllBreakpoints();
+    for (std::set<cbEditor*>::iterator it = editors.begin(); it != editors.end(); ++it)
+        (*it)->RefreshBreakpointMarkers();
+
+    Reload();
+
 }
 
 void BreakpointsDlg::EditBreakpoint(const wxString& filename, int line)
@@ -240,40 +274,33 @@ void BreakpointsDlg::OnRemove(wxCommandEvent& event)
 {
     long item = -1;
     bool reload = false;
+    std::set<cbEditor*> editors;
+
     while ((item = m_pList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != -1)
     {
-        RemoveBreakpoint(item);
-        reload = true;
+        if (item >= 0 || item < static_cast<int>(m_breakpoints.size()))
+        {
+            Item const &data = m_breakpoints[item];
+            if (data.breakpoint->IsVisibleInEditor())
+            {
+                cbEditor *ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(data.breakpoint->GetLocation());
+                if (ed)
+                    editors.insert(ed);
+            }
+
+            data.plugin->DeleteBreakpoint(data.breakpoint);
+            reload = true;
+        }
     }
     if (reload)
         Reload();
+    for (std::set<cbEditor*>::iterator it = editors.begin(); it != editors.end(); ++it)
+        (*it)->RefreshBreakpointMarkers();
 }
 
 void BreakpointsDlg::OnRemoveAll(wxCommandEvent& event)
 {
-    std::set<cbDebuggerPlugin*> plugins;
-
-    for (Items::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
-    {
-        cbBreakpoint& b = *it->breakpoint;
-
-        if (b.IsVisibleInEditor())
-        {
-            cbEditor* ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(b.GetLocation());
-            if (ed)
-            {
-                ed->RemoveBreakpoint(b.GetLine() - 1, false);
-
-                plugins.insert(it->plugin);
-            }
-        }
-        else
-            plugins.insert(it->plugin);
-    }
-    for (std::set<cbDebuggerPlugin*>::iterator it = plugins.begin(); it != plugins.end(); ++it)
-        (*it)->DeleteAllBreakpoints();
-
-    Reload();
+    RemoveAllBreakpoints();
 }
 
 void BreakpointsDlg::OnProperties(wxCommandEvent& event)
@@ -368,11 +395,8 @@ void BreakpointsDlg::OnKeyUp(wxKeyEvent& event)
 {
     if (event.GetKeyCode() == WXK_DELETE || event.GetKeyCode() == WXK_NUMPAD_DELETE)
     {
-        long item = m_pList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-        if (item == -1)
-            return;
-        RemoveBreakpoint(item);
-        Reload();
+        wxCommandEvent event;
+        OnRemove(event);
     }
 }
 
@@ -406,11 +430,6 @@ void BreakpointsDlg::OnBreakpointEdit(CodeBlocksEvent& event)
         }
     }
     Reload();
-}
-
-void BreakpointsDlg::OnBreakpointDelete(CodeBlocksEvent& event)
-{
-    RemoveBreakpoint(event.GetString(), event.GetInt());
 }
 
 void BreakpointsDlg::OnShowTemp(wxCommandEvent& event)

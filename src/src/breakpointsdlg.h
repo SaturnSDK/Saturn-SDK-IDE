@@ -28,8 +28,9 @@ class BreakpointsDlg : public wxPanel, public cbBreakpointsDlg
 
         wxWindow* GetWindow() { return this; }
 
-        bool AddBreakpoint(const wxString& filename, int line);
-        bool RemoveBreakpoint(const wxString& filename, int line);
+        bool AddBreakpoint(cbDebuggerPlugin *plugin, const wxString& filename, int line);
+        bool RemoveBreakpoint(cbDebuggerPlugin *plugin, const wxString& filename, int line);
+        void RemoveAllBreakpoints();
         void EditBreakpoint(const wxString& filename, int line);
         void EnableBreakpoint(const wxString& filename, int line, bool enable);
 
@@ -46,7 +47,6 @@ class BreakpointsDlg : public wxPanel, public cbBreakpointsDlg
         void OnDoubleClick(wxListEvent& event);
         void OnBreakpointAdd(CodeBlocksEvent& event);
         void OnBreakpointEdit(CodeBlocksEvent& event);
-        void OnBreakpointDelete(CodeBlocksEvent& event);
         void OnKeyUp(wxKeyEvent& event);
         void OnUpdateUI(wxUpdateUIEvent &event);
     private:
@@ -58,6 +58,8 @@ class BreakpointsDlg : public wxPanel, public cbBreakpointsDlg
             Info,
             Debugger
         };
+
+        friend struct FindBreakpointPred;
 
         struct Item
         {
@@ -74,7 +76,6 @@ class BreakpointsDlg : public wxPanel, public cbBreakpointsDlg
         };
         typedef std::vector<Item> Items;
     private:
-        void RemoveBreakpoint(int sel);
         Items::iterator FindBreakpoint(const wxString &filename, int line);
         void BreakpointProperties(const Item &item);
 
