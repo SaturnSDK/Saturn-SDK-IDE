@@ -2443,10 +2443,13 @@ void cbEditor::GotoMatchingBrace()
             int depth = 1; // search forwards
             for (int i = control->GetCurrentLine() + 1; i < control->GetLineCount(); ++i)
             {
-                if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
-                    ++depth;
-                else if (ppEnd.Matches(control->GetLine(i)))
-                    --depth;
+                if (control->GetLine(i).Find(wxT('#')) != wxNOT_FOUND) // limit testing due to performance cost
+                {
+                    if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
+                        ++depth;
+                    else if (ppEnd.Matches(control->GetLine(i)))
+                        --depth;
+                }
                 if (depth == 0)
                 {
                     pp.Matches(control->GetLine(i));
@@ -2460,10 +2463,13 @@ void cbEditor::GotoMatchingBrace()
             int depth = -1; // search backwards
             for (int i = control->GetCurrentLine() - 1; i >= 0; --i)
             {
-                if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
-                    ++depth;
-                else if (ppEnd.Matches(control->GetLine(i)))
-                    --depth;
+                if (control->GetLine(i).Find(wxT('#')) != wxNOT_FOUND) // limit testing due to performance cost
+                {
+                    if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
+                        ++depth;
+                    else if (ppEnd.Matches(control->GetLine(i)))
+                        --depth;
+                }
                 if (depth == 0)
                 {
                     pp.Matches(control->GetLine(i));
@@ -2476,7 +2482,10 @@ void cbEditor::GotoMatchingBrace()
 
     // now, we either found it or not
     if (matchingBrace != wxSCI_INVALID_POSITION)
+    {
         control->GotoPos(matchingBrace);
+        control->ChooseCaretX();
+    }
 }
 
 void cbEditor::HighlightBraces()
