@@ -10,6 +10,7 @@
 #define COMPILER_WAIT_LINK      _T("LINK")
 
 // forward decls
+class CompilerCommandGenerator;
 class CompilerGCC;
 class Compiler;
 class cbProject;
@@ -21,11 +22,13 @@ WX_DEFINE_ARRAY(ProjectFile*, MyFilesArray); // keep our own copy, to sort it by
 
 class DirectCommands
 {
+        DirectCommands(DirectCommands &);
+        DirectCommands& operator=(DirectCommands &);
     public:
         DirectCommands(CompilerGCC* compilerPlugin,
-                        Compiler*   compiler,
-                        cbProject*  project,
-                        int         logPageIndex = 0);
+                       Compiler*    compiler,
+                       cbProject*   project,
+                       int          logPageIndex = 0);
         ~DirectCommands();
 
         wxArrayString GetPreBuildCommands(ProjectBuildTarget* target);
@@ -49,11 +52,12 @@ class DirectCommands
         MyFilesArray GetProjectFilesSortedByWeight(ProjectBuildTarget* target, bool compile, bool link);
         void         AddCommandsToArray(const wxString& cmds, wxArrayString& array, bool isWaitCmd = false, bool isLinkCmd = false);
 
-        int                 m_PageIndex;
-        CompilerGCC*        m_pCompilerPlugin;
-        Compiler*           m_pCompiler;
-        cbProject*          m_pProject;
-        ProjectBuildTarget* m_pCurrTarget; // temp
+        int                       m_PageIndex;
+        CompilerGCC*              m_pCompilerPlugin;
+        Compiler*                 m_pCompiler;
+        cbProject*                m_pProject;
+        ProjectBuildTarget*       m_pCurrTarget; // temp
+        CompilerCommandGenerator* m_pGenerator;
     private:
 };
 

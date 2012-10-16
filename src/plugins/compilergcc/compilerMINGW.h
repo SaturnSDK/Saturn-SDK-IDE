@@ -17,7 +17,7 @@ class CompilerMINGW : public Compiler
         CompilerMINGW(const wxString& name = _("GNU GCC Compiler"), const wxString& ID = _T("gcc"));
         virtual ~CompilerMINGW();
         virtual AutoDetectResult AutoDetectInstallationDir();
-        virtual CompilerCommandGenerator* GetCommandGenerator();
+        virtual CompilerCommandGenerator* GetCommandGenerator(cbProject *project);
     protected:
         virtual Compiler* CreateCopy();
         virtual void SetVersionString();

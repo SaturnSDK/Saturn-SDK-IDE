@@ -38,9 +38,11 @@ Compiler * CompilerOW::CreateCopy()
     return (new CompilerOW(*this));
 }
 
-CompilerCommandGenerator* CompilerOW::GetCommandGenerator()
+CompilerCommandGenerator* CompilerOW::GetCommandGenerator(cbProject *project)
 {
-    return new CompilerOWGenerator;
+    CompilerOWGenerator *generator = new CompilerOWGenerator;
+    generator->Init(project);
+    return generator;
 }
 
 AutoDetectResult CompilerOW::AutoDetectInstallationDir()

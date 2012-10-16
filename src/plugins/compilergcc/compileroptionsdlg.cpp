@@ -1568,11 +1568,7 @@ void CompilerOptionsDlg::AutoDetectCompiler()
         case adrDetected:
         {
             wxString msg;
-            #if wxCHECK_VERSION(2, 9, 0)
             msg.Printf(_("Auto-detected installation path of \"%s\"\nin \"%s\""), compiler->GetName().wx_str(), compiler->GetMasterPath().wx_str());
-            #else
-            msg.Printf(_("Auto-detected installation path of \"%s\"\nin \"%s\""), compiler->GetName().c_str(), compiler->GetMasterPath().c_str());
-            #endif
             cbMessageBox(msg);
         }
         break;

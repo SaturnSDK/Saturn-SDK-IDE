@@ -17,7 +17,7 @@ class CompilerOW : public Compiler
 
         virtual void LoadSettings(const wxString& baseKey);
 		virtual void SetMasterPath(const wxString& path);
-		virtual CompilerCommandGenerator* GetCommandGenerator();
+		virtual CompilerCommandGenerator* GetCommandGenerator(cbProject *project);
 	protected:
         Compiler * CreateCopy();
 	private:

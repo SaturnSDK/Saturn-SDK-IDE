@@ -86,7 +86,6 @@ Compiler::Compiler(const wxString& name, const wxString& ID, const wxString& par
     m_Name(name),
     m_ID(ID.Lower()),
     m_ParentID(parentID.Lower()),
-    m_pGenerator(0),
     m_Valid(false),
     m_NeedValidityCheck(true),
     m_Mirrored(false)
@@ -105,7 +104,6 @@ Compiler::Compiler(const wxString& name, const wxString& ID, const wxString& par
 Compiler::Compiler(const Compiler& other) :
     CompileOptionsBase(other),
     m_ParentID(other.m_ParentID.IsEmpty() ? other.m_ID : other.m_ParentID),
-    m_pGenerator(0),
     m_Mirror(other.m_Mirror),
     m_Mirrored(other.m_Mirrored)
 {
@@ -146,7 +144,6 @@ Compiler::Compiler(const Compiler& other) :
 Compiler::~Compiler()
 {
     //dtor
-    delete m_pGenerator;
 }
 
 void Compiler::Reset()
@@ -256,49 +253,11 @@ void Compiler::MakeValidID()
     m_CompilerIDs.Add(m_ID);
 }
 
-CompilerCommandGenerator* Compiler::GetCommandGenerator()
+CompilerCommandGenerator* Compiler::GetCommandGenerator(cbProject *project)
 {
-    return new CompilerCommandGenerator;
-}
-
-void Compiler::Init(cbProject* project)
-{
-    if (!m_pGenerator)
-        m_pGenerator = GetCommandGenerator();
-    m_pGenerator->Init(project);
-}
-
-void Compiler::GenerateCommandLine(wxString& macro,
-                                   ProjectBuildTarget* target,
-                                   ProjectFile* pf,
-                                   const wxString& file,
-                                   const wxString& object,
-                                   const wxString& FlatObject,
-                                   const wxString& deps)
-{
-    if (!m_pGenerator)
-        cbThrow(_T("Compiler::Init() not called or generator invalid!"));
-    m_pGenerator->GenerateCommandLine(macro, target, pf, file, object, FlatObject, deps);
-}
-
-const wxArrayString& Compiler::GetCompilerSearchDirs(ProjectBuildTarget* target)
-{
-    static wxArrayString retIfError;
-    retIfError.Clear();
-    if (!m_pGenerator)
-        return retIfError;
-
-    return m_pGenerator->GetCompilerSearchDirs(target);
-}
-
-const wxArrayString& Compiler::GetLinkerSearchDirs(ProjectBuildTarget* target)
-{
-    static wxArrayString retIfError;
-    retIfError.Clear();
-    if (!m_pGenerator)
-        return retIfError;
-
-    return m_pGenerator->GetLinkerSearchDirs(target);
+    CompilerCommandGenerator* generator = new CompilerCommandGenerator;
+    generator->Init(project);
+    return generator;
 }
 
 const wxString& Compiler::GetCommand(CommandType ct, const wxString& fileExtension) const

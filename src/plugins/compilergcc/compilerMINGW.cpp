@@ -45,9 +45,11 @@ Compiler * CompilerMINGW::CreateCopy()
     return (new CompilerMINGW(*this));
 }
 
-CompilerCommandGenerator* CompilerMINGW::GetCommandGenerator()
+CompilerCommandGenerator* CompilerMINGW::GetCommandGenerator(cbProject *project)
 {
-    return new CompilerMINGWGenerator;
+    CompilerMINGWGenerator *generator = new CompilerMINGWGenerator;
+    generator->Init(project);
+    return generator;
 }
 
 AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
