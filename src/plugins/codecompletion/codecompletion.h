@@ -196,11 +196,14 @@ private:
 
     /** show code suggestion list*/
     void DoCodeComplete();
+    void DoShowCallTip(int caretPos = wxNOT_FOUND);
 
     /** ContextMenu->Insert-> declaration/implementation*/
     int DoClassMethodDeclImpl();
     /** ContextMenu->Insert-> All class methods*/
     int DoAllMethodsImpl();
+
+    void MatchCodeStyle(wxString& str, int eolStyle = wxSCI_EOL_LF, const wxString& indent = wxEmptyString, bool useTabs = false, int tabSize = 4);
 
     // CC's toolbar related functions
     /** help method in finding the function position in the vector for the function containing the current line*/
