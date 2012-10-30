@@ -1354,32 +1354,31 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
 
     // 2.) Marker for Breakpoints etc...
     const wxString &basepath = ConfigManager::GetDataFolder() + wxT("/manager_resources.zip#zip:/images/12x12/");
-    wxBitmap icon = cbLoadBitmap(basepath + wxT("breakpoint.png"), wxBITMAP_TYPE_PNG);
-    if (icon.IsOk())
-        control->MarkerDefineBitmap(BREAKPOINT_MARKER, icon);
-    else
+    bool imageBP = mgr->ReadBool(_T("/margin_1_image_bp"), true);
+    if (imageBP)
     {
-        control->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE);
-        control->MarkerSetBackground(BREAKPOINT_MARKER, wxColour(0xFF, 0x00, 0x00));
+      wxBitmap iconBP    = cbLoadBitmap(basepath + wxT("breakpoint.png"),          wxBITMAP_TYPE_PNG);
+      wxBitmap iconBPDis = cbLoadBitmap(basepath + wxT("breakpoint_disabled.png"), wxBITMAP_TYPE_PNG);
+      wxBitmap iconBPOth = cbLoadBitmap(basepath + wxT("breakpoint_other.png"),    wxBITMAP_TYPE_PNG);
+      if (iconBP.IsOk() && iconBPDis.IsOk() && iconBPOth.IsOk())
+      {
+          control->MarkerDefineBitmap(BREAKPOINT_MARKER,          iconBP   );
+          control->MarkerDefineBitmap(BREAKPOINT_DISABLED_MARKER, iconBPDis);
+          control->MarkerDefineBitmap(BREAKPOINT_OTHER_MARKER,    iconBPOth);
+      }
+      else
+        imageBP = false; // apply default markers
     }
-    icon = cbLoadBitmap(basepath + wxT("breakpoint_disabled.png"), wxBITMAP_TYPE_PNG);
-    if (icon.IsOk())
-        control->MarkerDefineBitmap(BREAKPOINT_DISABLED_MARKER, icon);
-    else
+    if (!imageBP)
     {
-        control->MarkerDefine(BREAKPOINT_DISABLED_MARKER, BREAKPOINT_STYLE);
+        control->MarkerDefine(BREAKPOINT_MARKER,                 BREAKPOINT_STYLE);
+        control->MarkerSetBackground(BREAKPOINT_MARKER,          wxColour(0xFF, 0x00, 0x00));
+        control->MarkerDefine(BREAKPOINT_DISABLED_MARKER,        BREAKPOINT_STYLE);
         control->MarkerSetBackground(BREAKPOINT_DISABLED_MARKER, wxColour(0x90, 0x90, 0x90));
+        control->MarkerDefine(BREAKPOINT_OTHER_MARKER,           BREAKPOINT_STYLE);
+        control->MarkerSetBackground(BREAKPOINT_OTHER_MARKER,    wxColour(0x59, 0x74, 0x8e));
     }
-    icon = cbLoadBitmap(basepath + wxT("breakpoint_other.png"), wxBITMAP_TYPE_PNG);
-    if (icon.IsOk())
-        control->MarkerDefineBitmap(BREAKPOINT_OTHER_MARKER, icon);
-    else
-    {
-        control->MarkerDefine(BREAKPOINT_OTHER_MARKER, BREAKPOINT_STYLE);
-        control->MarkerSetBackground(BREAKPOINT_OTHER_MARKER, wxColour(0x59, 0x74, 0x8e));
-    }
-
-    // 3.) Marker for Debugging etc...
+    // 3.) Marker for Debugging (currently debugged line) etc...
     control->MarkerDefine(DEBUG_MARKER, DEBUG_STYLE);
     control->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
 
@@ -1454,7 +1453,6 @@ void cbEditor::InternalSetEditorStyleAfterFileOpen(cbStyledTextCtrl* control)
                                   - (  (1 << wxSCI_MARKNUM_CHANGEUNSAVED)
                                      | (1 << wxSCI_MARKNUM_CHANGESAVED))) );
         control->SetMarginSensitive(C_FOLDING_MARGIN, 1);
-
     }
     else
     {
@@ -3075,7 +3073,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 
     m_autoIndentDone = false;
     OnScintillaEvent(event); // smart indent plugins will be called here
-    if(!m_autoIndentDone)
+    if (!m_autoIndentDone)
     {
         const wxChar ch = event.GetKey();
         cbStyledTextCtrl* control = GetControl();
@@ -3096,11 +3094,34 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                 control->EndUndoAction();
             }
         }
+        if(   Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/brace_completion"), true)
+           || control->IsBraceShortcutActive())
+            DoSelectionBraceCompletion(control, ch);
     }
 }
+
 void cbEditor::AutoIndentDone()
 {
     m_autoIndentDone = true;
+}
+
+void cbEditor::DoSelectionBraceCompletion(cbStyledTextCtrl* control, const wxChar& ch) const
+{
+    if (control->GetLastSelectedText().IsEmpty())
+        return;
+    const wxString braces(wxT("([{<'\")]}>'\""));
+    const int braceAIdx = braces.Find(ch, true); // from end (so caret ends after quotes)
+    if (braceAIdx == wxNOT_FOUND)
+        return;
+    const int braceBIdx = (braceAIdx + (braces.Length() / 2)) % braces.Length();
+    control->BeginUndoAction();
+    control->DeleteBack();
+    if (braceAIdx < braceBIdx)
+        control->InsertText(control->GetCurrentPos(),
+                            braces[braceAIdx] + control->GetLastSelectedText() + braces[braceBIdx]);
+    else
+        control->AddText(braces[braceBIdx] + control->GetLastSelectedText() + braces[braceAIdx]);
+    control->EndUndoAction();
 }
 
 void cbEditor::OnEditorDwellStart(wxScintillaEvent& event)

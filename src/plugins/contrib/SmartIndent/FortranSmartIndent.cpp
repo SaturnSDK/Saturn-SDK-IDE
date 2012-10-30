@@ -18,6 +18,7 @@ namespace
 {
     PluginRegistrant<FortranSmartIndent> reg(wxT("FortranSmartIndent"));
 }
+
 void FortranSmartIndent::OnEditorHook(cbEditor* ed, wxScintillaEvent& event) const
 {
     // check if smart indent is enabled
@@ -103,4 +104,7 @@ void FortranSmartIndent::OnEditorHook(cbEditor* ed, wxScintillaEvent& event) con
 
         stc->EndUndoAction();
     }
+
+    if ( SelectionBraceCompletionEnabled() || stc->IsBraceShortcutActive() )
+        ed->DoSelectionBraceCompletion(stc, ch);
 }
