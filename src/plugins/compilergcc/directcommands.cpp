@@ -38,9 +38,15 @@ DirectCommands::DirectCommands(CompilerGCC* compilerPlugin,
     m_pCompilerPlugin(compilerPlugin),
     m_pCompiler(compiler),
     m_pProject(project),
-    m_pCurrTarget(0)
+    m_pCurrTarget(0),
+    m_pGenerator(0)
 {
-    //ctor
+    // even if there is no project, the command generator need to be
+    // initialised for single file compilation to work.
+    // it can handle a NULL pointer argument... ;-)
+    m_pGenerator = m_pCompiler->GetCommandGenerator(m_pProject);
+
+    // ctor
     if (!m_pProject)
         return; // probably a compile file cmd without a project
 
@@ -52,13 +58,11 @@ DirectCommands::DirectCommands(CompilerGCC* compilerPlugin,
     wxFileName fname(m_pProject->GetFilename());
     fname.SetExt(_T("depend"));
     depsCacheRead(fname.GetFullPath().mb_str());
-
-    m_pGenerator = m_pCompiler->GetCommandGenerator(m_pProject);
 }
 
 DirectCommands::~DirectCommands()
 {
-    //dtor
+    // dtor
     if (!m_pProject)
         return; // probably a compile file cmd without a project
 
@@ -331,6 +335,9 @@ wxArrayString DirectCommands::GetCompileSingleFileCommand(const wxString& filena
     Compiler* compiler = CompilerFactory::GetDefaultCompiler();
     if (!compiler)
         return ret;
+
+    // please leave this check here for convenience: single file compilation is "special"
+    if (!m_pGenerator) cbThrow(_T("Command generator not initialised through ctor!"));
 
     wxString compilerCmd = compiler->GetCommand(ctCompileObjectCmd, srcExt);
     m_pGenerator->GenerateCommandLine(compilerCmd,
@@ -631,6 +638,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     }
     if (IsOpenWatcom && target->GetTargetType() != ttStaticLib)
         linkfiles << _T("file ");
+
     for (unsigned int i = 0; i < files.GetCount(); ++i)
     {
         ProjectFile* pf = files[i];
