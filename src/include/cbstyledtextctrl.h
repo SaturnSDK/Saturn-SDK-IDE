@@ -33,6 +33,9 @@ class cbStyledTextCtrl : public wxScintilla
         void CallTipCancel();
         bool IsBraceShortcutActive();
 
+        void DoBraceCompletion(const wxChar& ch);
+        bool DoSelectionBraceCompletion(const wxChar& ch);
+
         static std::map<int, std::set<int> > &GetCharacterLexerStyles();
         static std::map<int, std::set<int> > &GetStringLexerStyles();
         static std::map<int, std::set<int> > &GetPreprocessorLexerStyles();
@@ -59,7 +62,10 @@ class cbStyledTextCtrl : public wxScintilla
         wxString m_lastSelectedText;
         bool m_braceShortcutState;
 
-        static std::map<int, std::set<int> > CharacterLexerStyles, StringLexerStyles, PreprocessorLexerStyles, CommentLexerStyles;
+        static std::map<int, std::set<int> > CharacterLexerStyles;
+        static std::map<int, std::set<int> > StringLexerStyles;
+        static std::map<int, std::set<int> > PreprocessorLexerStyles;
+        static std::map<int, std::set<int> > CommentLexerStyles;
 
         DECLARE_EVENT_TABLE()
 };

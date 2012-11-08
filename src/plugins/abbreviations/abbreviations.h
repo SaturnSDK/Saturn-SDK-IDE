@@ -20,9 +20,6 @@ public:
     /** Destructor. */
     virtual ~Abbreviations();
 
-    /** Invoke configuration dialog. */
-    virtual int Configure();
-
     /** Return the plugin's configuration priority.
       * This is a number (default is 50) that is used to sort plugins
       * in configuration dialogs. Lower numbers mean the plugin's
@@ -148,10 +145,15 @@ private:
     void OnEditAutoComplete(wxCommandEvent& /*event*/);
     void OnEditMenuUpdateUI(wxUpdateUIEvent& event);
 
+public:
+  void EditorEventHook(cbEditor* editor, wxScintillaEvent& event);
+
 private:
     friend class AbbreviationsConfigPanel;
-    AutoCompleteMap m_AutoCompleteMap;
 
+    AutoCompleteMap m_AutoCompleteMap;
+    int             m_EditorHookId;
+    bool            m_IsAutoCompVisible; //!< is AutoComp opened by Abbreviations
 private:
     DECLARE_EVENT_TABLE();
 };

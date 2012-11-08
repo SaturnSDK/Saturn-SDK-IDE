@@ -723,9 +723,7 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
     {
         if (cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor())
         {
-            wxString filename = ed->GetShortName();
-            if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
-                && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
+            if ( !IsProviderFor(ed) )
                 return;
         }
 
@@ -803,7 +801,6 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
                     menu->FindChildItem(id, &position);
                 menu->Insert(position, idSelectedProjectReparse, _("Reparse this project"),
                              _("Reparse current actived project"));
-                menu->InsertSeparator(position + 1);
             }
             else if (data->GetKind() == FileTreeData::ftdkFile)
                 menu->Append(idSelectedFileReparse, _("Reparse this file"), _("Reparse current selected file"));
@@ -822,6 +819,17 @@ bool CodeCompletion::BuildToolBar(wxToolBar* toolBar)
     UpdateToolBar();
     EnableToolbarTools(false);
 
+    return true;
+}
+
+bool CodeCompletion::IsProviderFor(cbEditor* ed)
+{
+    PluginsArray pa = Manager::Get()->GetPluginManager()->GetCodeCompletionOffers();
+    for (unsigned int i=0; i<pa.Count(); ++i)
+    {
+        if ( (pa[i] != this) && static_cast<cbCodeCompletionPlugin*>(pa[i])->IsProviderFor(ed))
+            return false;
+    }
     return true;
 }
 
@@ -1020,9 +1028,7 @@ void CodeCompletion::DoShowCallTip(int caretPos)
     if (!ed)
         return;
 
-    wxString filename = ed->GetShortName();
-    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
-        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
+    if ( !IsProviderFor(ed) )
         return;
 
     // calculate the size of the calltips window
@@ -1341,9 +1347,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         return;
     }
 
-    wxString filename = editor->GetShortName();
-    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
-        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
+    if ( !IsProviderFor(editor) )
     {
         event.Skip();
         return;
@@ -2501,9 +2505,7 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
         return;
     }
 
-    wxString filename = ed->GetShortName();
-    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
-        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
+    if ( !IsProviderFor(ed) )
     {
         event.Skip();
         return;
@@ -2660,9 +2662,7 @@ void CodeCompletion::DoCodeComplete()
     if (!ed)
         return;
 
-    wxString filename = ed->GetShortName();
-    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
-        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
+    if ( !IsProviderFor(ed) )
         return;
 
     TRACE(_T("DoCodeComplete"));

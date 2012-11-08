@@ -702,7 +702,8 @@ void CompilerGCC::SetupEnvironment()
     // Get configured masterpath, expand macros and remove trailing separators
     wxString masterPath = compiler->GetMasterPath();
     Manager::Get()->GetMacrosManager()->ReplaceMacros(masterPath);
-    while ( (masterPath.Last() == '\\') || (masterPath.Last() == '/') )
+    while (   !masterPath.IsEmpty()
+           && ((masterPath.Last() == '\\') || (masterPath.Last() == '/')) )
         masterPath.RemoveLast();
 
     // Compile new PATH list...

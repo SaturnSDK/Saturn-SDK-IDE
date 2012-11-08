@@ -68,7 +68,8 @@ void TextCtrlLogger::UpdateSettings()
 
     control->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
-    int size = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/log_font_size"), platform::macosx ? 10 : 8);
+    ConfigManager* cfgman = Manager::Get()->GetConfigManager(_T("message_manager"));
+    int size = cfgman->ReadInt(_T("/log_font_size"), platform::macosx ? 10 : 8);
 
     wxFont default_font(size, fixed ? wxFONTFAMILY_MODERN : wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
     wxFont bold_font(default_font);
@@ -108,7 +109,7 @@ void TextCtrlLogger::UpdateSettings()
     style[warning].SetFont(italic_font);
 
     style[error].SetFont(bold_font);
-    style[error].SetTextColour(BlendTextColour(*wxRED));
+    style[error].SetTextColour( cfgman->ReadColour(_T("/log_error_text_colour"),wxColour(0xf0, 0x00, 0x00)) ); // red
 
     style[critical].SetFont(bold_font);
     style[critical].SetTextColour(BlendTextColour(*wxWHITE));     // we're setting both fore and background colors here
@@ -170,34 +171,34 @@ void TextCtrlLogger::ToggleWrapMode()
 
     wxWindowUpdateLocker noUpdates(control);
 
-    long style = control->GetWindowStyle();
+    long ctrl_style = control->GetWindowStyle();
 
     // wxTE_DONTWRAP is an equivalent for wxHSCROLL (see <wx/textctrl.h>)
-    bool is_dontwrap = ((style & wxTE_DONTWRAP)==wxTE_DONTWRAP);
+    bool is_dontwrap = ((ctrl_style & wxTE_DONTWRAP)==wxTE_DONTWRAP);
     if (is_dontwrap)
-        style &= ~wxTE_DONTWRAP; // don't wrap = OFF means wrapping = ON
+        ctrl_style &= ~wxTE_DONTWRAP; // don't wrap = OFF means wrapping = ON
     else
-        style |=  wxTE_DONTWRAP; // don't wrap = ON means wrapping = OFF
+        ctrl_style |=  wxTE_DONTWRAP; // don't wrap = ON means wrapping = OFF
 
 // On Windows the wrap-style can not easily be changed on the fly, but if the align flags
 // change wxWidgets recreates the textcontrol, doing this ourselves seems not to be so easy,
 // so we use this hack here (testing if the centred-flag is set, is not needed for our loggers)
 #ifdef __WXMSW__
-    bool is_centred = ((style & wxALIGN_CENTER)==wxALIGN_CENTER);
+    bool is_centred = ((ctrl_style & wxALIGN_CENTER)==wxALIGN_CENTER);
     if (is_centred)
     {
-        style &= ~wxALIGN_CENTRE;
-        control->SetWindowStyleFlag(style);
-        style |= wxALIGN_CENTRE;
+        ctrl_style &= ~wxALIGN_CENTRE;
+        control->SetWindowStyleFlag(ctrl_style);
+        ctrl_style |= wxALIGN_CENTRE;
     }
     else
     {
-        style |= wxALIGN_CENTRE;
-        control->SetWindowStyleFlag(style);
-        style &= ~wxALIGN_CENTRE;
+        ctrl_style |= wxALIGN_CENTRE;
+        control->SetWindowStyleFlag(ctrl_style);
+        ctrl_style &= ~wxALIGN_CENTRE;
     }
 #endif
-    control->SetWindowStyleFlag(style);
+    control->SetWindowStyleFlag(ctrl_style);
 }
 
 
@@ -213,11 +214,11 @@ void TimestampTextCtrlLogger::Append(const wxString& msg, Logger::level lv)
     control->AppendText(::temp_string);
 }
 
-ListCtrlLogger::ListCtrlLogger(const wxArrayString& titles, const wxArrayInt& widths, bool fixedPitchFont) :
+ListCtrlLogger::ListCtrlLogger(const wxArrayString& titles_in, const wxArrayInt& widths_in, bool fixedPitchFont) :
     control(0),
     fixed(fixedPitchFont),
-    titles(titles),
-    widths(widths)
+    titles(titles_in),
+    widths(widths_in)
 {
     cbAssert(titles.GetCount() == widths.GetCount());
 }
@@ -279,7 +280,8 @@ void ListCtrlLogger::UpdateSettings()
     if (!control)
         return;
 
-    int size = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/log_font_size"), platform::macosx ? 10 : 8);
+    ConfigManager* cfgman = Manager::Get()->GetConfigManager(_T("message_manager"));
+    int size = cfgman->ReadInt(_T("/log_font_size"), platform::macosx ? 10 : 8);
     wxFont default_font(size, fixed ? wxFONTFAMILY_MODERN : wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
     wxFont bold_font(default_font);
     wxFont italic_font(default_font);
@@ -306,9 +308,9 @@ void ListCtrlLogger::UpdateSettings()
     style[failure].colour = BlendTextColour(wxColour(0x00, 0x00, 0xa0));
 
     style[warning].font = italic_font;
-    style[warning].colour = BlendTextColour(wxColour(0x00, 0x00, 0xa0));    // navy blue
+    style[warning].colour = cfgman->ReadColour(_T("/log_warning_text_colour"), wxColour(0x00, 0x00, 0xa0)); // navy blue
 
-    style[error].colour = BlendTextColour(*wxRED);
+    style[error].colour = cfgman->ReadColour(_T("/log_error_text_colour"), wxColour(0xf0, 0x00, 0x00)); // red
 
     style[critical].font = bold_font;
     style[critical].colour = BlendTextColour(wxColour(0x0a, 0x00, 0x00));   // maroon

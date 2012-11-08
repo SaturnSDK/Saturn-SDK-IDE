@@ -95,11 +95,6 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
         /** The plugin must return its type on request. */
         virtual PluginType GetType() const { return m_Type; }
 
-        /** If a plugin provides some sort of configuration dialog,
-          * this is the place to invoke it.
-          */
-        virtual int Configure(){ return 0; }
-
         /** Return the plugin's configuration priority.
           * This is a number (default is 50) that is used to sort plugins
           * in configuration dialogs. Lower numbers mean the plugin's
@@ -139,7 +134,7 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
           *
           * @param menuBar the wxMenuBar to create items in
           */
-        virtual void BuildMenu(wxMenuBar* menuBar) = 0;
+        virtual void BuildMenu(wxMenuBar* /* menuBar */) {}
 
         /** This method is called by Code::Blocks core modules (EditorManager,
           * ProjectManager etc) and is used by the plugin to add any menu
@@ -156,7 +151,7 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
           * @param menu pointer to the popup menu
           * @param data pointer to FileTreeData object (to access/modify the file tree)
           */
-        virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0) = 0;
+        virtual void BuildModuleMenu(const ModuleType /* type */, wxMenu* /* menu */, const FileTreeData* data = 0) { (void) data; }
 
         /** This method is called by Code::Blocks and is used by the plugin
           * to add any toolbar items it needs on Code::Blocks's toolbar.\n
@@ -166,7 +161,7 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
           * @param toolBar the wxToolBar to create items on
           * @return The plugin should return true if it needed the toolbar, false if not
           */
-        virtual bool BuildToolBar(wxToolBar* toolBar) = 0;
+        virtual bool BuildToolBar(wxToolBar* /* toolBar */) { return false; }
 
         /** This method return the priority of the plugin's toolbar, the less value
           * indicates a more preceding position when C::B starts with no configuration file
@@ -364,7 +359,6 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
         /** @brief Get the exit code of the last build process. */
         virtual int GetExitCode() const = 0;
 
-        virtual int Configure() { return 0; }
         /** @brief Display configuration dialog.
           *
           * @param project The selected project (can be NULL).
@@ -743,6 +737,24 @@ class PLUGIN_EXPORT cbCodeCompletionPlugin : public cbPlugin
         virtual wxArrayString GetCallTips() = 0;
         virtual int CodeComplete() = 0;
         virtual void ShowCallTip() = 0;
+        /** @brief Does this plugin handle code completion for the editor cb?
+          *
+          * A plugin should override this function to indicate whether it will
+          * provide completion and call tips for the editor. The plugin should
+          * then prepare to handle codecomplete and calltip menu messages if
+          * it returns true. To implement this function, plugins will usually
+          * check the mimetype of the file or the current lexer (highlight
+          * language).
+          *
+          * Note: Currently the core CC plugin provides a default CodeCompletion
+          * implementation for any file type that is not provided for by any
+          * other CC plugins. The calltip and main menu options that can be handled
+          * by any CC plugin is also supplied by the core CC plugin.
+          *
+          * @param cb The editor for which code completion
+          * @return return true if the plugin handles completion for this editor,
+          * false otherwise*/
+        virtual bool IsProviderFor(cbEditor* /*cb*/) { return false; }
 };
 
 /** @brief Base class for wizard plugins

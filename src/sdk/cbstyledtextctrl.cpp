@@ -148,7 +148,7 @@ void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
 
         case WXK_TAB:
         {
-            if (m_tabSmartJump && !(event.ControlDown() || event.ShiftDown() || event.AltDown()))
+            if (m_tabSmartJump && event.GetModifiers() == wxMOD_NONE)
             {
                 if (!AutoCompActive() && m_bracePosition != wxSCI_INVALID_POSITION)
                 {
@@ -311,6 +311,70 @@ bool cbStyledTextCtrl::IsBraceShortcutActive()
     bool state = m_braceShortcutState;
     m_braceShortcutState = false;
     return state;
+}
+
+void cbStyledTextCtrl::DoBraceCompletion(const wxChar& ch)
+{
+    const int pos   = GetCurrentPos();
+    const int style = GetStyleAt(pos);
+    if (IsComment(style) || IsComment(GetStyleAt(pos - 2)))
+        return; // do nothing
+    if (ch == wxT('\'') || ch == wxT('"'))
+    {
+        if (GetCharAt(pos) == ch)
+        {
+            DeleteBack();
+            CharRight();
+        }
+        else if (!IsString(GetStyleAt(pos - 2)) && !IsCharacter(GetStyleAt(pos - 2)))
+            InsertText(pos, ch);
+        return; // done
+    }
+
+    if (IsString(style) || IsCharacter(style))
+        return; // do nothing
+
+    const wxString opBraces(wxT("([{")); const int opBraceIdx = opBraces.Find(ch);
+    const wxString clBraces(wxT(")]}")); const int clBraceIdx = clBraces.Find(ch);
+    if ( (opBraceIdx != wxNOT_FOUND) || (clBraceIdx != wxNOT_FOUND) )
+    {
+        if ( GetCharAt(pos) == ch )
+        {
+            DeleteBack();
+            CharRight();
+        }
+        else if (opBraceIdx != wxNOT_FOUND)
+        {
+            int nextPos = pos;
+            while ( wxIsspace(GetCharAt(nextPos)) && (nextPos < GetLength()) )
+                ++nextPos;
+
+            if (   ((wxChar)GetCharAt(nextPos) != clBraces[opBraceIdx])
+                || (BraceMatch(nextPos)        != wxNOT_FOUND) )
+            {
+                InsertText(pos, clBraces[opBraceIdx]);
+            }
+        }
+    }
+}
+
+bool cbStyledTextCtrl::DoSelectionBraceCompletion(const wxChar& ch)
+{
+    if (GetLastSelectedText().IsEmpty())
+        return false; // nothing changed
+    const wxString braces(wxT("([{<'\")]}>'\""));
+    const int braceAIdx = braces.Find(ch, true); // from end (so caret is placed after quotes)
+    if (braceAIdx == wxNOT_FOUND)
+        return false; // nothing changed
+    const int braceBIdx = (braceAIdx + (braces.Length() / 2)) % braces.Length();
+    BeginUndoAction();
+    DeleteBack();
+    if (braceAIdx < braceBIdx)
+        InsertText(GetCurrentPos(), braces[braceAIdx] + GetLastSelectedText() + braces[braceBIdx]);
+    else
+        AddText(braces[braceBIdx] + GetLastSelectedText() + braces[braceAIdx]);
+    EndUndoAction();
+    return true; // succeeded
 }
 
 bool cbStyledTextCtrl::AllowTabSmartJump()
