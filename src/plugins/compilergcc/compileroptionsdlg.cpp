@@ -2778,7 +2778,8 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         {
             dlg.SetSize(dlg.GetPosition().x, dlg.GetPosition().y - (220 - dlg.GetSize().GetHeight()) / 2,
                         dlg.GetSize().GetWidth(), 220);
-        }        dlg.ShowModal();
+        }
+        dlg.ShowModal();
         wxString flags = dlg.GetValue();
         flags.Replace(wxT("\n"), wxT(" "));
         flags.Replace(wxT("\r"), wxT(" "));

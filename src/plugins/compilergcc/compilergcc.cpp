@@ -701,6 +701,12 @@ void CompilerGCC::SetupEnvironment()
 
     // Get configured masterpath, expand macros and remove trailing separators
     wxString masterPath = compiler->GetMasterPath();
+    bool isNoComp = false;
+    if (masterPath == wxT("-- No Compiler --")) // Special case so "No Compiler" is valid
+    {
+        isNoComp = true;
+        masterPath.Clear();
+    }
     Manager::Get()->GetMacrosManager()->ReplaceMacros(masterPath);
     while (   !masterPath.IsEmpty()
            && ((masterPath.Last() == '\\') || (masterPath.Last() == '/')) )
@@ -757,7 +763,7 @@ void CompilerGCC::SetupEnvironment()
     /* TODO (jens#1#): Is the above correct ?
        Or should we search in the whole systempath (pathList in this case) for the executable? */
     // Try again...
-    if (binPath.IsEmpty() || (pathList.Index(binPath, caseSens)==wxNOT_FOUND))
+    if ((binPath.IsEmpty() || (pathList.Index(binPath, caseSens)==wxNOT_FOUND)) && !isNoComp)
     {
         InfoWindow::Display(_("Environment error"),
                             _("Can't find compiler executable in your configured search path's for ") + compiler->GetName() + _T('\n'));
