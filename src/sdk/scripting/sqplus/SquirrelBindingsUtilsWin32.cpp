@@ -4,7 +4,8 @@
 //#include "SquirrelVM.h"
 #include "SquirrelBindingsUtilsWin32.h"
 
-SQInteger refcounted_release_hook(SQUserPointer p, SQInteger size)
+// C::B patch: Comment out unused variable
+SQInteger refcounted_release_hook(SQUserPointer p, SQInteger /* size */)
 {
 	IUnknown *pRC = (IUnknown*)p;
 	pRC->Release();

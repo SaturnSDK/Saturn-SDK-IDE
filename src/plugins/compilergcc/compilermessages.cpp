@@ -31,8 +31,8 @@ namespace
 BEGIN_EVENT_TABLE(CompilerMessages, wxEvtHandler)
 END_EVENT_TABLE()
 
-CompilerMessages::CompilerMessages(const wxArrayString& titles, const wxArrayInt& widths)
-    : ListCtrlLogger(titles, widths, true)
+CompilerMessages::CompilerMessages(const wxArrayString& titles_in, const wxArrayInt& widths_in)
+    : ListCtrlLogger(titles_in, widths_in, true)
 {
     //ctor
 }
@@ -76,7 +76,7 @@ void CompilerMessages::FocusError(int nr)
     control->EnsureVisible(nr);
 }
 
-void CompilerMessages::OnClick(wxCommandEvent& /*event*/)
+void CompilerMessages::OnClick(cb_unused wxCommandEvent& event)
 {
     // single and double-click, behave the same
 

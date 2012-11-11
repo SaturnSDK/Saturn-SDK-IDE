@@ -3,7 +3,7 @@
  * http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-#if ( !defined (PREP_H) && defined(__cplusplus) )
+#if ( !defined(PREP_H) && defined(__cplusplus) )
 #define PREP_H
 
 #ifndef wxMAJOR_VERSION
@@ -11,31 +11,31 @@
 #endif
 
 #if !(__GNUC__ == 4 && __GNUC_MINOR__ >= 6 && defined __GXX_EXPERIMENTAL_CXX0X__)
-// it is a const object...
-const class nullptr_t
-{
-public:
-    // constructor
-    nullptr_t() {}
-    // convertible to any type of null non-member pointer...
-    template<typename T> operator T* () const{ return (T*)0; }
-    // or any type of null member pointer...
-    template<typename C, typename T> operator T C::* () const { return (T C::*)0; }
-    // support operator overloading (== and !=)
-    template<typename T> bool equals(T const& rhs) const { return rhs == 0; }
-private:
-    // can't take address of nullptr
-    void operator&() const;
-    // can't copyable
-    nullptr_t(const nullptr_t&);
-    const nullptr_t& operator=(const nullptr_t&);
-} nullptr_;
-#define nullptr nullptr_
+    // it is a const object...
+    const class nullptr_t
+    {
+    public:
+        // constructor
+        nullptr_t() {}
+        // convertible to any type of null non-member pointer...
+        template<typename T> operator T* () const{ return (T*)0; }
+        // or any type of null member pointer...
+        template<typename C, typename T> operator T C::* () const { return (T C::*)0; }
+        // support operator overloading (== and !=)
+        template<typename T> bool equals(T const& rhs) const { return rhs == 0; }
+    private:
+        // can't take address of nullptr
+        void operator&() const;
+        // can't copyable
+        nullptr_t(const nullptr_t&);
+        const nullptr_t& operator=(const nullptr_t&);
+    } nullptr_;
+    #define nullptr nullptr_
 
-template<typename T> inline bool operator==(const nullptr_t& lhs, T const& rhs) { return  lhs.equals(rhs); }
-template<typename T> inline bool operator==(T const& lhs, const nullptr_t& rhs) { return  rhs.equals(lhs); }
-template<typename T> inline bool operator!=(const nullptr_t& lhs, T const& rhs) { return !lhs.equals(rhs); }
-template<typename T> inline bool operator!=(T const& lhs, const nullptr_t& rhs) { return !rhs.equals(lhs); }
+    template<typename T> inline bool operator==(const nullptr_t& lhs, T const& rhs) { return  lhs.equals(rhs); }
+    template<typename T> inline bool operator==(T const& lhs, const nullptr_t& rhs) { return  rhs.equals(lhs); }
+    template<typename T> inline bool operator!=(const nullptr_t& lhs, T const& rhs) { return !lhs.equals(rhs); }
+    template<typename T> inline bool operator!=(T const& lhs, const nullptr_t& rhs) { return !rhs.equals(lhs); }
 #endif
 
 /*  ---------------------------------------------------------------------------------------------------------
@@ -66,12 +66,12 @@ template <int major, int minor, int rel = 0> struct wxExactVersion { enum { eval
     Break compilation if the assertion fails.
 
     Example:
-		CompileTimeAssertion<wxMinimumVersion<2,6>::eval>::Assert();
+        CompileTimeAssertion<wxMinimumVersion<2,6>::eval>::Assert();
 
-		This example code will break the build if you try to compile the code with wxWindows 2.4 (or any
-		other version below 2.6).
-		However, it will break the build in such a way that the problem is apparent in the error message,
-		rather than throwing up 317 obscure errors about whatever undefined symbols and wrong types.
+        This example code will break the build if you try to compile the code with wxWindows 2.4 (or any
+        other version below 2.6).
+        However, it will break the build in such a way that the problem is apparent in the error message,
+        rather than throwing up 317 obscure errors about whatever undefined symbols and wrong types.
 */
 template <bool b> struct CompileTimeAssertion{};
 template<> struct CompileTimeAssertion<true> { static inline void Assert(){}; };
@@ -91,11 +91,12 @@ template<> struct CompileTimeAssertion<true> { static inline void Assert(){}; };
     and not having to worry about what it really is, without giving up type safety and without
     the nasty side effects that a #define might have.
 
-	Example:
-		typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t;
+    Example:
+        typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t;
 */
 template <bool cond, class true_t, class false_t> struct TernaryCondTypedef { typedef true_t eval; };
 template <class true_t, class false_t> struct TernaryCondTypedef<false, true_t, false_t> { typedef false_t eval; };
+
 
 
 /*  ---------------------------------------------------------------------------------------------------------
@@ -207,13 +208,13 @@ namespace platform
     const bool cocoa = false;
     #endif
 
-	#if defined ( linux )
-		#undef linux
-	#endif
+    #if defined ( linux )
+        #undef linux
+    #endif
 
-	#if defined ( unix )
-		#undef unix
-	#endif
+    #if defined ( unix )
+        #undef unix
+    #endif
 
     const bool windows = (id == platform_windows);
     const bool macosx  = (id == platform_macosx);
@@ -227,22 +228,74 @@ namespace platform
 
     const int bits = 8*sizeof(void*);
 
+    // Function and parameter attributes
+    // ----------------------------------
+    //
+    // These parameters possibly allow more fine-grained optimization and better diagnostics.
+    // They are implemented for the GCC compiler family and 'quiet' for all others
+    //
+    // IMPORTANT: Do not lie to the compiler when marking functions pure or const, or you will cause great evil.
+    //
+    // a) Optimization hints:
+    //
+    // cb_pure_function        Function has no observable effects other than the return value
+    //                         and the return value depends only on parameters and global variables
+    //                         ALSO: function does not throw (makes sense with the above requirement).
+    //
+    // cb_const_function       Function has no observable effects other than the return value
+    //                         and the return value depends only on parameters.
+    //                         ALSO: No external memory, including memory referenced by parameters, may be touched.
+    //                         ALSO: function does not throw (makes sense with the above requirement).
+    //
+    // cb_force_inline         What the name says. This is the strongest available inline hint (the compiler may still ignore it).
+    //
+    //
+    // b) Usage hints:
+    //
+    // cb_must_consume_result  The return value of a function must be consumed (usually because of taking ownership), i.e.
+    //                         ObjType* result = function();  ---> valid
+    //                         function();                    ---> will raise a warning
+    //
+    // cb_deprecated_function  The function is deprecated and may be removed in a future revision of the API.
+    //                         New code should not call the function. Doing so will work, but will raise a warning.
+    //
+    // cb_optional             No warning will be raised if the parameter is not used. Identical to "unused",
+    //                         but the wording sounds more like "you may omit using this" rather than "we are not using this"
+    //                         Used for interfaces or base classes to convey the message that a (generally useful) parameter is passed,
+	//                         but it is allowable to ignore the parameter (and maybe a base class implementation does just that).
+    //
+    // cb_unused               No warning will be raised if the parameter is not used.
+    //                         Use this if you want to convey that you are aware of a parameter but you are intentionally not using it.
+    //
+    // POISON(message)         If you touch this, you'll die. The message tells you why.
+    //                         ALSO: It will break the build, so nobody else must die.
 
-    #if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 2)
+    #if defined(__GNUC__) && ((100 * __GNUC__ + 10 * __GNUC_MINOR__ + __GNUC_PATCHLEVEL__) >= 332)
         const int gcc = Version<__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__>::eval;
-        #define pure_function       __attribute__ ((pure, nothrow))
-        #define const_function      __attribute__ ((const, nothrow))
-        #define force_inline        __attribute__ ((always_inline))
-        #define warn_unused         __attribute__ ((warn_unused_result))
-        #define deprecated_function __attribute__ ((deprecated))
+        #define cb_pure_function       __attribute__ ((__pure__,  __nothrow__))
+        #define cb_const_function      __attribute__ ((__const__, __nothrow__))
+        #define cb_force_inline        __attribute__ ((__always_inline__))
+        #define cb_must_consume_result __attribute__ ((__warn_unused_result__))
+        #define cb_deprecated_function __attribute__ ((__deprecated__))
+        #define cb_unused              __attribute__ ((__unused__))
+
+        #if((100 * __GNUC__ + 10 *__GNUC_MINOR__ + __GNUC_PATCHLEVEL__) >= 436)
+            #define POISON(message) __attribute__((__error__(#message))
+        #else
+            #define POISON(message)
+        #endif
     #else
         const int gcc = 0;
-        #define pure_function
-        #define const_function
-        #define force_inline
-        #define warn_unused
-        #define deprecated_function
+        #define cb_pure_function
+        #define cb_const_function
+        #define cb_force_inline
+        #define cb_must_consume_result
+        #define cb_deprecated_function
+        #define cb_unused
+        #define POISON(message)
     #endif
+
+    #define cb_optional cb_unused
 }
 
 
@@ -252,9 +305,9 @@ namespace platform
 */
 namespace sdk
 {
-    const int version = Version<1>::eval;
+    const int version             = Version<1>::eval;
     const int buildsystem_version = Version<1>::eval;
-    const int plugin_api_version = Version<1,11,10>::eval;
+    const int plugin_api_version  = Version<1,11,10>::eval;
 }
 
 
@@ -358,9 +411,9 @@ inline ID ConstructID(unsigned int i) { return ID(i); }
 // Add std::shared_ptr in a namespace, so different implementations can be used with different compilers
 namespace cb
 {
-using std::tr1::shared_ptr;
-using std::tr1::static_pointer_cast;
-using std::tr1::weak_ptr;
+    using std::tr1::shared_ptr;
+    using std::tr1::static_pointer_cast;
+    using std::tr1::weak_ptr;
 }
 
 #if defined(__APPLE__) && defined(__MACH__)

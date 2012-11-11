@@ -38,7 +38,7 @@
 #include "todosettingsdlg.h"
 
 #include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(ToDoItems);
+WX_DEFINE_OBJARRAY(ToDoItems); // TODO: find out why this causes a shadow warning for 'Item'
 
 namespace
 {
@@ -129,7 +129,7 @@ void ToDoList::OnAttach()
     Manager::Get()->RegisterEventSink(cbEVT_PROJECT_FILE_REMOVED, new cbEventFunctor<ToDoList, CodeBlocksEvent>(this, &ToDoList::OnReparse));
 }
 
-void ToDoList::OnRelease(bool /* appShutDown */)
+void ToDoList::OnRelease(cb_unused bool appShutDown)
 {
     if (m_StandAlone)
     {
@@ -181,7 +181,7 @@ void ToDoList::BuildMenu(wxMenuBar* menuBar)
 
 }
 
-void ToDoList::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* /* data */)
+void ToDoList::BuildModuleMenu(const ModuleType type, wxMenu* menu, cb_unused const FileTreeData* data)
 {
     if (!menu || !IsAttached())
         return;
@@ -266,7 +266,7 @@ void ToDoList::OnAppDoneStartup(CodeBlocksEvent& event)
     event.Skip();
 }
 
-void ToDoList::OnUpdateUI(wxUpdateUIEvent& /* event */)
+void ToDoList::OnUpdateUI(cb_unused wxUpdateUIEvent& event)
 {
     Manager::Get()->GetAppFrame()->GetMenuBar()->Check(idViewTodo, IsWindowReallyShown(m_pListLog->GetWindow()));
 }
@@ -290,18 +290,18 @@ void ToDoList::OnViewList(wxCommandEvent& event)
         {
             CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
             Manager::Get()->ProcessEvent(evtShow);
-            CodeBlocksLogEvent event(cbEVT_SWITCH_TO_LOG_WINDOW, m_pListLog);
-            Manager::Get()->ProcessEvent(event);
+            CodeBlocksLogEvent evt(cbEVT_SWITCH_TO_LOG_WINDOW, m_pListLog);
+            Manager::Get()->ProcessEvent(evt);
         }
         else
         {
-            CodeBlocksLogEvent event(cbEVT_HIDE_LOG_WINDOW, m_pListLog);
-            Manager::Get()->ProcessEvent(event);
+            CodeBlocksLogEvent evt(cbEVT_HIDE_LOG_WINDOW, m_pListLog);
+            Manager::Get()->ProcessEvent(evt);
         }
     }
 }
 
-void ToDoList::OnAddItem(wxCommandEvent& /* event */)
+void ToDoList::OnAddItem(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!ed)
@@ -361,11 +361,11 @@ void ToDoList::OnAddItem(wxCommandEvent& /* event */)
                 streamStart = token.doxygenStreamCommentStart;
                 streamEnd = token.doxygenStreamCommentEnd;
             }
-            AskTypeDlg dlg(Manager::Get()->GetAppWindow(), streamStart, streamEnd);
-            PlaceWindow(&dlg);
-            if (dlg.ShowModal() != wxID_OK)
+            AskTypeDlg asktype_dlg(Manager::Get()->GetAppWindow(), streamStart, streamEnd);
+            PlaceWindow(&asktype_dlg);
+            if (asktype_dlg.ShowModal() != wxID_OK)
                 return;
-            switch(dlg.GetTypeCorrection())
+            switch(asktype_dlg.GetTypeCorrection())
             {
                 case tcStay:
                     break; // do nothing, leave things as they are

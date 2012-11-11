@@ -73,7 +73,7 @@ void Abbreviations::OnAttach()
     m_EditorHookId = EditorHooks::RegisterHook(myhook);
 }
 
-void Abbreviations::OnRelease(bool appShutDown)
+void Abbreviations::OnRelease(cb_unused bool appShutDown)
 {
     // do de-initialization for your plugin
     // if appShutDown is true, the plugin is unloaded because Code::Blocks is being shut down,
@@ -131,25 +131,7 @@ void Abbreviations::BuildMenu(wxMenuBar* menuBar)
     }
 }
 
-void Abbreviations::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
-{
-    //Some library module is ready to display a pop-up menu.
-    //Check the parameter \"type\" and see which module it is
-    //and append any items you need in the menu...
-    //TIP: for consistency, add a separator as the first item...
-}
-
-bool Abbreviations::BuildToolBar(wxToolBar* toolBar)
-{
-    //The application is offering its toolbar for your plugin,
-    //to add any toolbar items you want...
-    //Append any items you need on the toolbar...
-
-    // return true if you add toolbar items
-    return false;
-}
-
-void Abbreviations::OnEditAutoComplete(wxCommandEvent& /*event*/)
+void Abbreviations::OnEditAutoComplete(cb_unused wxCommandEvent& event)
 {
     cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     cbStyledTextCtrl* control = editor->GetControl();

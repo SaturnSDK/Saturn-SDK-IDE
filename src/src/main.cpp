@@ -687,8 +687,6 @@ void MainFrame::ShowTips(bool forceShow)
 void MainFrame::CreateIDE()
 {
     int leftW = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left_block_width"), 200);
-//    int bottomH = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_height"), 150);
-//    SetSize(1000, 800);
     wxSize clientsize = GetClientSize();
 
     // Create CloseFullScreen Button, and hide it initially
@@ -841,7 +839,7 @@ void MainFrame::RunStartupScripts()
     }
 }
 
-void MainFrame::PluginsUpdated(cbPlugin* /*plugin*/, int /*status*/)
+void MainFrame::PluginsUpdated(cb_unused cbPlugin* plugin, cb_unused int status)
 {
     Freeze();
 
@@ -978,7 +976,6 @@ void MainFrame::CreateMenubar()
                 DoAddPlugin(plug);
             else
             {
-                AddPluginInSettingsMenu(plug);
                 AddPluginInHelpPluginsMenu(plug);
                 try
                 {
@@ -1186,10 +1183,6 @@ void MainFrame::AddPluginInPluginsMenu(cbPlugin* plugin)
                     m_PluginsMenu->GetMenuItemCount() - 2);
 }
 
-void MainFrame::AddPluginInSettingsMenu(cbPlugin* /*plugin*/)
-{
-}
-
 void MainFrame::AddPluginInHelpPluginsMenu(cbPlugin* plugin)
 {
     AddPluginInMenus(m_HelpPluginsMenu, plugin,
@@ -1275,16 +1268,29 @@ void MainFrame::LoadWindowSize()
                 Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/height"), h));
     // maximize if needed
     bool maximized = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/main_frame/layout/maximized"), true);
-    Maximize(maximized);
+    Maximize(maximized); // toggle
+
     // set size and position
+    int index = wxDisplay::GetFromWindow(this);
+    wxDisplay display(index);
     if (maximized)
     {
-        int index = wxDisplay::GetFromWindow(this);
-        wxDisplay display(index);
-        rect = display.GetClientArea();
-        rect.width-=100;
-        rect.height-=100;
+        rect = display.GetClientArea(); // apply from display, overriding settinzs above
+        rect.width  -= 100;
+        rect.height -= 100;
     }
+    else
+    {
+        // Adjust to actual screen size. This is useful for portable C::B versions,
+        // where the window might be out of screen when saving on a two-monitor
+        // system an re-opening on a one-monitor system (on Windows, at least).
+        wxRect displayRect = display.GetClientArea();
+        if (displayRect.GetWidth() <rect.GetLeft())   rect.SetLeft  (displayRect.GetLeft());
+        if (displayRect.GetWidth() <rect.GetRight())  rect.SetRight (displayRect.GetRight());
+        if (displayRect.GetHeight()<rect.GetTop())    rect.SetTop   (displayRect.GetTop());
+        if (displayRect.GetHeight()<rect.GetBottom()) rect.SetBottom(displayRect.GetBottom());
+    }
+
     SetSize(rect);
 }
 
@@ -1322,9 +1328,9 @@ void MainFrame::SaveWindowState()
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/maximized"), IsMaximized());
     if (!IsMaximized() && !IsIconized())
     {
-        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left"), GetPosition().x);
-        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/top"), GetPosition().y);
-        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/width"), GetSize().x);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left"),   GetPosition().x);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/top"),    GetPosition().y);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/width"),  GetSize().x);
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/height"), GetSize().y);
     }
 }
@@ -1622,7 +1628,6 @@ ToolbarInfo MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
 void MainFrame::DoAddPlugin(cbPlugin* plugin)
 {
     //Manager::Get()->GetLogManager()->DebugLog(_T("Adding plugin: %s"), plugin->GetInfo()->name.wx_str());
-    AddPluginInSettingsMenu(plugin);
     AddPluginInHelpPluginsMenu(plugin);
     if (plugin->GetType() == ptTool)
     {
@@ -1991,15 +1996,15 @@ void MainFrame::DoUpdateLayoutColours()
     m_LayoutManager.SetFlags((wxAUI_MGR_DEFAULT | wxAUI_MGR_ALLOW_ACTIVE_PANE | wxAUI_MGR_TRANSPARENT_DRAG | wxAUI_MGR_VENETIAN_BLINDS_HINT)& ~wxAUI_MGR_TRANSPARENT_HINT);
 #endif // #ifndef __WXGTK__
 
-    art->SetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE,   cfg->ReadInt(_T("/environment/aui/border_size"), art->GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE)));
-    art->SetMetric(wxAUI_DOCKART_SASH_SIZE,          cfg->ReadInt(_T("/environment/aui/sash_size"), art->GetMetric(wxAUI_DOCKART_SASH_SIZE)));
-    art->SetMetric(wxAUI_DOCKART_CAPTION_SIZE,       cfg->ReadInt(_T("/environment/aui/caption_size"), art->GetMetric(wxAUI_DOCKART_CAPTION_SIZE)));
-    art->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR,              cfg->ReadColour(_T("/environment/aui/active_caption_colour"), art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR)));
-    art->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR,     cfg->ReadColour(_T("/environment/aui/active_caption_gradient_colour"), art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR)));
-    art->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR,         cfg->ReadColour(_T("/environment/aui/active_caption_text_colour"), art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR)));
-    art->SetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR,            cfg->ReadColour(_T("/environment/aui/inactive_caption_colour"), art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR)));
-    art->SetColour(wxAUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR,   cfg->ReadColour(_T("/environment/aui/inactive_caption_gradient_colour"), art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR)));
-    art->SetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR,       cfg->ReadColour(_T("/environment/aui/inactive_caption_text_colour"), art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR)));
+    art->SetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE,                 cfg->ReadInt(_T("/environment/aui/border_size"), art->GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE)));
+    art->SetMetric(wxAUI_DOCKART_SASH_SIZE,                        cfg->ReadInt(_T("/environment/aui/sash_size"), art->GetMetric(wxAUI_DOCKART_SASH_SIZE)));
+    art->SetMetric(wxAUI_DOCKART_CAPTION_SIZE,                     cfg->ReadInt(_T("/environment/aui/caption_size"), art->GetMetric(wxAUI_DOCKART_CAPTION_SIZE)));
+    art->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR,            cfg->ReadColour(_T("/environment/aui/active_caption_colour"), art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR)));
+    art->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR,   cfg->ReadColour(_T("/environment/aui/active_caption_gradient_colour"), art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR)));
+    art->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR,       cfg->ReadColour(_T("/environment/aui/active_caption_text_colour"), art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR)));
+    art->SetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR,          cfg->ReadColour(_T("/environment/aui/inactive_caption_colour"), art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR)));
+    art->SetColour(wxAUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR, cfg->ReadColour(_T("/environment/aui/inactive_caption_gradient_colour"), art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR)));
+    art->SetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR,     cfg->ReadColour(_T("/environment/aui/inactive_caption_text_colour"), art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR)));
 
     DoUpdateLayout();
 }
@@ -2657,7 +2662,7 @@ bool MainFrame::OnDropFiles(wxCoord /*x*/, wxCoord /*y*/, const wxArrayString& f
     return success;
 }
 
-void MainFrame::OnFileNew(wxCommandEvent& /*event*/)
+void MainFrame::OnFileNew(cb_unused wxCommandEvent& event)
 {
     wxMenu* popup = nullptr;
     wxMenuBar* bar = GetMenuBar();
@@ -2730,7 +2735,7 @@ void MainFrame::DoOnFileOpen(bool bProject)
     }
 }
 
-void MainFrame::OnFileOpen(wxCommandEvent& /*event*/)
+void MainFrame::OnFileOpen(cb_unused wxCommandEvent& event)
 {
     DoOnFileOpen(false); // through file menu (not sure if we are opening a project)
 }
@@ -2743,7 +2748,7 @@ void MainFrame::OnFileReopenProject(wxCommandEvent& event)
         AskToRemoveFileFromHistory(m_pProjectsHistory, id);
 }
 
-void MainFrame::OnFileOpenRecentProjectClearHistory(wxCommandEvent& /*event*/)
+void MainFrame::OnFileOpenRecentProjectClearHistory(cb_unused wxCommandEvent& event)
 {
     while (m_pProjectsHistory->GetCount())
         m_pProjectsHistory->RemoveFileFromHistory(0);
@@ -2764,7 +2769,7 @@ void MainFrame::OnFileReopen(wxCommandEvent& event)
         AskToRemoveFileFromHistory(m_pFilesHistory, id);
 }
 
-void MainFrame::OnFileOpenRecentClearHistory(wxCommandEvent& /*event*/)
+void MainFrame::OnFileOpenRecentClearHistory(cb_unused wxCommandEvent& event)
 {
     while (m_pFilesHistory->GetCount())
         m_pFilesHistory->RemoveFileFromHistory(0);
@@ -2777,7 +2782,7 @@ void MainFrame::OnFileOpenRecentClearHistory(wxCommandEvent& /*event*/)
         ((StartHerePage*)sh)->Reload();
 }
 
-void MainFrame::OnFileSave(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSave(cb_unused wxCommandEvent& event)
 {
     if (!Manager::Get()->GetEditorManager()->SaveActive())
     {
@@ -2788,19 +2793,19 @@ void MainFrame::OnFileSave(wxCommandEvent& /*event*/)
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFileSaveAs(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveAs(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->SaveActiveAs();
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFileSaveAllFiles(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveAllFiles(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->SaveAll();
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFileSaveProject(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveProject(cb_unused wxCommandEvent& event)
 {
     // no need to call SaveActiveProjectAs(), because this is handled in cbProject::Save()
     if (Manager::Get()->GetProjectManager()->SaveActiveProject())
@@ -2809,7 +2814,7 @@ void MainFrame::OnFileSaveProject(wxCommandEvent& /*event*/)
     DoUpdateAppTitle();
 }
 
-void MainFrame::OnFileSaveProjectAs(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveProjectAs(cb_unused wxCommandEvent& event)
 {
     if (Manager::Get()->GetProjectManager()->SaveActiveProjectAs())
         AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetActiveProject()->GetFilename());
@@ -2817,14 +2822,14 @@ void MainFrame::OnFileSaveProjectAs(wxCommandEvent& /*event*/)
     DoUpdateAppTitle();
 }
 
-void MainFrame::OnFileSaveProjectAllProjects(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveProjectAllProjects(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetProjectManager()->SaveAllProjects();
     DoUpdateStatusBar();
     DoUpdateAppTitle();
 }
 
-void MainFrame::OnFileSaveAll(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveAll(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetConfigManager(_T("app"))->Flush();
     Manager::Get()->GetEditorManager()->SaveAll();
@@ -2840,12 +2845,12 @@ void MainFrame::OnFileSaveAll(wxCommandEvent& /*event*/)
     DoUpdateAppTitle();
 }
 
-void MainFrame::OnFileSaveProjectTemplate(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveProjectTemplate(cb_unused wxCommandEvent& event)
 {
     TemplateManager::Get()->SaveUserTemplate(Manager::Get()->GetProjectManager()->GetActiveProject());
 }
 
-void MainFrame::OnFileCloseProject(wxCommandEvent& /*event*/)
+void MainFrame::OnFileCloseProject(cb_unused wxCommandEvent& event)
 {
     // we 're not actually shutting down here, but we want to check if the
     // active project is still opening files (still busy)
@@ -2858,7 +2863,7 @@ void MainFrame::OnFileCloseProject(wxCommandEvent& /*event*/)
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFileCloseAllProjects(wxCommandEvent& /*event*/)
+void MainFrame::OnFileCloseAllProjects(cb_unused wxCommandEvent& event)
 {
     if (!ProjectManager::CanShutdown() || !EditorManager::CanShutdown())
     {
@@ -2869,32 +2874,32 @@ void MainFrame::OnFileCloseAllProjects(wxCommandEvent& /*event*/)
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFileImportProjectDevCpp(wxCommandEvent& /*event*/)
+void MainFrame::OnFileImportProjectDevCpp(cb_unused wxCommandEvent& event)
 {
     OpenGeneric(ShowOpenFileDialog(_("Import Dev-C++ project"), FileFilters::GetFilterString(_T('.') + FileFilters::DEVCPP_EXT)), false);
 }
 
-void MainFrame::OnFileImportProjectMSVC(wxCommandEvent& /*event*/)
+void MainFrame::OnFileImportProjectMSVC(cb_unused wxCommandEvent& event)
 {
     OpenGeneric(ShowOpenFileDialog(_("Import MS Visual C++ 6.0 project"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC6_EXT)), false);
 }
 
-void MainFrame::OnFileImportProjectMSVCWksp(wxCommandEvent& /*event*/)
+void MainFrame::OnFileImportProjectMSVCWksp(cb_unused wxCommandEvent& event)
 {
     OpenGeneric(ShowOpenFileDialog(_("Import MS Visual C++ 6.0 workspace"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC6_WORKSPACE_EXT)), false);
 }
 
-void MainFrame::OnFileImportProjectMSVS(wxCommandEvent& /*event*/)
+void MainFrame::OnFileImportProjectMSVS(cb_unused wxCommandEvent& event)
 {
     OpenGeneric(ShowOpenFileDialog(_("Import MS Visual Studio 7.0+ project"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC7_EXT)), false);
 }
 
-void MainFrame::OnFileImportProjectMSVSWksp(wxCommandEvent& /*event*/)
+void MainFrame::OnFileImportProjectMSVSWksp(cb_unused wxCommandEvent& event)
 {
     OpenGeneric(ShowOpenFileDialog(_("Import MS Visual Studio 7.0+ solution"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC7_WORKSPACE_EXT)), false);
 }
 
-void MainFrame::OnFileOpenDefWorkspace(wxCommandEvent& /*event*/)
+void MainFrame::OnFileOpenDefWorkspace(cb_unused wxCommandEvent& event)
 {
     ProjectManager *pman = Manager::Get()->GetProjectManager();
     if (!pman->GetWorkspace()->IsDefault() && !pman->LoadWorkspace())
@@ -2905,49 +2910,49 @@ void MainFrame::OnFileOpenDefWorkspace(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnFileSaveWorkspace(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveWorkspace(cb_unused wxCommandEvent& event)
 {
     if (Manager::Get()->GetProjectManager()->SaveWorkspace())
         AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename());
 }
 
-void MainFrame::OnFileSaveWorkspaceAs(wxCommandEvent& /*event*/)
+void MainFrame::OnFileSaveWorkspaceAs(cb_unused wxCommandEvent& event)
 {
     if (Manager::Get()->GetProjectManager()->SaveWorkspaceAs(_T("")))
         AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename());
 }
 
-void MainFrame::OnFileCloseWorkspace(wxCommandEvent& /*event*/)
+void MainFrame::OnFileCloseWorkspace(cb_unused wxCommandEvent& event)
 {
     DoCloseCurrentWorkspace();
 }
 
-void MainFrame::OnFileClose(wxCommandEvent& WXUNUSED(event))
+void MainFrame::OnFileClose(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->CloseActive();
     DoUpdateStatusBar();
     Refresh();
 }
 
-void MainFrame::OnFileCloseAll(wxCommandEvent& WXUNUSED(event))
+void MainFrame::OnFileCloseAll(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->CloseAll();
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFileNext(wxCommandEvent& /*event*/)
+void MainFrame::OnFileNext(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->ActivateNext();
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFilePrev(wxCommandEvent& /*event*/)
+void MainFrame::OnFilePrev(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->ActivatePrevious();
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnFilePrint(wxCommandEvent& /*event*/)
+void MainFrame::OnFilePrint(cb_unused wxCommandEvent& event)
 {
     PrintDialog dlg(this);
     PlaceWindow(&dlg);
@@ -2955,7 +2960,7 @@ void MainFrame::OnFilePrint(wxCommandEvent& /*event*/)
         Manager::Get()->GetEditorManager()->Print(dlg.GetPrintScope(), dlg.GetPrintColourMode(), dlg.GetPrintLineNumbers());
 }
 
-void MainFrame::OnFileQuit(wxCommandEvent& WXUNUSED(event))
+void MainFrame::OnFileQuit(cb_unused wxCommandEvent& event)
 {
     Close(true);
 }
@@ -3020,6 +3025,7 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     Manager::Get()->GetLogManager()->DebugLog(_T("Deinitializing plugins..."));
     CodeBlocksEvent evtShutdown(cbEVT_APP_START_SHUTDOWN);
     Manager::Get()->ProcessEvent(evtShutdown);
+    Manager::Yield();
 
     if (!Manager::IsBatchBuild())
         SaveWindowState();
@@ -3050,195 +3056,195 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     Destroy();
 }
 
-void MainFrame::OnEditSwapHeaderSource(wxCommandEvent& /*event*/)
+void MainFrame::OnEditSwapHeaderSource(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->SwapActiveHeaderSource();
     DoUpdateStatusBar();
 }
 
-void MainFrame::OnEditGotoMatchingBrace(wxCommandEvent& /*event*/)
+void MainFrame::OnEditGotoMatchingBrace(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GotoMatchingBrace();
 }
 
-void MainFrame::OnEditBookmarksToggle(wxCommandEvent& /*event*/)
+void MainFrame::OnEditBookmarksToggle(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->ToggleBookmark();
 }
 
-void MainFrame::OnEditBookmarksNext(wxCommandEvent& /*event*/)
+void MainFrame::OnEditBookmarksNext(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->GotoNextBookmark();
 }
 
-void MainFrame::OnEditBookmarksPrevious(wxCommandEvent& /*event*/)
+void MainFrame::OnEditBookmarksPrevious(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->GotoPreviousBookmark();
 }
 
-void MainFrame::OnEditUndo(wxCommandEvent& /*event*/)
+void MainFrame::OnEditUndo(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->Undo();
 }
 
-void MainFrame::OnEditRedo(wxCommandEvent& /*event*/)
+void MainFrame::OnEditRedo(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->Redo();
 }
 
-void MainFrame::OnEditClearHistory(wxCommandEvent& /*event*/)
+void MainFrame::OnEditClearHistory(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->ClearHistory();
 }
 
-void MainFrame::OnEditCopy(wxCommandEvent& /*event*/)
+void MainFrame::OnEditCopy(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->Copy();
 }
 
-void MainFrame::OnEditCut(wxCommandEvent& /*event*/)
+void MainFrame::OnEditCut(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->Cut();
 }
 
-void MainFrame::OnEditPaste(wxCommandEvent& /*event*/)
+void MainFrame::OnEditPaste(cb_unused wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->Paste();
 }
 
-void MainFrame::OnEditParaUp(wxCommandEvent& /*event*/)
+void MainFrame::OnEditParaUp(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->ParaUp();
 }
 
-void MainFrame::OnEditParaUpExtend(wxCommandEvent& /*event*/)
+void MainFrame::OnEditParaUpExtend(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->ParaUpExtend();
 }
 
-void MainFrame::OnEditParaDown(wxCommandEvent& /*event*/)
+void MainFrame::OnEditParaDown(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->ParaDown();
 }
 
-void MainFrame::OnEditParaDownExtend(wxCommandEvent& /*event*/)
+void MainFrame::OnEditParaDownExtend(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->ParaDownExtend();
 }
 
-void MainFrame::OnEditWordPartLeft(wxCommandEvent& /*event*/)
+void MainFrame::OnEditWordPartLeft(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->WordPartLeft();
 }
 
-void MainFrame::OnEditWordPartLeftExtend(wxCommandEvent& /*event*/)
+void MainFrame::OnEditWordPartLeftExtend(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->WordPartLeftExtend();
 }
 
-void MainFrame::OnEditWordPartRight(wxCommandEvent& /*event*/)
+void MainFrame::OnEditWordPartRight(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->WordPartRight();
 }
 
-void MainFrame::OnEditWordPartRightExtend(wxCommandEvent& /*event*/)
+void MainFrame::OnEditWordPartRightExtend(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->WordPartRightExtend();
 }
 
-void MainFrame::OnEditZoomIn(wxCommandEvent& /*event*/)
+void MainFrame::OnEditZoomIn(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->ZoomIn();
 }
 
-void MainFrame::OnEditZoomOut(wxCommandEvent& /*event*/)
+void MainFrame::OnEditZoomOut(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->ZoomOut();
 }
 
-void MainFrame::OnEditZoomReset(wxCommandEvent& /*event*/)
+void MainFrame::OnEditZoomReset(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->SetZoom(0);
 }
 
-void MainFrame::OnEditLineCut(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLineCut(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->LineCut();
 }
 
-void MainFrame::OnEditLineDelete(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLineDelete(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->LineDelete();
 }
 
-void MainFrame::OnEditLineDuplicate(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLineDuplicate(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->LineDuplicate();
 }
 
-void MainFrame::OnEditLineTranspose(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLineTranspose(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->LineTranspose();
 }
 
-void MainFrame::OnEditLineCopy(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLineCopy(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->LineCopy();
 }
 
-void MainFrame::OnEditLinePaste(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLinePaste(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3301,14 +3307,14 @@ void MainFrame::OnEditLineMove(wxCommandEvent& event)
     ctrl->SetSelectionEnd(endPos);
 }
 
-void MainFrame::OnEditUpperCase(wxCommandEvent& /*event*/)
+void MainFrame::OnEditUpperCase(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GetControl()->UpperCase();
 }
 
-void MainFrame::OnEditLowerCase(wxCommandEvent& /*event*/)
+void MainFrame::OnEditLowerCase(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3334,7 +3340,7 @@ void MainFrame::OnEditGotoLineEnd(wxCommandEvent& event)
     }
 }
 
-void MainFrame::OnEditSelectAll(wxCommandEvent& /*event*/)
+void MainFrame::OnEditSelectAll(cb_unused wxCommandEvent& event)
 {
     EditorBase* eb = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (eb)
@@ -3345,7 +3351,7 @@ void MainFrame::OnEditSelectAll(wxCommandEvent& /*event*/)
  * now more suitingly named OnEditToggleCommentSelected (because that's what
  * it does :)
  */
-void MainFrame::OnEditCommentSelected(wxCommandEvent& /*event*/)
+void MainFrame::OnEditCommentSelected(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3395,7 +3401,7 @@ void MainFrame::OnEditCommentSelected(wxCommandEvent& /*event*/)
 }
 
 /* See above (OnEditCommentSelected) for details. */
-void MainFrame::OnEditUncommentSelected(wxCommandEvent& /*event*/)
+void MainFrame::OnEditUncommentSelected(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3481,7 +3487,7 @@ void MainFrame::OnEditUncommentSelected(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& /*event*/)
+void MainFrame::OnEditToggleCommentSelected(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3537,7 +3543,7 @@ void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& /*event*/)
+void MainFrame::OnEditStreamCommentSelected(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3611,7 +3617,7 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnEditBoxCommentSelected(wxCommandEvent& /*event*/)
+void MainFrame::OnEditBoxCommentSelected(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3710,42 +3716,42 @@ void MainFrame::OnEditHighlightMode(wxCommandEvent& event)
     }
 }
 
-void MainFrame::OnEditFoldAll(wxCommandEvent& /*event*/)
+void MainFrame::OnEditFoldAll(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->FoldAll();
 }
 
-void MainFrame::OnEditUnfoldAll(wxCommandEvent& /*event*/)
+void MainFrame::OnEditUnfoldAll(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->UnfoldAll();
 }
 
-void MainFrame::OnEditToggleAllFolds(wxCommandEvent& /*event*/)
+void MainFrame::OnEditToggleAllFolds(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->ToggleAllFolds();
 }
 
-void MainFrame::OnEditFoldBlock(wxCommandEvent& /*event*/)
+void MainFrame::OnEditFoldBlock(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->FoldBlockFromLine();
 }
 
-void MainFrame::OnEditUnfoldBlock(wxCommandEvent& /*event*/)
+void MainFrame::OnEditUnfoldBlock(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->UnfoldBlockFromLine();
 }
 
-void MainFrame::OnEditToggleFoldBlock(wxCommandEvent& /*event*/)
+void MainFrame::OnEditToggleFoldBlock(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -3821,7 +3827,7 @@ void MainFrame::OnViewLayout(wxCommandEvent& event)
     LoadViewLayout(m_PluginIDsMap[event.GetId()]);
 }
 
-void MainFrame::OnViewLayoutSave(wxCommandEvent& /*event*/)
+void MainFrame::OnViewLayoutSave(cb_unused wxCommandEvent& event)
 {
     wxString def = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/main_frame/layout/default"));
     wxString name = wxGetTextFromUser(_("Enter the name for this perspective"), _("Save current perspective"), def);
@@ -3832,7 +3838,7 @@ void MainFrame::OnViewLayoutSave(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnViewLayoutDelete(wxCommandEvent& /*event*/)
+void MainFrame::OnViewLayoutDelete(cb_unused wxCommandEvent& event)
 {
     if (m_LastLayoutName == gDefaultLayout)
     {
@@ -3899,7 +3905,7 @@ void MainFrame::OnViewLayoutDelete(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnNotebookDoubleClick(CodeBlocksEvent& /*event*/)
+void MainFrame::OnNotebookDoubleClick(cb_unused CodeBlocksEvent& event)
 {
     if (m_LastLayoutName == gMinimalLayout)
         LoadViewLayout(m_PreviousLayoutName.IsEmpty()?Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/environment/view/layout_to_toggle"),gDefaultLayout):m_PreviousLayoutName);
@@ -3911,12 +3917,12 @@ void MainFrame::OnNotebookDoubleClick(CodeBlocksEvent& /*event*/)
     }
 }
 
-void MainFrame::OnViewScriptConsole(wxCommandEvent& /*event*/)
+void MainFrame::OnViewScriptConsole(cb_unused wxCommandEvent& event)
 {
     ShowHideScriptConsole();
 }
 
-void MainFrame::OnViewHideEditorTabs(wxCommandEvent& /*event*/)
+void MainFrame::OnViewHideEditorTabs(cb_unused wxCommandEvent& event)
 {
 	cbAuiNotebook* nb = Manager::Get()->GetEditorManager()->GetNotebook();
 	if (nb)
@@ -3954,7 +3960,7 @@ void MainFrame::OnSearchReplace(wxCommandEvent& event)
     Manager::Get()->GetEditorManager()->ShowFindDialog(true, bDoMultipleFiles);
 }
 
-void MainFrame::OnSearchGotoLine(wxCommandEvent& /*event*/)
+void MainFrame::OnSearchGotoLine(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!ed)
@@ -3982,14 +3988,14 @@ void MainFrame::OnSearchGotoLine(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnSearchGotoNextChanged(wxCommandEvent& /*event*/)
+void MainFrame::OnSearchGotoNextChanged(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
         ed->GotoNextChanged();
 }
 
-void MainFrame::OnSearchGotoPrevChanged(wxCommandEvent& /*event*/)
+void MainFrame::OnSearchGotoPrevChanged(cb_unused wxCommandEvent& event)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (ed)
@@ -4003,7 +4009,7 @@ void MainFrame::OnHelpAbout(wxCommandEvent& WXUNUSED(event))
     dlg.ShowModal();
 }
 
-void MainFrame::OnHelpTips(wxCommandEvent& /*event*/)
+void MainFrame::OnHelpTips(cb_unused wxCommandEvent& event)
 {
     ShowTips(true);
 }
@@ -4320,7 +4326,7 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
     }
 }
 
-void MainFrame::OnToggleStatusBar(wxCommandEvent& /*event*/)
+void MainFrame::OnToggleStatusBar(cb_unused wxCommandEvent& event)
 {
     cbStatusBar* sb = (cbStatusBar*)GetStatusBar();
     if (!sb) return;
@@ -4335,7 +4341,7 @@ void MainFrame::OnToggleStatusBar(wxCommandEvent& /*event*/)
     DoUpdateLayout();
 }
 
-void MainFrame::OnFocusEditor(wxCommandEvent& /*event*/)
+void MainFrame::OnFocusEditor(cb_unused wxCommandEvent& event)
 {
     EditorManager* edman = Manager::Get()->GetEditorManager();
     cbAuiNotebook* nb = edman?edman->GetNotebook():nullptr;
@@ -4343,20 +4349,20 @@ void MainFrame::OnFocusEditor(wxCommandEvent& /*event*/)
         nb->FocusActiveTabCtrl();
 }
 
-void MainFrame::OnFocusManagement(wxCommandEvent& /*event*/)
+void MainFrame::OnFocusManagement(cb_unused wxCommandEvent& event)
 {
     cbAuiNotebook* nb = m_pPrjMan ? m_pPrjMan->GetNotebook():nullptr;
     if (nb)
         nb->FocusActiveTabCtrl();
 }
 
-void MainFrame::OnFocusLogsAndOthers(wxCommandEvent& /*event*/)
+void MainFrame::OnFocusLogsAndOthers(cb_unused wxCommandEvent& event)
 {
     if (m_pInfoPane)
         m_pInfoPane->FocusActiveTabCtrl();
 }
 
-void MainFrame::OnSwitchTabs(wxCommandEvent& /*event*/)
+void MainFrame::OnSwitchTabs(cb_unused wxCommandEvent& event)
 {
     // Get the notebook from the editormanager:
     cbAuiNotebook* nb = Manager::Get()->GetEditorManager()->GetNotebook();
@@ -4426,7 +4432,7 @@ void MainFrame::OnSwitchTabs(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnToggleStartPage(wxCommandEvent& /*event*/)
+void MainFrame::OnToggleStartPage(cb_unused wxCommandEvent& event)
 {
 
     int toggle=-1;
@@ -4437,7 +4443,7 @@ void MainFrame::OnToggleStartPage(wxCommandEvent& /*event*/)
     ShowHideStartPage(false,toggle);
 }
 
-void MainFrame::OnToggleFullScreen(wxCommandEvent& /*event*/)
+void MainFrame::OnToggleFullScreen(cb_unused wxCommandEvent& event)
 {
     ShowFullScreen( !IsFullScreen(), wxFULLSCREEN_NOTOOLBAR// | wxFULLSCREEN_NOSTATUSBAR
                     | wxFULLSCREEN_NOBORDER | wxFULLSCREEN_NOCAPTION );
@@ -4509,7 +4515,7 @@ void MainFrame::OnPluginUnloaded(CodeBlocksEvent& event)
     PluginsUpdated(plugin, Unloaded);
 }
 
-void MainFrame::OnSettingsEnvironment(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsEnvironment(cb_unused wxCommandEvent& event)
 {
     bool tbarsmall = m_SmallToolBar;
     bool needRestart = false;
@@ -4530,17 +4536,17 @@ void MainFrame::OnSettingsEnvironment(wxCommandEvent& /*event*/)
         cbMessageBox(_("Code::Blocks needs to be restarted for the changes to take effect."), _("Information"), wxICON_INFORMATION);
 }
 
-void MainFrame::OnGlobalUserVars(wxCommandEvent& /*event*/)
+void MainFrame::OnGlobalUserVars(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetUserVariableManager()->Configure();
 }
 
-void MainFrame::OnSettingsEditor(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsEditor(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->Configure();
 }
 
-void MainFrame::OnSettingsCompiler(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsCompiler(cb_unused wxCommandEvent& event)
 {
     CompilerSettingsDlg dlg(this);
     PlaceWindow(&dlg);
@@ -4552,7 +4558,7 @@ void MainFrame::OnSettingsCompiler(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnSettingsDebugger(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsDebugger(cb_unused wxCommandEvent& event)
 {
     DebuggerSettingsDlg dlg(this);
     PlaceWindow(&dlg);
@@ -4564,12 +4570,12 @@ void MainFrame::OnSettingsDebugger(wxCommandEvent& /*event*/)
     }
 }
 
-void MainFrame::OnSettingsPlugins(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsPlugins(cb_unused wxCommandEvent& event)
 {
     Manager::Get()->GetPluginManager()->Configure();
 }
 
-void MainFrame::OnSettingsScripting(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsScripting(cb_unused wxCommandEvent& event)
 {
     ScriptingSettingsDlg dlg(this);
     if (dlg.ShowModal() == wxID_OK)
@@ -4632,7 +4638,7 @@ void MainFrame::OnPageChanged(wxNotebookEvent& event)
     event.Skip();
 }
 
-void MainFrame::OnShiftTab(wxCommandEvent& /*event*/)
+void MainFrame::OnShiftTab(cb_unused wxCommandEvent& event)
 {
     // Must make sure it's cbEditor and not EditorBase
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
@@ -4640,7 +4646,7 @@ void MainFrame::OnShiftTab(wxCommandEvent& /*event*/)
         ed->DoUnIndent();
 }
 
-void MainFrame::OnCtrlAltTab(wxCommandEvent& /*event*/)
+void MainFrame::OnCtrlAltTab(cb_unused wxCommandEvent& event)
 {
     wxCommandEvent dummy;
     switch (m_LastCtrlAltTabWindow)
@@ -4730,13 +4736,13 @@ void MainFrame::OnRequestHideDockWindow(CodeBlocksDockEvent& event)
     Manager::Get()->ProcessEvent(evt);
 }
 
-void MainFrame::OnDockWindowVisibility(CodeBlocksDockEvent& /*event*/)
+void MainFrame::OnDockWindowVisibility(cb_unused CodeBlocksDockEvent& event)
 {
 //    if (m_ScriptConsoleID != -1 && event.GetId() == m_ScriptConsoleID)
 //        ShowHideScriptConsole();
 }
 
-void MainFrame::OnLayoutUpdate(CodeBlocksLayoutEvent& WXUNUSED(event))
+void MainFrame::OnLayoutUpdate(cb_unused CodeBlocksLayoutEvent& event)
 {
     DoFixToolbarsLayout();
     DoUpdateLayout();
@@ -4809,7 +4815,7 @@ void MainFrame::OnGetActiveLogWindow(CodeBlocksLogEvent& event)
         event.window = m_pInfoPane->GetWindow(page_index);
 }
 
-void MainFrame::OnShowLogManager(CodeBlocksLogEvent& /*event*/)
+void MainFrame::OnShowLogManager(cb_unused CodeBlocksLogEvent& event)
 {
     if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false))
         return;
@@ -4818,7 +4824,7 @@ void MainFrame::OnShowLogManager(CodeBlocksLogEvent& /*event*/)
     DoUpdateLayout();
 }
 
-void MainFrame::OnHideLogManager(CodeBlocksLogEvent& /*event*/)
+void MainFrame::OnHideLogManager(cb_unused CodeBlocksLogEvent& event)
 {
     if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false) ||
            m_AutoHideLockCounter > 0)
@@ -4828,14 +4834,14 @@ void MainFrame::OnHideLogManager(CodeBlocksLogEvent& /*event*/)
     DoUpdateLayout();
 }
 
-void MainFrame::OnLockLogManager(CodeBlocksLogEvent& /*event*/)
+void MainFrame::OnLockLogManager(cb_unused CodeBlocksLogEvent& event)
 {
     if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false))
         return;
     ++m_AutoHideLockCounter;
 }
 
-void MainFrame::OnUnlockLogManager(CodeBlocksLogEvent& /*event*/)
+void MainFrame::OnUnlockLogManager(cb_unused CodeBlocksLogEvent& event)
 {
     if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false) &&
            m_AutoHideLockCounter > 0)

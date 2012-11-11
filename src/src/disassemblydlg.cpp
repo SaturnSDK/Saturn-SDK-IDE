@@ -169,12 +169,14 @@ void DisassemblyDlg::CenterLine(unsigned long int lineno)
         firstdispline = 0 ; //or is it zero?
     m_pCode->SetFirstVisibleLine(firstdispline) ;
 }
+
 void DisassemblyDlg::CenterCurrentLine()
 {
     int displine;
     displine = m_pCode->GetCurrentLine() ;
     CenterLine(displine);
 }
+
 bool DisassemblyDlg::SetActiveAddress(unsigned long int addr)
 {
     if (m_HasActiveAddr && addr == m_LastActiveAddr)
@@ -213,7 +215,7 @@ bool DisassemblyDlg::SetActiveAddress(unsigned long int addr)
     return m_HasActiveAddr ;
 }
 
-void DisassemblyDlg::OnAdjustLine(wxCommandEvent& event)
+void DisassemblyDlg::OnAdjustLine(cb_unused wxCommandEvent& event)
 {
     int los = m_pCode->LinesOnScreen();
 
@@ -230,7 +232,7 @@ void DisassemblyDlg::OnAdjustLine(wxCommandEvent& event)
     CenterLine(displine);
 }
 
-void DisassemblyDlg::OnSave(wxCommandEvent& event)
+void DisassemblyDlg::OnSave(cb_unused wxCommandEvent& event)
 {
     wxFileDialog dlg(this,
                      _("Save as text file"),
@@ -259,14 +261,14 @@ void DisassemblyDlg::OnSave(wxCommandEvent& event)
         cbMessageBox(_("Could not save file..."), _("Error"), wxICON_ERROR);
 }
 
-void DisassemblyDlg::OnRefresh(wxCommandEvent& event)
+void DisassemblyDlg::OnRefresh(cb_unused wxCommandEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     cbAssert(plugin);
     plugin->RequestUpdate(cbDebuggerPlugin::Disassembly);
 }
 
-void DisassemblyDlg::OnMixedModeCB(wxCommandEvent &event)
+void DisassemblyDlg::OnMixedModeCB(cb_unused wxCommandEvent &event)
 {
     DebuggerManager &manager = *Manager::Get()->GetDebuggerManager();
     bool newMode = !manager.IsDisassemblyMixedMode();

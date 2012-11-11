@@ -94,7 +94,7 @@ void ThreadsDlg::Reload()
 //    m_list->Thaw();
 //}
 
-void ThreadsDlg::OnListRightClick(wxListEvent& event)
+void ThreadsDlg::OnListRightClick(cb_unused wxListEvent& event)
 {
     if (m_list->GetSelectedItemCount() == 0)
         return;
@@ -103,13 +103,13 @@ void ThreadsDlg::OnListRightClick(wxListEvent& event)
     m_list->PopupMenu(&m);
 }
 
-void ThreadsDlg::OnListDoubleClick(wxListEvent& /*event*/)
+void ThreadsDlg::OnListDoubleClick(cb_unused wxListEvent& /* event */) // TODO: verify this please
 {
-    wxCommandEvent event;
+    wxCommandEvent event; // is ignoring the original event and using an empty event really what is intended?
     OnSwitchThread(event);
 }
 
-void ThreadsDlg::OnSwitchThread(wxCommandEvent& event)
+void ThreadsDlg::OnSwitchThread(cb_unused wxCommandEvent& event)
 {
     if (m_list->GetSelectedItemCount() == 0)
         return;

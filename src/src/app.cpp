@@ -102,7 +102,7 @@ wxConnectionBase* DDEServer::OnAcceptConnection(const wxString& topic)
     return topic == DDE_TOPIC ? new DDEConnection(m_Frame) : 0L;
 }
 
-bool DDEConnection::OnExecute(const wxString& /*topic*/, wxChar *data, int /*size*/, wxIPCFormat /*format*/)
+bool DDEConnection::OnExecute(cb_unused const wxString& topic, wxChar *data, cb_unused int size, cb_unused wxIPCFormat format)
 {
     wxString strData(data);
 
@@ -263,7 +263,7 @@ class Splash
 };
 }; // namespace
 
-IMPLEMENT_APP(CodeBlocksApp)
+IMPLEMENT_APP(CodeBlocksApp) // TODO: This gives a "redundant declaration" warning, though I think it's false. Dig through macro and check.
 
 BEGIN_EVENT_TABLE(CodeBlocksApp, wxApp)
     EVT_ACTIVATE_APP(CodeBlocksApp::OnAppActivate)
@@ -467,18 +467,22 @@ void CodeBlocksApp::InitLocale()
     path.Append(_T('/'));
     path.Append(info->CanonicalName);
 
-    wxDir dir(path);
+    if ( !wxDirExists(path) )
+        return;
 
+    wxDir dir(path);
     if (!dir.IsOpened())
         return;
 
     wxString moName;
 
     if (dir.GetFirst(&moName, _T("*.mo"), wxDIR_FILES))
-    do
     {
-        m_locale.AddCatalog(moName);
-    } while (dir.GetNext(&moName));
+        do
+        {
+            m_locale.AddCatalog(moName);
+        } while (dir.GetNext(&moName));
+    }
 }
 
 bool CodeBlocksApp::OnInit()

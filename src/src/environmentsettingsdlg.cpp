@@ -205,15 +205,20 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
         XRCCTRL(*this, "chkI18N", wxCheckBox)->SetValue(i18n);
 
     wxString locPath = ConfigManager::GetDataFolder() + _T("/locale");
-    wxDir    locDir(locPath);
-    wxString locFName;
-    if (wxDirExists(locPath) && locDir.IsOpened() && locDir.GetFirst(&locFName/*, wxEmptyString, wxDIR_DIRS*/))
-    do
+    if ( wxDirExists(locPath) )
     {
-        const wxLanguageInfo* info = wxLocale::FindLanguageInfo(locFName);
-        if (info)
-            XRCCTRL(*this, "cbxLanguage", wxComboBox)->Append(info->Description);
-    } while ( locDir.GetNext(&locFName) );
+        wxString locFName;
+        wxDir    locDir(locPath);
+        if ( locDir.IsOpened() && locDir.GetFirst(&locFName/*, wxEmptyString, wxDIR_DIRS*/) )
+        {
+            do
+            {
+                const wxLanguageInfo* info = wxLocale::FindLanguageInfo(locFName);
+                if (info)
+                    XRCCTRL(*this, "cbxLanguage", wxComboBox)->Append(info->Description);
+            } while ( locDir.GetNext(&locFName) );
+        }
+    }
 
     XRCCTRL(*this, "cbxLanguage", wxComboBox)->Enable(i18n);
 
@@ -356,7 +361,7 @@ void EnvironmentSettingsDlg::UpdateListbookImages()
     XRCCTRL(*this, "pnlTitleInfo", wxPanel)->Layout();
 }
 
-void EnvironmentSettingsDlg::OnPageChanging(wxListbookEvent& /*event*/)
+void EnvironmentSettingsDlg::OnPageChanging(cb_unused wxListbookEvent& event)
 {
 }
 
@@ -367,7 +372,7 @@ void EnvironmentSettingsDlg::OnPageChanged(wxListbookEvent& event)
         UpdateListbookImages();
 }
 
-void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& /*event*/)
+void EnvironmentSettingsDlg::OnSetAssocs(cb_unused wxCommandEvent& event)
 {
 #ifdef __WXMSW__
     Associations::SetCore();
@@ -375,7 +380,7 @@ void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& /*event*/)
 #endif
 }
 
-void EnvironmentSettingsDlg::OnManageAssocs(wxCommandEvent& /*event*/)
+void EnvironmentSettingsDlg::OnManageAssocs(cb_unused wxCommandEvent& event)
 {
 #ifdef __WXMSW__
     ManageAssocsDialog dlg(this);
@@ -399,7 +404,7 @@ void EnvironmentSettingsDlg::OnChooseColour(wxCommandEvent& event)
     }
 }
 
-void EnvironmentSettingsDlg::OnResetDefaultColours(wxCommandEvent& /*event*/)
+void EnvironmentSettingsDlg::OnResetDefaultColours(cb_unused wxCommandEvent& event)
 {
     wxAuiDockArt* art = new wxAuiDefaultDockArt;
 
@@ -416,7 +421,7 @@ void EnvironmentSettingsDlg::OnResetDefaultColours(wxCommandEvent& /*event*/)
     delete art;
 }
 
-void EnvironmentSettingsDlg::OnAutoHide(wxCommandEvent& /*event*/)
+void EnvironmentSettingsDlg::OnAutoHide(cb_unused wxCommandEvent& event)
 {
     bool en = XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->GetValue();
     XRCCTRL(*this, "chkAutoShowMessagesOnSearch",   wxCheckBox)->Enable(en);
@@ -429,13 +434,13 @@ void EnvironmentSettingsDlg::OnUseIpcCheck(wxCommandEvent& event)
     XRCCTRL(*this, "chkRaiseViaIPC", wxCheckBox)->Enable(event.IsChecked());
 }
 
-void EnvironmentSettingsDlg::OnDblClickMaximizes(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnDblClickMaximizes(cb_unused wxCommandEvent& event)
 {
     bool en = XRCCTRL(*this, "chkDblClkMaximizes", wxCheckBox)->GetValue();
     XRCCTRL(*this, "choLayoutToToggle", wxCheckBox)->Enable(en);
 }
 
-void EnvironmentSettingsDlg::OnMousewheelModifier(wxKeyEvent& event)
+void EnvironmentSettingsDlg::OnMousewheelModifier(cb_unused wxKeyEvent& event)
 {
     wxString keys;
 
@@ -457,7 +462,7 @@ void EnvironmentSettingsDlg::OnMousewheelModifier(wxKeyEvent& event)
         XRCCTRL(*this, "txtMousewheelModifier", wxTextCtrl)->SetValue(keys);
 }
 
-void EnvironmentSettingsDlg::OnUseTabMousewheel(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnUseTabMousewheel(cb_unused wxCommandEvent& event)
 {
     bool en = (bool)XRCCTRL(*this, "chkNBUseMousewheel",wxCheckBox)->GetValue();
     XRCCTRL(*this, "rbNBModToAdvance", wxRadioButton)->Enable(en);

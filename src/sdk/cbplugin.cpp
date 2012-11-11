@@ -172,7 +172,7 @@ void cbDebuggerPlugin::OnRelease(bool appShutDown)
     Manager::Get()->GetDebuggerManager()->UnregisterDebugger(this);
 }
 
-void cbDebuggerPlugin::BuildMenu(wxMenuBar* /* menuBar */)
+void cbDebuggerPlugin::BuildMenu(cb_unused wxMenuBar* menuBar)
 {
     if (!IsAttached())
         return;
@@ -236,7 +236,7 @@ wxString cbDebuggerPlugin::GetEditorWordAtCaret(const wxPoint* mousePosition)
     return selected_text;
 }
 
-void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* /* data */)
+void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, cb_unused const FileTreeData* data)
 {
     cbDebuggerPlugin *active_plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     if (active_plugin != this)
@@ -261,7 +261,7 @@ void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, cons
     Manager::Get()->GetDebuggerManager()->BuildContextMenu(*menu, word, IsRunning());
 }
 
-bool cbDebuggerPlugin::BuildToolBar(wxToolBar* /* toolBar */)
+bool cbDebuggerPlugin::BuildToolBar(cb_unused wxToolBar* toolBar)
 {
     return false;
 }
@@ -519,7 +519,7 @@ void cbDebuggerPlugin::OnProjectClosed(CodeBlocksEvent& event)
     }
 }
 
-void cbDebuggerPlugin::OnEditorHook(cbEditor* editor, wxScintillaEvent& event)
+void cbDebuggerPlugin::OnEditorHook(cb_unused cbEditor* editor, wxScintillaEvent& event)
 {
     if (event.GetEventType() == wxEVT_SCI_START_DRAG)
         m_DragInProgress = true;
@@ -730,7 +730,7 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate(StartType startType)
     return true;
 }
 
-void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& /* event */)
+void cbDebuggerPlugin::OnCompilerFinished(cb_unused CodeBlocksEvent& event)
 {
     if (m_WaitingCompilerToFinish)
     {
@@ -828,7 +828,7 @@ void cbDebuggerPlugin::MarkAsStopped()
     Manager::Get()->GetProjectManager()->SetIsRunning(NULL);
 }
 
-wxString cbDebuggerPlugin::GetConsoleTty(int ConsolePid)
+wxString cbDebuggerPlugin::GetConsoleTty(cb_unused int ConsolePid)
 {
 #ifndef __WXMSW__
 
@@ -908,13 +908,13 @@ void cbDebuggerPlugin::RegisterValueTooltip()
                                       new Event(this, &cbDebuggerPlugin::CancelValueTooltip));
 }
 
-bool cbDebuggerPlugin::ShowValueTooltip(int /*style*/)
+bool cbDebuggerPlugin::ShowValueTooltip(cb_unused int style)
 {
     return false;
 }
 
 // Default implementation does nothing
-void cbDebuggerPlugin::OnValueTooltip(const wxString &/*token*/, const wxRect &/*evalRect*/)
+void cbDebuggerPlugin::OnValueTooltip(cb_unused const wxString& token, cb_unused const wxRect& evalRect)
 {
 }
 
@@ -958,7 +958,7 @@ void cbDebuggerPlugin::ProcessValueTooltip(CodeBlocksEvent& event)
     }
 }
 
-void cbDebuggerPlugin::CancelValueTooltip(CodeBlocksEvent& /* event */)
+void cbDebuggerPlugin::CancelValueTooltip(cb_unused CodeBlocksEvent& event)
 {
     Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->HideValueTooltip();
 }
@@ -1012,7 +1012,7 @@ void cbSmartIndentPlugin::OnAttach()
     m_FunctorId = EditorHooks::RegisterHook( new EditorHooks::cbSmartIndentEditorHookFunctor(this) );
 }
 
-void cbSmartIndentPlugin::OnRelease(bool /* appShutDown */)
+void cbSmartIndentPlugin::OnRelease(cb_unused bool appShutDown)
 {
     EditorHooks::UnregisterHook(m_FunctorId);
 }
@@ -1167,7 +1167,7 @@ wxChar cbSmartIndentPlugin::GetNextNonWhitespaceCharOnLine(cbStyledTextCtrl* stc
     return 0;
 }
 
-int cbSmartIndentPlugin::FindBlockStart(cbStyledTextCtrl* stc, int position, wxChar blockStart, wxChar blockEnd, bool skipNested)const
+int cbSmartIndentPlugin::FindBlockStart(cbStyledTextCtrl* stc, int position, wxChar blockStart, wxChar blockEnd, cb_unused bool skipNested)const
 {
     int lvl = 0;
     wxChar b = stc->GetCharAt(position);

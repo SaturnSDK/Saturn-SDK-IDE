@@ -42,7 +42,7 @@
 #include "wizpage.h"
 
 #include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(Wizards);
+WX_DEFINE_OBJARRAY(Wizards); // TODO: find out why this causes a shadow warning for 'Item'
 
 namespace
 {
@@ -531,7 +531,7 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
     return theproject;
 }
 
-CompileTargetBase* Wiz::RunTargetWizard(wxString* /*pFilename*/)
+CompileTargetBase* Wiz::RunTargetWizard(cb_unused wxString* pFilename)
 {
     cbProject* theproject = Manager::Get()->GetProjectManager()->GetActiveProject(); // can't fail; if no project, the wizard didn't even run
     ProjectBuildTarget* target = theproject->AddBuildTarget(GetTargetName());
@@ -645,7 +645,7 @@ CompileTargetBase* Wiz::RunFilesWizard(wxString* pFilename)
     return 0;
 }
 
-CompileTargetBase* Wiz::RunCustomWizard(wxString* /*pFilename*/)
+CompileTargetBase* Wiz::RunCustomWizard(cb_unused wxString* pFilename)
 {
     try
     {
@@ -748,12 +748,15 @@ void Wiz::CopyFiles(cbProject* theproject, const wxString&  prjdir, const wxStri
     // first get the dir with the files
     wxArrayString filesList;
     wxString enumdirs = ConfigManager::GetFolder(sdDataUser) + _T("/templates/wizard/") + srcdir;
-    if (!wxDirExists(enumdirs + _T("/")))
+    if ( !wxDirExists(enumdirs + _T("/")) )
         enumdirs = ConfigManager::GetFolder(sdDataGlobal) + _T("/templates/wizard/") + srcdir;
     wxString basepath = wxFileName(enumdirs).GetFullPath();
 
-    // recursively enumerate all files under srcdir
-    wxDir::GetAllFiles(enumdirs, &filesList);
+    if ( wxDirExists(enumdirs + _T("/")) )
+    {
+        // recursively enumerate all files under srcdir
+        wxDir::GetAllFiles(enumdirs, &filesList);
+    }
 
     // prepare the list of targets to add this file to (i.e. all of them)
     wxArrayInt targetIndices;
@@ -1357,7 +1360,7 @@ void Wiz::SetFilePathSelectionFilter(const wxString& filter)
         m_pWizFilePathPanel->SetFilePathSelectionFilter(filter);
 }
 
-void Wiz::SetCompilerDefault(const wxString& /*defCompilerID*/)
+void Wiz::SetCompilerDefault(cb_unused const wxString& defCompilerID)
 {
     // default compiler settings (returned if no compiler page is added in the wizard)
     m_DefCompilerID = CompilerFactory::GetDefaultCompilerID();
