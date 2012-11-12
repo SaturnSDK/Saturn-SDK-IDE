@@ -3728,17 +3728,15 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
 
 wxString CompilerGCC::GetErrWarnStr()
 {
-    return wxString::Format(_("%u error%s, %u warning%s"),
-                            m_Errors.GetCount(cltError), wxString(m_Errors.GetCount(cltError) == 1 ? _("") : _("s")).wx_str(),
-                            m_Errors.GetCount(cltWarning), wxString(m_Errors.GetCount(cltWarning) == 1 ? _("") : _("s")).wx_str());
+    return wxString::Format(_("%u error(s), %u warning(s)"),
+                            m_Errors.GetCount(cltError), m_Errors.GetCount(cltWarning));
 }
 
 wxString CompilerGCC::GetMinSecStr()
 {
     long int elapsed = (wxGetLocalTimeMillis() - m_StartTime).ToLong() / 1000;
-    int mins = elapsed / 60;
+    int mins =  elapsed / 60;
     int secs = (elapsed % 60);
-    return wxString::Format(_("%d minute%s, %d second%s"),
-                            mins, wxString(mins == 1 ? _("") : _("s")).wx_str(),
-                            secs, wxString(secs == 1 ? _("") : _("s")).wx_str());
+    return wxString::Format(_("%d minute(s), %d second(s)"), mins, secs);
+;
 }
