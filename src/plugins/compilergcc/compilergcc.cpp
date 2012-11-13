@@ -3738,5 +3738,4 @@ wxString CompilerGCC::GetMinSecStr()
     int mins =  elapsed / 60;
     int secs = (elapsed % 60);
     return wxString::Format(_("%d minute(s), %d second(s)"), mins, secs);
-;
 }

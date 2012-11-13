@@ -202,7 +202,7 @@ wxArrayString MakeUniqueArray(const wxArrayString& array, bool caseSens)
 
 wxString MakeUniqueString(const wxString& text, const wxString& separator, bool caseSens)
 {
-    return GetStringFromArray(MakeUniqueArray(GetArrayFromString(text, separator), caseSens), separator, false);
+    return GetStringFromArray( MakeUniqueArray( GetArrayFromString(text, separator), caseSens ), separator, false );
 }
 
 void AppendArray(const wxArrayString& from, wxArrayString& to)
@@ -756,8 +756,8 @@ wxFontEncoding DetectEncodingAndConvert(const char* strIn, wxString& strOut, wxF
                         encoding = (wxFontEncoding)i;
                         if (encoding == possibleEncoding)
                             continue; // skip if same as what was asked
-                        wxCSConv conv(encoding);
-                        strOut = wxString(strIn, conv);
+                        wxCSConv csconv(encoding);
+                        strOut = wxString(strIn, csconv);
                         if (strOut.Length() != 0)
                             break; // got it!
                     }
