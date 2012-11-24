@@ -103,6 +103,6 @@ xcopy /D /y devel\*.dll output > nul
 xcopy /D /y %CB_DEVEL_RESDIR%\plugins\*.dll %CB_OUTPUT_RESDIR%\plugins > nul
 
 echo Stripping debug info from output tree
-C:\Devel\CodeBlocks\MinGW\bin\strip output\*.exe
-C:\Devel\CodeBlocks\MinGW\bin\strip output\*.dll
-C:\Devel\CodeBlocks\MinGW\bin\strip %CB_OUTPUT_RESDIR%\plugins\*.dll
+strip output\*.exe
+strip output\*.dll
+strip %CB_OUTPUT_RESDIR%\plugins\*.dll
