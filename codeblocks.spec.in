@@ -3,7 +3,7 @@
 %define _fedora             %(if [ -f /etc/fedora-release ]; then echo 1; else echo 0; fi)
 %define _redhat             %(if [ -f /etc/redhat-release ]; then echo 1; else echo 0; fi)
 %define _mandrake           %(if [ -f /etc/mandrake-release ]; then echo 1; else echo 0; fi)
-%define _version            10.5.svn.%{_svnrev}
+%define _version            12.11
 %define _rel                1
 %define _release            %{_rel}
 %define jobs                %(if [ -e /usr/bin/getconf ]; then echo $(( `/usr/bin/getconf _NPROCESSORS_ONLN` + 1 )); else echo 1; fi)
@@ -426,6 +426,8 @@ This package contains the development libraries and headers needed to build wxSm
 %{_includedir}/wxsmith/*
 
 %changelog
+* Sat Nov 24 2012 jens <jens@codeblocks.org>
+- prepare for release
 * Fri Jun 08 2012 jens <jens@codeblocks.org>
 - partly reverted last change, to keep the package layout more clear
 - do not try to build NassiShneiderman-plugin on CentOS/RedHat < 6, because the
