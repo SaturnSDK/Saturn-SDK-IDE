@@ -47,12 +47,14 @@
 
 #define CC_NATIVEPARSER_DEBUG_OUTPUT 0
 
-#if CC_GLOBAL_DEBUG_OUTPUT == 1
-    #undef CC_NATIVEPARSER_DEBUG_OUTPUT
-    #define CC_NATIVEPARSER_DEBUG_OUTPUT 1
-#elif CC_GLOBAL_DEBUG_OUTPUT == 2
-    #undef CC_NATIVEPARSER_DEBUG_OUTPUT
-    #define CC_NATIVEPARSER_DEBUG_OUTPUT 2
+#if defined (CC_GLOBAL_DEBUG_OUTPUT)
+    #if CC_GLOBAL_DEBUG_OUTPUT == 1
+        #undef CC_NATIVEPARSER_DEBUG_OUTPUT
+        #define CC_NATIVEPARSER_DEBUG_OUTPUT 1
+    #elif CC_GLOBAL_DEBUG_OUTPUT == 2
+        #undef CC_NATIVEPARSER_DEBUG_OUTPUT
+        #define CC_NATIVEPARSER_DEBUG_OUTPUT 2
+    #endif
 #endif
 
 #if CC_NATIVEPARSER_DEBUG_OUTPUT == 1
@@ -377,6 +379,7 @@ int NativeParser::GetTokenKindImage(const Token* token)
                 case tsPublic:    return PARSER_IMG_ENUM_PUBLIC;
                 case tsProtected: return PARSER_IMG_ENUM_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_ENUM_PRIVATE;
+                case tsUndefined:
                 default:          return PARSER_IMG_ENUM;
             }
 
@@ -388,7 +391,8 @@ int NativeParser::GetTokenKindImage(const Token* token)
                 case tsPublic:    return PARSER_IMG_CLASS_PUBLIC;
                 case tsProtected: return PARSER_IMG_CLASS_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_CLASS_PRIVATE;
-                default:          return PARSER_IMG_CLASS_PUBLIC;
+                case tsUndefined:
+                default:          return PARSER_IMG_CLASS;
             }
 
         case tkNamespace:         return PARSER_IMG_NAMESPACE;
@@ -399,6 +403,7 @@ int NativeParser::GetTokenKindImage(const Token* token)
                 case tsPublic:    return PARSER_IMG_TYPEDEF_PUBLIC;
                 case tsProtected: return PARSER_IMG_TYPEDEF_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_TYPEDEF_PRIVATE;
+                case tsUndefined:
                 default:          return PARSER_IMG_TYPEDEF;
             }
 
@@ -408,6 +413,7 @@ int NativeParser::GetTokenKindImage(const Token* token)
                 case tsPublic:    return PARSER_IMG_MACRO_PUBLIC;
                 case tsProtected: return PARSER_IMG_MACRO_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_MACRO_PRIVATE;
+                case tsUndefined:
                 default:          return PARSER_IMG_MACRO;
             }
 
@@ -416,6 +422,8 @@ int NativeParser::GetTokenKindImage(const Token* token)
             {
                 case tsProtected: return PARSER_IMG_CTOR_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_CTOR_PRIVATE;
+                case tsUndefined:
+                case tsPublic:
                 default:          return PARSER_IMG_CTOR_PUBLIC;
             }
 
@@ -424,6 +432,8 @@ int NativeParser::GetTokenKindImage(const Token* token)
             {
                 case tsProtected: return PARSER_IMG_DTOR_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_DTOR_PRIVATE;
+                case tsUndefined:
+                case tsPublic:
                 default:          return PARSER_IMG_DTOR_PUBLIC;
             }
 
@@ -432,6 +442,8 @@ int NativeParser::GetTokenKindImage(const Token* token)
             {
                 case tsProtected: return PARSER_IMG_FUNC_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_FUNC_PRIVATE;
+                case tsUndefined:
+                case tsPublic:
                 default:          return PARSER_IMG_FUNC_PUBLIC;
             }
 
@@ -440,9 +452,14 @@ int NativeParser::GetTokenKindImage(const Token* token)
             {
                 case tsProtected: return PARSER_IMG_VAR_PROTECTED;
                 case tsPrivate:   return PARSER_IMG_VAR_PRIVATE;
+                case tsUndefined:
+                case tsPublic:
                 default:          return PARSER_IMG_VAR_PUBLIC;
             }
 
+        case tkAnyContainer:
+        case tkAnyFunction:
+        case tkUndefined:
         default:                  return PARSER_IMG_NONE;
     }
 }
@@ -606,7 +623,7 @@ bool NativeParser::DeleteParser(cbProject* project)
         if (it->second == m_Parser)
           SetParser(m_TempParser); // Also updates class browser
 
-        wxString log(F(_("Delete parser for project '%s'!"), prj.wx_str()));
+        wxString log(F(_("Deleting parser for project '%s'!"), prj.wx_str()));
         CCLogger::Get()->Log(log);
         CCLogger::Get()->DebugLog(log);
 
@@ -619,7 +636,7 @@ bool NativeParser::DeleteParser(cbProject* project)
     if (removeProjectFromParser)
         return true;
 
-    CCLogger::Get()->DebugLog(_T("Delete parser failed!"));
+    CCLogger::Get()->DebugLog(_T("Deleting parser failed!"));
     return false;
 }
 
@@ -1824,15 +1841,16 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
     if (blockStart != -1)
     {
         ++blockStart; // skip {
-        const int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
-        const int line = searchData->control->LineFromPosition(pos);
-        const int blockEnd = searchData->control->GetLineEndPosition(line);
-        if (blockEnd < 0 || blockEnd > searchData->control->GetLength())
+        cbStyledTextCtrl* stc = searchData->control;
+        const int pos         = (caretPos == -1 ? stc->GetCurrentPos() : caretPos);
+        const int line        = stc->LineFromPosition(pos);
+        const int blockEnd    = stc->GetLineEndPosition(line);
+        if (blockEnd < 0 || blockEnd > stc->GetLength())
         {
             if (s_DebugSmartSense)
             {
                 CCLogger::Get()->DebugLog(F(_T("ParseLocalBlock() ERROR blockEnd=%d and edLength=%d?!"),
-                                            blockEnd, searchData->control->GetLength()));
+                                            blockEnd, stc->GetLength()));
             }
             return false;
         }
@@ -1840,7 +1858,70 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
         if (blockStart >= blockEnd)
             blockStart = blockEnd;
 
-        wxString buffer = searchData->control->GetTextRange(blockStart, blockEnd);
+//        wxString buffer = searchData->control->GetTextRange(blockStart, blockEnd);
+        wxString buffer;
+        // condense out-of-scope braces {...}
+        int scanPos = blockEnd;
+        for (int curPos = pos; curPos > blockStart; --curPos)
+        {
+            if (stc->GetCharAt(curPos) != wxT('}'))
+                continue;
+            const int style = stc->GetStyleAt(curPos);
+            if (   stc->IsString(style)
+                || stc->IsCharacter(style)
+                || stc->IsComment(style))
+            {
+                continue;
+            }
+            const int scopeStart = stc->BraceMatch(curPos);
+            if (scopeStart < blockStart)
+                break;
+            buffer.Prepend(stc->GetTextRange(curPos, scanPos));
+            int startLn = stc->LineFromPosition(scopeStart);
+            int endLn   = stc->LineFromPosition(curPos);
+            if (startLn < endLn) // maintain correct line numbers for parsed tokens
+                buffer.Prepend( wxString(wxT('\n'), endLn - startLn) );
+            scanPos = scopeStart + 1;
+            curPos  = scopeStart;
+
+            // condense out-of-scope for/if/while declarations
+            int prevCharIdx = scopeStart - 1;
+            for (; prevCharIdx > blockStart; --prevCharIdx)
+            {
+                if (stc->IsComment(stc->GetStyleAt(prevCharIdx)))
+                    continue;
+                if (!wxIsspace(stc->GetCharAt(prevCharIdx)))
+                    break;
+            }
+            if (stc->GetCharAt(prevCharIdx) != wxT(')'))
+                continue;
+            const int paramStart = stc->BraceMatch(prevCharIdx);
+            if (paramStart < blockStart)
+                continue;
+            for (prevCharIdx = paramStart - 1; prevCharIdx > blockStart; --prevCharIdx)
+            {
+                if (stc->IsComment(stc->GetStyleAt(prevCharIdx)))
+                    continue;
+                if (!wxIsspace(stc->GetCharAt(prevCharIdx)))
+                    break;
+            }
+            const wxString text = stc->GetTextRange(stc->WordStartPosition(prevCharIdx, true),
+                                                    stc->WordEndPosition(  prevCharIdx, true));
+            if (text == wxT("for"))
+                buffer.Prepend(wxT("(;;){"));
+            else if (text == wxT("if") || text == wxT("while"))
+                buffer.Prepend(wxT("(0){"));
+            else
+                continue;
+            startLn = stc->LineFromPosition(prevCharIdx);
+            endLn   = stc->LineFromPosition(scopeStart);
+            if (startLn < endLn)
+                buffer.Prepend( wxString(wxT('\n'), endLn - startLn) );
+            curPos  = stc->WordStartPosition(prevCharIdx, true);
+            scanPos = stc->WordEndPosition(  prevCharIdx, true);
+        }
+        buffer.Prepend(stc->GetTextRange(blockStart, scanPos));
+
         buffer.Trim();
         if (   !buffer.IsEmpty()
             && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, m_LastFuncTokenIdx, initLine) )
@@ -2006,7 +2087,10 @@ bool NativeParser::AddCompilerDirs(cbProject* project, ParserBase* parser)
     // add compiler include dirs
     for (int idxCompiler = 0; idxCompiler < nCompilers; ++idxCompiler)
     {
-        const wxArrayString& dirs = (Compilers[idxCompiler])->GetIncludeDirs();
+        Compiler* compiler = Compilers[idxCompiler];
+        if (!compiler) continue;
+
+        const wxArrayString& dirs = compiler->GetIncludeDirs();
         for (unsigned int i = 0; i < dirs.GetCount(); ++i)
         {
 //            CCLogger::Get()->Log(mltDevDebug, "Adding %s", dirs[i].c_str());
@@ -2025,9 +2109,9 @@ bool NativeParser::AddCompilerDirs(cbProject* project, ParserBase* parser)
         // find out which compiler, if gnu, do the special trick
         // to find it's internal include paths
         // but do only once per C::B session, thus cache for later calls
-        wxString CompilerID = (Compilers[idxCompiler])->GetID();
+        wxString CompilerID = compiler->GetID();
         if (CompilerID.Contains(_T("gcc")))
-            AddGCCCompilerDirs(Compilers[idxCompiler]->GetMasterPath(), Compilers[idxCompiler]->GetPrograms().CPP, parser);
+            AddGCCCompilerDirs(Compilers[idxCompiler]->GetMasterPath(), compiler->GetPrograms().CPP, parser);
     } // end of while loop over the found compilers
 
     if (!nCompilers)
@@ -2374,37 +2458,40 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
     TRACE(_T("NativeParser::OnParserStart()"));
 
     cbProject* project = static_cast<cbProject*>(event.GetClientData());
-    wxString prj = (project ? project->GetTitle() : _T("*NONE*"));
+    wxString   prj     = (project ? project->GetTitle() : _T("*NONE*"));
     const ParserCommon::ParserState state = static_cast<ParserCommon::ParserState>(event.GetInt());
 
     switch (state)
     {
-    case ParserCommon::ptCreateParser:
-        CCLogger::Get()->DebugLog(F(_("Starting batch parsing for project '%s'..."), prj.wx_str()));
-        {
-            std::pair<cbProject*, ParserBase*> info = GetParserInfoByCurrentEditor();
-            if (info.second && m_Parser != info.second)
+        case ParserCommon::ptCreateParser:
+            CCLogger::Get()->DebugLog(F(_("Starting batch parsing for project '%s'..."), prj.wx_str()));
             {
-                CCLogger::Get()->DebugLog(_T("Start switch from OnParserStart::ptCreateParser"));
-                SwitchParser(info.first, info.second); // Calls SetParser() which also calls UpdateClassBrowserView()
+                std::pair<cbProject*, ParserBase*> info = GetParserInfoByCurrentEditor();
+                if (info.second && m_Parser != info.second)
+                {
+                    CCLogger::Get()->DebugLog(_T("Start switch from OnParserStart::ptCreateParser"));
+                    SwitchParser(info.first, info.second); // Calls SetParser() which also calls UpdateClassBrowserView()
+                }
             }
-        }
-        break;
+            break;
 
-    case ParserCommon::ptAddFileToParser:
-        CCLogger::Get()->DebugLog(F(_("Starting add file parsing for project '%s'..."), prj.wx_str()));
-        break;
+        case ParserCommon::ptAddFileToParser:
+            CCLogger::Get()->DebugLog(F(_("Starting add file parsing for project '%s'..."), prj.wx_str()));
+            break;
 
-    case ParserCommon::ptReparseFile:
-        CCLogger::Get()->DebugLog(F(_("Starting re-parsing for project '%s'..."), prj.wx_str()));
-        break;
+        case ParserCommon::ptReparseFile:
+            CCLogger::Get()->DebugLog(F(_("Starting re-parsing for project '%s'..."), prj.wx_str()));
+            break;
 
-    case ParserCommon::ptUndefined:
-        if (event.GetString().IsEmpty())
-            CCLogger::Get()->DebugLog(F(_("Batch parsing error in project '%s'"), prj.wx_str()));
-        else
-            CCLogger::Get()->DebugLog(F(_("%s in project '%s'"), event.GetString().wx_str(), prj.wx_str()));
-        return;
+        case ParserCommon::ptUndefined:
+            if (event.GetString().IsEmpty())
+                CCLogger::Get()->DebugLog(F(_("Batch parsing error in project '%s'"), prj.wx_str()));
+            else
+                CCLogger::Get()->DebugLog(F(_("%s in project '%s'"), event.GetString().wx_str(), prj.wx_str()));
+            return;
+
+        default:
+            break;
     }
 
     event.Skip();
@@ -2421,32 +2508,35 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
 
     switch (state)
     {
-    case ParserCommon::ptCreateParser:
-        {
-            wxString log(F(_("Project '%s' parsing stage done!"), prj.wx_str()));
-            CCLogger::Get()->Log(log);
-            CCLogger::Get()->DebugLog(log);
-        }
-        break;
-
-    case ParserCommon::ptAddFileToParser:
-        break;
-
-    case ParserCommon::ptReparseFile:
-        if (parser != m_Parser)
-        {
-            std::pair<cbProject*, ParserBase*> info = GetParserInfoByCurrentEditor();
-            if (info.second && info.second != m_Parser)
+        case ParserCommon::ptCreateParser:
             {
-                CCLogger::Get()->DebugLog(_T("Start switch from OnParserEnd::ptReparseFile"));
-                SwitchParser(info.first, info.second); // Calls SetParser() which also calls UpdateClassBrowserView()
+                wxString log(F(_("Project '%s' parsing stage done!"), prj.wx_str()));
+                CCLogger::Get()->Log(log);
+                CCLogger::Get()->DebugLog(log);
             }
-        }
-        break;
+            break;
 
-    case ParserCommon::ptUndefined:
-        CCLogger::Get()->DebugLog(F(_T("Parser event handling error of project '%s'"), prj.wx_str()));
-        return;
+        case ParserCommon::ptAddFileToParser:
+            break;
+
+        case ParserCommon::ptReparseFile:
+            if (parser != m_Parser)
+            {
+                std::pair<cbProject*, ParserBase*> info = GetParserInfoByCurrentEditor();
+                if (info.second && info.second != m_Parser)
+                {
+                    CCLogger::Get()->DebugLog(_T("Start switch from OnParserEnd::ptReparseFile"));
+                    SwitchParser(info.first, info.second); // Calls SetParser() which also calls UpdateClassBrowserView()
+                }
+            }
+            break;
+
+        case ParserCommon::ptUndefined:
+            CCLogger::Get()->DebugLog(F(_T("Parser event handling error of project '%s'"), prj.wx_str()));
+            return;
+
+        default:
+            break;
     }
 
     if (!event.GetString().IsEmpty())

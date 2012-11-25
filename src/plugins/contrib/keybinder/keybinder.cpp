@@ -57,8 +57,6 @@
 #include "wx/config.h"
 #include "wx/tokenzr.h"
 
-extern wxString GetFullMenuPath(int);
-
 // class definition for wxKeyProfile
 IMPLEMENT_CLASS(wxKeyProfile, wxKeyBinder)
 
@@ -245,6 +243,8 @@ wxString wxKeyBind::NumpadKeyCodeToString(int keyCode)
 		res << wxT("."); break;
 	case WXK_NUMPAD_DIVIDE:
 		res << wxT("/"); break;
+    default:
+        break;
 	}
 
 	return res;
@@ -688,10 +688,10 @@ bool wxCmd::Save(wxConfigBase *p, const wxString &key, bool bCleanOld) const
 {
 	// build the shortcut string separating each one with a "|"
 	wxString shortcuts;
-	for (int j=0; j < GetShortcutCount(); j++)
+	for (int j = 0; j < GetShortcutCount(); ++j)
 		shortcuts += GetShortcut(j)->GetStr() + wxT("|");
 
-    wxString fullMenuPath = GetFullMenuPath(GetId());
+    const wxString fullMenuPath = GetFullMenuPath(GetId());
     //LOGIT( _T("\nfullPath[%s]"), fullMenuPath.c_str() );
 
 	// write the entry in the format NAME|DESC|SHORTCUT1|SHORTCUT2...|SHORTCUTn
@@ -1008,7 +1008,7 @@ int wxKeyBinder::MergeSubMenu(wxMenu* pMenu, int& modified)           //+v0.4.25
             if ( (6 == menuItemKeyStr.Length())
                  && (menuItemKeyStr.StartsWith(_T("Ctrl-"))) )
             {
-                wxChar c = menuItemKeyStr.GetChar(5);
+                const wxChar c = menuItemKeyStr.GetChar(5);
                 switch(c)
                 {
                     case _T('C'):
@@ -1017,6 +1017,8 @@ int wxKeyBinder::MergeSubMenu(wxMenu* pMenu, int& modified)           //+v0.4.25
                         if (menuItemLabel.Matches(_T("Paste"))) continue;
                     case _T('S'):
                         if (menuItemLabel.Matches(_T("Cut"))) continue;
+                    default:
+                        break;
                 }
                 if ( (c == _T('C')) || (c == _T('V')) || (c == _T('X')) )
                     continue;

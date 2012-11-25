@@ -71,6 +71,8 @@ int wxFindMenuItem(wxMenuBar *p, const wxString &str)
     return id;
 }
 
+namespace
+{
 // ----------------------------------------------------------------------------
 int FindMenuDuplicateCount(wxMenuBar *p, wxString &str)
 // ----------------------------------------------------------------------------
@@ -78,7 +80,7 @@ int FindMenuDuplicateCount(wxMenuBar *p, wxString &str)
     //int id = wxNOT_FOUND;
     int count = 0;
 
-    for (int i=0; i < (int)p->GetMenuCount(); i++) {
+    for (int i = 0; i < (int)p->GetMenuCount(); ++i) {
 
         //id = p->GetMenu(i)->FindItem(str);
         //if (id != wxNOT_FOUND)
@@ -87,6 +89,7 @@ int FindMenuDuplicateCount(wxMenuBar *p, wxString &str)
     }
 
     return count;
+}
 }
 // ----------------------------------------------------------------------------
 int FindMenuDuplicateItems(wxMenu* pMenu, wxString& rStr, int& rCount)
@@ -199,6 +202,9 @@ wxString GetFullMenuPath(int id)
     return fullMenuPath;
 }
 
+namespace
+{
+
 // ----------------------------------------------------------------------------
 int FindMenuIdUsingFullMenuPath( const wxString& sFullMenuPath )
 // ----------------------------------------------------------------------------
@@ -269,6 +275,7 @@ int FindMenuIdUsingFullMenuPath( const wxString& sFullMenuPath )
     return id;
 
 }//FindMenuIdUsingFullMenuPath
+}
 // ----------------------------------------------------------------------------
 
 /*

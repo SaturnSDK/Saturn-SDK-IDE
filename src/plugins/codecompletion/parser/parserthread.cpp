@@ -27,12 +27,14 @@
 
 #define CC_PARSERTHREAD_DEBUG_OUTPUT 0
 
-#if CC_GLOBAL_DEBUG_OUTPUT == 1
-    #undef CC_PARSERTHREAD_DEBUG_OUTPUT
-    #define CC_PARSERTHREAD_DEBUG_OUTPUT 1
-#elif CC_GLOBAL_DEBUG_OUTPUT == 2
-    #undef CC_PARSERTHREAD_DEBUG_OUTPUT
-    #define CC_PARSERTHREAD_DEBUG_OUTPUT 2
+#if defined(CC_GLOBAL_DEBUG_OUTPUT)
+    #if CC_GLOBAL_DEBUG_OUTPUT == 1
+        #undef CC_PARSERTHREAD_DEBUG_OUTPUT
+        #define CC_PARSERTHREAD_DEBUG_OUTPUT 1
+    #elif CC_GLOBAL_DEBUG_OUTPUT == 2
+        #undef CC_PARSERTHREAD_DEBUG_OUTPUT
+        #define CC_PARSERTHREAD_DEBUG_OUTPUT 2
+    #endif
 #endif
 
 #ifdef CC_PARSER_TEST
@@ -441,19 +443,22 @@ bool ParserThread::InitTokenizer()
     {
         if (!m_IsBuffer)
         {
-            wxFile file(m_Buffer);
-            if (file.IsOpened())
+            if (wxFileExists(m_Buffer))
             {
-                m_Filename = m_Buffer;
-                m_FileSize = file.Length();
+                wxFile file(m_Buffer);
+                if (file.IsOpened())
+                {
+                    m_Filename = m_Buffer;
+                    m_FileSize = file.Length();
 
-                TRACE(_T("InitTokenizer() : m_Filename='%s', m_FileSize=%u."), m_Filename.wx_str(), m_FileSize);
+                    TRACE(_T("InitTokenizer() : m_Filename='%s', m_FileSize=%u."), m_Filename.wx_str(), m_FileSize);
 
-                bool ret = m_Tokenizer.Init(m_Filename, m_Options.loader);
-                Delete(m_Options.loader);
+                    bool ret = m_Tokenizer.Init(m_Filename, m_Options.loader);
+                    Delete(m_Options.loader);
 
-                if (!ret) { TRACE(_T("InitTokenizer() : Could not initialise tokenizer for file '%s'."), m_Filename.wx_str()); }
-                return ret;
+                    if (!ret) { TRACE(_T("InitTokenizer() : Could not initialise tokenizer for file '%s'."), m_Filename.wx_str()); }
+                    return ret;
+                }
             }
 
             TRACE(_T("InitTokenizer() : Could not open file: '%s'."), m_Buffer.wx_str());
@@ -1260,7 +1265,7 @@ Token* ParserThread::DoAddToken(TokenKind       kind,
     wxString baseArgs;
     if (kind & tkAnyFunction)
     {
-        if (!GetBaseArgs(args, baseArgs))
+        if ( !GetBaseArgs(args, baseArgs) )
             kind = tkVariable;
     }
 
@@ -1288,12 +1293,12 @@ Token* ParserThread::DoAddToken(TokenKind       kind,
         {   TRACE(_T("DoAddToken() : Found token (member function).")); }
     }
 
-    // none of the above; check for token under parent (but not if we 're parsing a temp buffer)
-    if (!newToken && !m_Options.isTemp)
+    // none of the above; check for token under parent
+    if (!newToken)
     {
         newToken = TokenExists(newname, baseArgs, m_LastParent, kind);
         if (newToken)
-		{   TRACE(_T("DoAddToken() : Found token (parent).")); }
+        {   TRACE(_T("DoAddToken() : Found token (parent).")); }
     }
 
     // need to check if the current token already exists in the tokenTree
@@ -2530,7 +2535,7 @@ bool ParserThread::ReadClsNames(wxString& ancestor)
     return success;
 }
 
-bool ParserThread::GetBaseArgs(const wxString & args, wxString& baseArgs)
+bool ParserThread::GetBaseArgs(const wxString& args, wxString& baseArgs)
 {
     const wxChar* ptr = args;  // pointer to current char in args string
     wxString word;             // compiled word of last arg

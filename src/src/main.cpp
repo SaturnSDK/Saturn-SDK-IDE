@@ -1261,6 +1261,8 @@ void MainFrame::LoadWindowSize()
     int w = 1000;
     int h = 800;
 
+    // obtain display index used last time
+    int last_display_index = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/display"), 0);
     // load window size and position
     wxRect rect(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left"),   x),
                 Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/top"),    y),
@@ -1270,12 +1272,17 @@ void MainFrame::LoadWindowSize()
     bool maximized = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/main_frame/layout/maximized"), true);
     Maximize(maximized); // toggle
 
-    // set size and position
-    int index = wxDisplay::GetFromWindow(this);
-    wxDisplay display(index);
+    // set display, size and position
+    int display_index_window = wxDisplay::GetFromWindow(this); // C::B usually starts on primary display...
+    // ...but try to use display that was used last time, if still available:
+    if ((last_display_index>=0) && (last_display_index<static_cast<int>(wxDisplay::GetCount())))
+        display_index_window = static_cast<int>(last_display_index);
+    int display_index = ((display_index_window>=0) ? display_index_window : 0);
+
+    wxDisplay disp(display_index); // index might be wxNOT_FOUND (=-1) due to GetFromWindow call
     if (maximized)
     {
-        rect = display.GetClientArea(); // apply from display, overriding settinzs above
+        rect = disp.GetClientArea(); // apply from display, overriding settings above
         rect.width  -= 100;
         rect.height -= 100;
     }
@@ -1284,11 +1291,11 @@ void MainFrame::LoadWindowSize()
         // Adjust to actual screen size. This is useful for portable C::B versions,
         // where the window might be out of screen when saving on a two-monitor
         // system an re-opening on a one-monitor system (on Windows, at least).
-        wxRect displayRect = display.GetClientArea();
-        if (displayRect.GetWidth() <rect.GetLeft())   rect.SetLeft  (displayRect.GetLeft());
-        if (displayRect.GetWidth() <rect.GetRight())  rect.SetRight (displayRect.GetRight());
-        if (displayRect.GetHeight()<rect.GetTop())    rect.SetTop   (displayRect.GetTop());
-        if (displayRect.GetHeight()<rect.GetBottom()) rect.SetBottom(displayRect.GetBottom());
+        wxRect displayRect = disp.GetClientArea();
+        if ((displayRect.GetLeft() + displayRect.GetWidth())  < rect.GetLeft())   rect.SetLeft  (displayRect.GetLeft()  );
+        if ((displayRect.GetLeft() + displayRect.GetWidth())  < rect.GetRight())  rect.SetRight (displayRect.GetRight() );
+        if ((displayRect.GetTop()  + displayRect.GetHeight()) < rect.GetTop())    rect.SetTop   (displayRect.GetTop()   );
+        if ((displayRect.GetTop()  + displayRect.GetHeight()) < rect.GetBottom()) rect.SetBottom(displayRect.GetBottom());
     }
 
     SetSize(rect);
@@ -1324,8 +1331,8 @@ void MainFrame::SaveWindowState()
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left_block_selection"), Manager::Get()->GetProjectManager()->GetNotebook()->GetSelection());
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/bottom_block_selection"), m_pInfoPane->GetSelection());
 
-    // save window size and position
-    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/maximized"), IsMaximized());
+    // save display, window size and position
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/display"),   wxDisplay::GetFromWindow(this));
     if (!IsMaximized() && !IsIconized())
     {
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left"),   GetPosition().x);
@@ -1333,6 +1340,7 @@ void MainFrame::SaveWindowState()
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/width"),  GetSize().x);
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/height"), GetSize().y);
     }
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/maximized"), IsMaximized());
 }
 
 void MainFrame::LoadViewLayout(const wxString& name, bool isTemp)
@@ -1548,7 +1556,7 @@ void MainFrame::DoAddPluginStatusField(cbPlugin* plugin)
     sbar->AdjustFieldsSize();
 }
 
-void InitToolbar(wxToolBar *tb)
+inline void InitToolbar(wxToolBar *tb)
 {
 #if defined __WXMSW__ && !wxCHECK_VERSION(2, 8, 9)
     // HACK: for all windows versions (including XP *without* using a manifest file),
@@ -1723,10 +1731,9 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
 {
     if (filename.IsEmpty())
         return false;
-    wxFileName fname(filename);
-    fname.ClearExt();
-    fname.SetExt(_T("cbp"));
-    switch (FileTypeOf(filename))
+
+    wxFileName fname(filename); fname.ClearExt(); fname.SetExt(_T("cbp"));
+    switch ( FileTypeOf(filename) )
     {
         //
         // Workspace
@@ -1737,7 +1744,7 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
                 return true;
             else
             {
-                if (DoCloseCurrentWorkspace())
+                if ( DoCloseCurrentWorkspace() )
                 {
                     wxBusyCursor wait; // loading a worspace can take some time -> showhourglass
                     ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
@@ -3632,10 +3639,12 @@ void MainFrame::OnEditBoxCommentSelected(cb_unused wxCommandEvent& event)
         wxString nlc;
         switch (stc->GetEOLMode())
         {
-            case wxSCI_EOL_CRLF: nlc=_T("\r\n"); break;
-            case wxSCI_EOL_CR:   nlc=_T("\r");   break;
-            case wxSCI_EOL_LF:   nlc=_T("\n");   break;
-
+            case wxSCI_EOL_CRLF: nlc = _T("\r\n"); break;
+            case wxSCI_EOL_CR:   nlc = _T("\r");   break;
+            case wxSCI_EOL_LF:   nlc = _T("\n");   break;
+            default:
+                (platform::windows ? (nlc = _T("\r\n")) : (nlc = _T("\n")));
+                break;
         }
 
         stc->BeginUndoAction();
@@ -4140,6 +4149,9 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
                 break;
             case wxSCI_EOL_LF:
                 mbar->Check(idEditEOLLF,   true);
+                break;
+            default:
+                (platform::windows ? mbar->Check(idEditEOLCRLF, true) : mbar->Check(idEditEOLLF,   true));
                 break;
         }
 
@@ -4688,6 +4700,7 @@ void MainFrame::OnRequestDockWindow(CodeBlocksDockEvent& event)
         case CodeBlocksDockEvent::dsTop:      info.Top();    break;
         case CodeBlocksDockEvent::dsBottom:   info.Bottom(); break;
         case CodeBlocksDockEvent::dsFloating: info.Float();  break;
+        case CodeBlocksDockEvent::dsUndefined: // fall through
         default:                                             break;
     }
     info.Show(event.shown);

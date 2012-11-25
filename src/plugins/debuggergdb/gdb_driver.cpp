@@ -904,6 +904,13 @@ void GDB_driver::ParseOutput(const wxString& output)
             m_pDBG->Log(lines[i]);
         }
 
+        else if (   (lines[i].StartsWith(_T("Cannot find bounds of current function")))
+                 || (lines[i].StartsWith(_T("No stack"))) )
+        {
+            m_pDBG->Log(lines[i]);
+            m_ProgramIsStopped = true;
+        }
+
         // pending breakpoint resolved?
         // e.g.
         // Pending breakpoint "C:/Devel/libs/irr_svn/source/Irrlicht/CSceneManager.cpp:1077" resolved
@@ -985,6 +992,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                 }
             }
         }
+
         else if (lines[i].StartsWith(wxT("Temporary breakpoint")))
         {
             if (reTempBreakFound.Matches(lines[i]))
@@ -997,6 +1005,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                 Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
             }
         }
+
         // cursor change
         else if (lines[i].StartsWith(g_EscapeChar)) // ->->
         {
@@ -1021,6 +1030,7 @@ void GDB_driver::ParseOutput(const wxString& output)
             else
                 HandleMainBreakPoint(reBreak, lines[i]);
         }
+
         else
         {
             // other break info, e.g.
@@ -1105,9 +1115,9 @@ void GDB_driver::ParseOutput(const wxString& output)
 }
 
 
-void GDB_driver::HandleMainBreakPoint(const wxRegEx& reBreak, wxString line)
+void GDB_driver::HandleMainBreakPoint(const wxRegEx& reBreak_in, wxString line)
 {
-    if ( reBreak.Matches(line) )
+    if ( reBreak_in.Matches(line) )
     {
         if (m_ManualBreakOnEntry)
             QueueCommand(new GdbCmd_InfoProgram(this), DebuggerDriver::High);
@@ -1120,15 +1130,15 @@ void GDB_driver::HandleMainBreakPoint(const wxRegEx& reBreak, wxString line)
             wxString lineStr;
             if (platform::windows)
             {
-                m_Cursor.file = reBreak.GetMatch(line, 1) + reBreak.GetMatch(line, 2);
-                lineStr = reBreak.GetMatch(line, 3);
-                m_Cursor.address = reBreak.GetMatch(line, 4);
+                m_Cursor.file = reBreak_in.GetMatch(line, 1) + reBreak_in.GetMatch(line, 2);
+                lineStr = reBreak_in.GetMatch(line, 3);
+                m_Cursor.address = reBreak_in.GetMatch(line, 4);
             }
             else
             {
-                m_Cursor.file = reBreak.GetMatch( line, 1);
-                lineStr = reBreak.GetMatch( line, 2);
-                m_Cursor.address = reBreak.GetMatch( line, 3);
+                m_Cursor.file = reBreak_in.GetMatch( line, 1);
+                lineStr = reBreak_in.GetMatch(line, 2);
+                m_Cursor.address = reBreak_in.GetMatch( line, 3);
             }
 
             lineStr.ToLong(&m_Cursor.line);
