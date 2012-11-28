@@ -26,7 +26,7 @@ EditorTweaksConfDlg::EditorTweaksConfDlg(wxWindow* parent)
     int maxSavedAlignerEntries = cfg->ReadInt(_T("/aligner/max_saved_entries"),4);
     SpinCtrl1->SetValue(maxSavedAlignerEntries);
 
-    Choice1->SetSelection(cfg->ReadInt(wxT("/buffer_caret"), 4));
+    Choice1->SetSelection(cfg->ReadInt(wxT("/buffer_caret"), -1));
 }
 
 EditorTweaksConfDlg::~EditorTweaksConfDlg()
@@ -44,7 +44,7 @@ void EditorTweaksConfDlg::SaveSettings()
     if(oldSavedAlignerEntries != newSavedAlignerEntries )
         cfg->Write(_T("aligner/max_saved_entries"),newSavedAlignerEntries);
 
-    const int oldBuffer = cfg->ReadInt(wxT("/buffer_caret"), 4);
+    const int oldBuffer = cfg->ReadInt(wxT("/buffer_caret"), -1);
     const int newBuffer = Choice1->GetSelection();
     if (oldBuffer != newBuffer)
         cfg->Write(wxT("/buffer_caret"), newBuffer);
