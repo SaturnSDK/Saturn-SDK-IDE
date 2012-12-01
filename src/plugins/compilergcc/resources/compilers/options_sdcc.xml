@@ -25,7 +25,7 @@
     <Switch name="linkLibs"                value="-l"/>
     <Switch name="defines"                 value="-D"/>
     <Switch name="genericSwitch"           value="-"/>
-    <Switch name="objectExtension"         value="rel"/>
+    <Switch name="objectExtension"         value="o"/>
     <Switch name="needDependencies"        value="true"/>
     <Switch name="forceCompilerUseQuotes"  value="false"/>
     <Switch name="forceLinkerUseQuotes"    value="false"/>
