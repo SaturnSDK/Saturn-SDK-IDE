@@ -161,7 +161,7 @@
 				<Option external_deps="devel/libcodeblocks.so;" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --multiple-instance -ns -ni -v" />
+				<Option parameters="--debug-log --multiple-instance -ns -ni -v -p debug" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="`pkg-config gtk+-2.0 --cflags`" />
@@ -2468,6 +2468,9 @@
 		<Unit filename="sdk/resources/external_deps.xrc">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/resources/findreplacedlg.xrc">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/resources/generic_multi_select.xrc">
 			<Option target="sdk" />
 		</Unit>
@@ -2670,9 +2673,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/resources/projectfile_options.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/resources/findreplacedlg.xrc">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/resources/scripting_security_dlg.xrc">

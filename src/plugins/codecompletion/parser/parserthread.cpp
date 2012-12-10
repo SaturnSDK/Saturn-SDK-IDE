@@ -149,6 +149,7 @@ namespace ParserConsts
     const wxString kw_undef        (_T("undef"));
     const wxString kw_union        (_T("union"));
     const wxString kw_using        (_T("using"));
+    const wxString kw_throw        (_T("throw"));
     const wxString kw_while        (_T("while"));
     // length: 6
     const wxString kw_define       (_T("define"));
@@ -2042,22 +2043,23 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
                 lineStart = m_Tokenizer.GetLineNumber();
                 SkipBlock(); // skip  to matching }
                 lineEnd = m_Tokenizer.GetLineNumber();
-
-                // Show message, if skipped buffer is more than 10% of whole buffer (might be a bug in the parser)
-                if (!m_IsBuffer) // TODO: (Martin) Compiler suggested braces around the single TRACE statement. Since the if() already doesn't correspond to above comment,
-                                 //       I'm feeling uneasy. Please check whether the semantics (break?) are as intended, or whether the compiler found a bug.
-                {
-                    TRACE(_T("HandleFunction() : Skipped function '%s' impl. %d lines from %d to %d (file name='%s', file size=%u)."),
-                          name.wx_str(), (lineEnd-lineStart), lineStart, lineEnd, m_Filename.wx_str(), m_FileSize);
-				}
                 break;
             }
             else if (peek == ParserConsts::clbrace || peek == ParserConsts::semicolon)
                 break; // function decl
             else if (peek == ParserConsts::kw_const)
                 isConst = true;
+            else if (peek == ParserConsts::kw_throw)
+            {
+                // Handle something like: std::string MyClass::MyMethod() throw(std::exception)
+                wxString arg = m_Tokenizer.GetToken(); // eat args ()
+            }
             else
+            {
+                TRACE(_T("HandleFunction() : Possible macro '%s' in function '%s' (file name='%s', line numer %d)."),
+                      peek.wx_str(), name.wx_str(), m_Filename.wx_str(), m_Tokenizer.GetLineNumber());
                 break; // darned macros that do not end with a semicolon :/
+            }
 
             // if we reached here, eat the token so peek gets a new value
             m_Tokenizer.GetToken();
@@ -2457,8 +2459,7 @@ bool ParserThread::ReadVarNames()
                  || (token.GetChar(0) == ParserConsts::underscore_chr) )
         {
             TRACE(_T("ReadVarNames() : Adding variable '%s' as '%s' to '%s'"),
-                  token.wx_str(),
-                  m_Str.wx_str(),
+                  token.wx_str(), m_Str.wx_str(),
                   (m_LastParent ? m_LastParent->m_Name.wx_str() : _T("<no-parent>")));
 
             Token* newToken = DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
@@ -2470,7 +2471,10 @@ bool ParserThread::ReadVarNames()
         }
         else // unexpected
         {
-            TRACE(_T("ReadVarNames() : Unexpected token '%s'."), token.wx_str());
+            TRACE(F(_T("ReadVarNames() : Unexpected token '%s' for '%s', file '%s', line %d."),
+                    token.wx_str(), m_Str.wx_str(), m_Tokenizer.GetFilename().wx_str(), m_Tokenizer.GetLineNumber()));
+            CCLogger::Get()->DebugLog(F(_T("ReadVarNames() : Unexpected token '%s' for '%s', file '%s', line %d."),
+                                        token.wx_str(), m_Str.wx_str(), m_Tokenizer.GetFilename().wx_str(), m_Tokenizer.GetLineNumber()));
             success = false;
             break;
         }
@@ -2522,8 +2526,10 @@ bool ParserThread::ReadClsNames(wxString& ancestor)
         }
         else // unexpected
         {
-            TRACE(_T("ReadClsNames() : Unexpected token '%s'."), token.wx_str());
-            CCLogger::Get()->DebugLog(F(_T("ReadClsNames() : Unexpected token '%s'."), token.wx_str()));
+            TRACE(F(_T("ReadClsNames() : Unexpected token '%s' for '%s', file '%s', line %d."),
+                    token.wx_str(), m_Str.wx_str(), m_Tokenizer.GetFilename().wx_str(), m_Tokenizer.GetLineNumber()));
+            CCLogger::Get()->DebugLog(F(_T("ReadClsNames() : Unexpected token '%s' for '%s', file '%s', line %d."),
+                                        token.wx_str(), m_Str.wx_str(), m_Tokenizer.GetFilename().wx_str(), m_Tokenizer.GetLineNumber()));
             // The following code snippet freezes CC here:
             // typedef std::enable_if<N > 1, get_type_N<N-1, Tail...>> type;
             m_Tokenizer.UngetToken();
