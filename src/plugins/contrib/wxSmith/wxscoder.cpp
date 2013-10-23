@@ -516,15 +516,7 @@ wxString wxsCoder::RebuildCode(wxString& BaseIndentation,const wxChar* Code,int 
     }
 
     if ( EOL.IsEmpty() )
-    {
-        int EolMode = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/eol/eolmode"), 0);
-        switch ( EolMode )
-        {
-            case 1:  EOL = _T("\r"); break;
-            case 2:  EOL = _T("\n"); break;
-            default: EOL = _T("\r\n");
-        }
-    }
+        EOL = GetEOLStr();
 
     BaseIndentation.Prepend(EOL);
 

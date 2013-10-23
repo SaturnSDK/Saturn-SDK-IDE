@@ -18,6 +18,8 @@
     #include <wx/listctrl.h>
     #include <wx/menu.h>
 
+    #include "wx/wxscintilla.h"
+
     #include "cbexception.h"
     #include "configmanager.h" // ReadBool
     #include "filemanager.h"
@@ -782,6 +784,26 @@ wxFontEncoding DetectEncodingAndConvert(const char* strIn, wxString& strOut, wxF
     return encoding;
 }
 
+wxString GetEOLStr(int eolMode)
+{
+    if (eolMode == -1)
+    {
+        static const int defEOL = platform::windows ? wxSCI_EOL_CRLF : wxSCI_EOL_LF;
+        eolMode = Manager::Get()->GetConfigManager(wxT("editor"))->ReadInt(wxT("/eol/eolmode"), defEOL);
+        if (eolMode == 3) // auto-detect EOL
+            eolMode = defEOL;
+    }
+    switch (eolMode)
+    {
+      case wxSCI_EOL_CR:
+          return wxT("\r");
+      case wxSCI_EOL_LF:
+          return wxT("\n");
+      default: // wxSCI_EOL_CRLF
+          return wxT("\r\n");
+    }
+}
+
 wxString URLEncode(const wxString &str) // not sure this is 100% standards compliant, but I hope so
 {
     wxString ret;
@@ -1020,7 +1042,11 @@ void SetSettingsIconsStyle(wxListCtrl* lc, SettingsIconsStyle style)
     long flags = lc->GetWindowStyleFlag();
     switch (style)
     {
+#if wxCHECK_VERSION(2, 9, 0)
         case sisNoIcons: flags = (flags & ~wxLC_MASK_TYPE) | wxLC_LIST; break;
+#else
+        case sisNoIcons: flags = (flags & ~wxLC_MASK_TYPE) | wxLC_SMALL_ICON; break;
+#endif
         default: flags = (flags & ~wxLC_MASK_TYPE) | wxLC_ICON; break;
     }
     lc->SetWindowStyleFlag(flags);

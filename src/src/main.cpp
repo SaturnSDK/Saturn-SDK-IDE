@@ -3505,17 +3505,6 @@ void MainFrame::OnEditBoxCommentSelected(cb_unused wxCommandEvent& event)
         if (comment.boxCommentStart==wxEmptyString)
             return;
 
-        wxString nlc;
-        switch (stc->GetEOLMode())
-        {
-            case wxSCI_EOL_CRLF: nlc = _T("\r\n"); break;
-            case wxSCI_EOL_CR:   nlc = _T("\r");   break;
-            case wxSCI_EOL_LF:   nlc = _T("\n");   break;
-            default:
-                (platform::windows ? (nlc = _T("\r\n")) : (nlc = _T("\n")));
-                break;
-        }
-
         stc->BeginUndoAction();
         if ( wxSCI_INVALID_POSITION != stc->GetSelectionStart() )
         {
@@ -3557,7 +3546,7 @@ void MainFrame::OnEditBoxCommentSelected(cb_unused wxCommandEvent& event)
                 } // end while
 
                 // insert boxcomment end token and add a new line character
-                stc->InsertText( stc->PositionFromLine( curLine ), comment.boxCommentEnd + nlc);
+                stc->InsertText( stc->PositionFromLine( curLine ), comment.boxCommentEnd + GetEOLStr(stc->GetEOLMode()) );
             } // end if
             stc->SetSelectionVoid(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
         }
@@ -4640,6 +4629,19 @@ void MainFrame::OnEditorActivated(CodeBlocksEvent& event)
 {
     DoUpdateAppTitle();
     DoUpdateStatusBar();
+
+    EditorBase *editor = event.GetEditor();
+    if (editor && editor->IsBuiltinEditor())
+    {
+        ConfigManager* cfgEditor = Manager::Get()->GetConfigManager(_T("editor"));
+        if (cfgEditor->ReadBool(_T("/sync_editor_with_project_manager"), false))
+        {
+            ProjectFile* pf = static_cast<cbEditor*>(editor)->GetProjectFile();
+            if (pf)
+                m_pPrjManUI->ShowFileInTree(*pf);
+        }
+    }
+
     event.Skip();
 }
 

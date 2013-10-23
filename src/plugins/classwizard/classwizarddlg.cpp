@@ -359,21 +359,9 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& WXUNUSED(event))
     // Common stuff
     bool usestabs = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/use_tab"),    false);
     int  tabsize  = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/tab_size"),    4);
-    int  eolmode  = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/eol/eolmode"), 0);
 
     m_TabStr = usestabs ? wxString(_T("\t")) : wxString(_T(' '), tabsize);
-    if (eolmode == 2)
-    {
-        m_EolStr = _T("\n");
-    }
-    else if (eolmode == 1)
-    {
-        m_EolStr = _T("\r");
-    }
-    else
-    {
-        m_EolStr = _T("\r\n");
-    }
+    m_EolStr = GetEOLStr();
 
     // actual file creation starts here
     bool success = DoHeader();
