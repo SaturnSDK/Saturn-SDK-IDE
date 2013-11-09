@@ -10,6 +10,7 @@
 
 #include "settings.h"
 #include "globals.h"
+#include "prep.h"
 #include <wx/dynarray.h>
 #include <wx/filename.h>
 #include <wx/treectrl.h>
@@ -93,7 +94,7 @@ class ProjectFile
 
         /** This is called automatically when adding/removing build targets.
           * @param target A pointer to the build target whose file details should be updated. */
-        void UpdateFileDetails(ProjectBuildTarget* target = 0);
+        void UpdateFileDetails(ProjectBuildTarget* target = nullptr);
 
         /** Access the file details for this project file for the specified target.
           * @param target A pointer to the build target whose file details should be updated.

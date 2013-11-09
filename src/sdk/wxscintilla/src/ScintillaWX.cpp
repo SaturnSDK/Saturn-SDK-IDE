@@ -373,9 +373,9 @@ void ScintillaWX::StartDrag() {
         inDragDrop = ddNone;
         SetDragPosition(SelectionPosition(invalidPosition));
 /* C::B begin */
-        wxScintillaEvent evt(wxEVT_SCI_FINISHED_DRAG, sci->GetId());
-        evt.SetEventObject (sci);
-        sci->GetEventHandler()->ProcessEvent (evt);
+        wxScintillaEvent evtFin(wxEVT_SCI_FINISHED_DRAG, sci->GetId());
+        evtFin.SetEventObject(sci);
+        sci->GetEventHandler()->ProcessEvent(evtFin);
 /* C::B end */
     }
 #endif // wxUSE_DRAG_AND_DROP
@@ -1096,7 +1096,10 @@ void ScintillaWX::DoLeftButtonMove(Point pt) {
     ButtonMove(pt);
 }
 
-#ifdef __WXGTK__
+/* C::B begin */
+//#ifdef __WXGTK__
+#if 0 // emulated in cbStyledTextCtrl::OnMouseMiddleClick() due to buggy wxClipboard
+/* C::B end */
 void ScintillaWX::DoMiddleButtonUp(Point pt) {
     // Set the current position to the mouse click point and
     // then paste in the PRIMARY selection, if any.  wxGTK only.
