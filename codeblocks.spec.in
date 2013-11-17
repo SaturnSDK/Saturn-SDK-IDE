@@ -3,8 +3,8 @@
 %define _fedora             %(if [ -f /etc/fedora-release ]; then echo 1; else echo 0; fi)
 %define _redhat             %(if [ -f /etc/redhat-release ]; then echo 1; else echo 0; fi)
 %define _mandrake           %(if [ -f /etc/mandrake-release ]; then echo 1; else echo 0; fi)
-%define _version            13.12.svn.%{_svnrev}
-%define _rel                1
+%define _version            13.12
+%define _rel                rc1
 %define _release            %{_rel}
 %define jobs                %(if [ -e /usr/bin/getconf ]; then echo $(( `/usr/bin/getconf _NPROCESSORS_ONLN` + 1 )); else echo 1; fi)
 
@@ -181,7 +181,7 @@ Requires:                   %{name}-contrib%{?_isa} = %{version}
 
 %description contrib-devel
 This package contains the development libraries and headers needed to build wxSmith-plugins and to use the wxContribItems in own programs.
- 
+
 %{?debugrpm:%debug_package}
 
 %prep
@@ -224,7 +224,7 @@ This package contains the development libraries and headers needed to build wxSm
 
 %install
   %__make DESTDIR=$RPM_BUILD_ROOT install
-  
+
   rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
   rm -f $RPM_BUILD_ROOT%{pkglibdir}/wxContribItems/*.la
   rm -f $RPM_BUILD_ROOT%{plugindir}/*.la
@@ -429,6 +429,8 @@ This package contains the development libraries and headers needed to build wxSm
 %{_includedir}/wxsmith/*
 
 %changelog
+* Sun, 17 Nov 2013 Jens Lody <jens@codeblocks.org>
+- First release candidat of release 13.12.
 * Fri Jun 08 2012 jens <jens@codeblocks.org>
 - partly reverted last change, to keep the package layout more clear
 - do not try to build NassiShneiderman-plugin on CentOS/RedHat < 6, because the
