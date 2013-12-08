@@ -4,7 +4,7 @@
 %define _redhat             %(if [ -f /etc/redhat-release ]; then echo 1; else echo 0; fi)
 %define _mandrake           %(if [ -f /etc/mandrake-release ]; then echo 1; else echo 0; fi)
 %define _version            13.12
-%define _rel                rc1
+%define _rel                rc2
 %define _release            %{_rel}
 %define jobs                %(if [ -e /usr/bin/getconf ]; then echo $(( `/usr/bin/getconf _NPROCESSORS_ONLN` + 1 )); else echo 1; fi)
 
@@ -429,6 +429,8 @@ This package contains the development libraries and headers needed to build wxSm
 %{_includedir}/wxsmith/*
 
 %changelog
+* Sun Dec 08 2013 Jens Lody <jens@codeblocks.org>
+- Second release candidat of release 13.12.
 * Sun Nov 17 2013 Jens Lody <jens@codeblocks.org>
 - First release candidat of release 13.12.
 * Fri Jun 08 2012 jens <jens@codeblocks.org>
