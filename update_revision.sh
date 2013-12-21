@@ -56,7 +56,7 @@ if [ "x$REV" != "x$OLD_REV" -o ! -r $REV_FILE ]; then
 		if [ -x "$DCH" ]; then
 			AKT_REV=`sed -e 's/.*svn\([0-9]*\).*/\1/' -e 'q' < debian/changelog`
 			if [ $REV -gt $AKT_REV ]; then
-				dch -v 13.12-rc2 "Second release candidat of release 13.12."
+				dch -v 13.12-rc2 "Second release candidate of release 13.12."
 			fi
 		fi
 	else
