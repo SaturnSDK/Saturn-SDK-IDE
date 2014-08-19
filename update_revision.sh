@@ -13,6 +13,21 @@
 # make sure [git-]svn answers in english
 export LC_ALL="C"
 
+GITHASHSHORT=`git log --pretty=format:"%h" -1`
+
+TAG_NAME=`git describe --tags | sed -e 's/_[0-9].*//'`
+VERSION_NUM=`git describe --match "${TAG_NAME}_[0-9]*" HEAD | sed -e 's/-g.*//' -e "s/${TAG_NAME}_//"`
+MAJOR_BUILD_NUM=`echo $VERSION_NUM | sed 's/-[^.]*$//' | sed -r 's/.[^.]*$//' | sed -r 's/.[^.]*$//'`
+MINOR_BUILD_NUM=`echo $VERSION_NUM | sed 's/-[^.]*$//' | sed -r 's/.[^.]*$//' | sed -r 's/.[.]*//'`
+REVISION_BUILD_NUM=`echo $VERSION_NUM | sed 's/-[^.]*$//' | sed -r 's/.*(.[0-9].)//'`
+BUILD_NUM=`echo $VERSION_NUM | sed -e 's/[0-9].[0-9].[0-9]//' -e 's/-//'`
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+
+if [[ -z ${BUILD_NUM} ]]; then
+	BUILD_NUM=0
+fi
+
+
 REV_FILE=./revision.m4
 
 # let's import OLD_REV (if there)
@@ -36,7 +51,8 @@ elif svn --info >/dev/null 2>&1; then
 #	LCD=`git svn info | grep "^Last Changed Date:" | cut -d" " -f4,5`
 elif git log --max-count=1 >/dev/null 2>&1; then
 	echo "Using 'git log --graph' to get the revision"
-	REV=`git log --graph | grep 'git-svn-id' | head -n 1 | grep -o -e "@\([0-9]*\)" | tr -d '@ '`
+	#REV=`git log --graph | grep 'git-svn-id' | head -n 1 | grep -o -e "@\([0-9]*\)" | tr -d '@ '`
+	REV=`git rev-list HEAD --count`
 	LCD=`git log --date=iso --max-count=1 | grep -o -e "Date: \(.*\)" | cut -d ' ' -f 2- | sed 's/^ *//' | cut -f -2 -d ' '`
 else
 	REV=0
@@ -46,7 +62,9 @@ fi
 echo "Found revision: '${REV}' '${LCD}'"
 
 if [ "x$REV" != "x$OLD_REV" -o ! -r $REV_FILE ]; then
-	echo "m4_define([SVN_REV], $REV)" > $REV_FILE
+	echo "Updating revision..."
+	echo "m4_define([GIT_REVISION_FULL], ${MAJOR_BUILD_NUM}.${MINOR_BUILD_NUM}.${REVISION_BUILD_NUM}.${BUILD_NUM} ${TAG_NAME})" > $REV_FILE
+	echo "m4_define([SVN_REV], $REV)" >> $REV_FILE 
 	echo "m4_define([SVN_REVISION], 13.12svn$REV)" >> $REV_FILE
 	echo "m4_define([SVN_DATE], $LCD)" >> $REV_FILE
 

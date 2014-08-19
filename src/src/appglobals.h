@@ -12,7 +12,7 @@
 //#define RELEASE "13.12"
 
 #ifndef RELEASE
-    #define RELEASE "svn"
+    #define RELEASE "Git"
     #define SVN_BUILD 1
 #endif
 

@@ -43,19 +43,19 @@ void cbSplashScreen::DrawReleaseInfo(wxDC  &dc)
     wxCoord sf_width, sf_height, sf_descend;
     dc.GetTextExtent(release + revision, &sf_width, &sf_height, &sf_descend, nullptr, &smallFont);
 
-    int text_center = 450;
+    int text_center = 10;
     int x_offset = text_center;
-    int y = 220;
+    int y = 270;
 
-    dc.SetTextForeground(*wxBLACK);
+    dc.SetTextForeground(*wxWHITE);
 
 #if SVN_BUILD
     // only render SVN revision when not building official release
-    x_offset = text_center - (sf_width)/2;
+    x_offset = text_center;// - (sf_width)/2;
     dc.SetFont(smallFont);
     dc.DrawText(release + revision, x_offset, (y - sf_height + sf_descend));
 #else
-    x_offset = text_center - (lf_width)/2;
+    x_offset = text_center;// - (lf_width)/2;
     dc.SetFont(largeFont);
     dc.DrawText(release,  x_offset, (y  - lf_height + lf_descend));
 #endif

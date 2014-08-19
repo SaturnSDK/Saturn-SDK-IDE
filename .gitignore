@@ -32,3 +32,7 @@ Makefile.in
 /config.guess
 /config.sub
 *.cbTemp
+/compile
+/m4
+*.swp
+*.vim

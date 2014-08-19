@@ -9,7 +9,7 @@
 namespace autorevision
 {
 	const unsigned int svn_revision = @REVISION@;
-	const wxString svnRevision(_T("@REVISION@"));
+	const wxString svnRevision(_T("@GIT_REV@"));
 	const wxString svnDate(_T("@DATE@"));
 }
 

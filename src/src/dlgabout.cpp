@@ -54,7 +54,7 @@ dlgAbout::dlgAbout(wxWindow* parent)
                                    "any kind of functionality to the core program, through the use of "
                                    "plugins...\n");
 
-    wxString file = ConfigManager::ReadDataPath() + _T("/images/splash_1312.png");
+    wxString file = ConfigManager::ReadDataPath() + _T("/images/splash_saturn.png");
     wxImage im; im.LoadFile(file, wxBITMAP_TYPE_PNG); im.ConvertAlphaToMask();
     wxBitmap bmp(im);
     wxMemoryDC dc;
