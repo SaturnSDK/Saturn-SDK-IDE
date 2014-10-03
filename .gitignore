@@ -16,7 +16,7 @@ cb_console_runner
 cb_console_runner29
 *.bmarks
 Makefile.in
-/build*
+#/build*
 /configure
 /aclocal.m4
 /.last_revision
@@ -36,7 +36,7 @@ Makefile.in
 /m4
 *.swp
 *.vim
-build
+build/
 install
 installer
 installerpackage
