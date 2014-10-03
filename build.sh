@@ -1,5 +1,7 @@
 export NCPU=`nproc`
 
+./bootstrap
+
 ./build-ide.sh
 
 
