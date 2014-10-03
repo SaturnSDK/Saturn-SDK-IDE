@@ -36,3 +36,7 @@ Makefile.in
 /m4
 *.swp
 *.vim
+build
+install
+installer
+installerpackage
