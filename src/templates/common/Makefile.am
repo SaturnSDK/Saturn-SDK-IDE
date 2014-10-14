@@ -46,4 +46,6 @@ dist_pkgdata_DATA = console.cbp \
 		wx-main-sh.cpp \
 		wx-main-sh.h \
 		wx_pch.h\
-		wxwidgets.png
+		wxwidgets.png\
+		saturn.cbp\
+		saturn.template

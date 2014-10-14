@@ -22,6 +22,7 @@ function RegisterWizards()
     RegisterWizard(wizProject,     _T("fortran/lib"),  _T("Fortran library"),       _T("Fortran"));
     RegisterWizard(wizProject,     _T("fortran/dll"),  _T("Fortran DLL"),           _T("Fortran"));
     RegisterWizard(wizProject,     _T("console"),      _T("Console application"),   _T("Console"));
+    RegisterWizard(wizProject,     _T("saturn"),      _T("SEGA Saturn"),   _T("SEGA Saturn"));
     RegisterWizard(wizProject,     _T("d"),            _T("D application"),         _T("D language"));
     if (PLATFORM == PLATFORM_MSW)
     {
