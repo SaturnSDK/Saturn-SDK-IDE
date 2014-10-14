@@ -98,6 +98,7 @@ AM_PATH_WXCONFIG(2.8.12, wxWin=1)
                 wxWindows version is 2.8.0 or above.
                 ])
 	else
+		AC_MSG_NOTICE([WX-WIDGETS: Got verion $WX_VERSION !!!!!!!!!])
 		# check for wx2.8.3 which is known to behave badly for us
 		if test "$WX_VERSION" = "2.8.3"; then
 			AC_MSG_ERROR([
