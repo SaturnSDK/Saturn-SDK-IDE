@@ -394,6 +394,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/scriptedwizard/resources/ppc/Makefile
 	src/plugins/scriptedwizard/resources/qt4/Makefile
 	src/plugins/scriptedwizard/resources/qt4/files/Makefile
+	src/plugins/scriptedwizard/resources/saturn/Makefile
 	src/plugins/scriptedwizard/resources/sdl/Makefile
 	src/plugins/scriptedwizard/resources/sdl/files/Makefile
 	src/plugins/scriptedwizard/resources/sfml/Makefile
