@@ -1,5 +1,8 @@
 export NCPU=`nproc`
 
+rm -rf $INSTALLDIR
+rm -rf build
+
 ./bootstrap
 
 ./build-ide.sh
