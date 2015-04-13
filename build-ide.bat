@@ -8,6 +8,14 @@ cbp2make --local -in CodeBlocks.cbp -out Makefile -windows -targets "All" --targ
 for /f %%i in ('echo %MINGW32% ^| sed "s/\\/\\\\/g"') do set MINGW32PATH=%%i
 %GNUWIN32%\bin\sed.exe -i -e "s/zip -/%MINGW32PATH%\\bin\\zip.exe -/" Makefile
 exit /b 0
+mingw32-make clean
+if not %errorlevel% 0
+{
+	cd %ROOTDIR%
+	echo "MinGW make failed"
+	exit /b %errorlevel%
+}
+
 mingw32-make
 if not %errorlevel% 0
 {
