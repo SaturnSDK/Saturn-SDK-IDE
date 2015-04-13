@@ -1,16 +1,16 @@
-@for /f %%i in ('git describe --tags ^| sed -e "s/_[0-9].*//"') do @set TAG_NAME=%%i
+@for /f %%i in ('git describe --tags ^| %GNUWIN32%\bin\%GNUWIN32%\bin\sed.exe.exe -e "s/_[0-9].*//"') do @set TAG_NAME=%%i
 
-@for /f %%i in ('git describe --match "%TAG_NAME%_[0-9]*" HEAD ^| sed -e "s/-g.*//" -e "s/%%TAG_NAME%%_//"') do @set VERSION_NUM = %%i
+@for /f %%i in ('git describe --match "%TAG_NAME%_[0-9]*" HEAD ^| %GNUWIN32%\bin\sed.exe -e "s/-g.*//" -e "s/%%TAG_NAME%%_//"') do @set VERSION_NUM = %%i
 
-@for /f %%i in ('git log --pretty^=format:"%%ci" -1 ^| sed -e "s/ [^ ]*%%//g"') do @set GIT_DATE=%%i
+@for /f %%i in ('git log --pretty^=format:"%%ci" -1 ^| %GNUWIN32%\bin\sed.exe -e "s/ [^ ]*%%//g"') do @set GIT_DATE=%%i
 
-@for /f %%i in ('echo %VERSION_NUM% ^| sed "s/-[^.]*$//" ^| sed -r "s/.[^.]*$//" ^| sed -r "s/.[^.]*$//"') do @set MAJOR_BUILD_NUM=%%i
+@for /f %%i in ('echo %VERSION_NUM% ^| %GNUWIN32%\bin\sed.exe "s/-[^.]*$//" ^| %GNUWIN32%\bin\sed.exe -r "s/.[^.]*$//" ^| %GNUWIN32%\bin\sed.exe -r "s/.[^.]*$//"') do @set MAJOR_BUILD_NUM=%%i
 
-@for /f %%i in ('echo %VERSION_NUM% ^| sed "s/-[^.]*$//" ^| sed -r "s/.[^.]*$//" ^| sed -r "s/.[.]*//"') do @set MINOR_BUILD_NUM=%%i
+@for /f %%i in ('echo %VERSION_NUM% ^| %GNUWIN32%\bin\sed.exe "s/-[^.]*$//" ^| %GNUWIN32%\bin\sed.exe -r "s/.[^.]*$//" ^| %GNUWIN32%\bin\sed.exe -r "s/.[.]*//"') do @set MINOR_BUILD_NUM=%%i
 
-@for /f %%i in ('echo %VERSION_NUM% ^| sed "s/-[^.]*$//" ^| sed -r "s/.*(.[0-9].)//"') do @set REVISION_BUILD_NUM=%%i
+@for /f %%i in ('echo %VERSION_NUM% ^| %GNUWIN32%\bin\sed.exe "s/-[^.]*$//" ^| %GNUWIN32%\bin\sed.exe -r "s/.*(.[0-9].)//"') do @set REVISION_BUILD_NUM=%%i
 
-@for /f %%i in ('echo %VERSION_NUM% ^| sed -e "s/[0-9].[0-9].[0-9]//" -e "s/-//"') do @set BUILD_NUM=%%i
+@for /f %%i in ('echo %VERSION_NUM% ^| %GNUWIN32%\bin\sed.exe -e "s/[0-9].[0-9].[0-9]//" -e "s/-//"') do @set BUILD_NUM=%%i
 
 @if "%TAG_NAME%" == "" set TAG_NAME=unknown
 @if "%MAJOR_BUILD_NUM%" == "" set MAJOR_BUILD_NUM=0
