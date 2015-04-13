@@ -40,3 +40,7 @@ build/
 install
 installer
 installerpackage
+
+/src/Makefile
+/src/cbp2make*
+/src/sed*
