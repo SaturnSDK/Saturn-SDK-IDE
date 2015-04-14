@@ -1,12 +1,10 @@
 cd src
 cbp2make --local --config show
 cbp2make --local -in CodeBlocks.cbp -out Makefile -windows -targets "All" --target-case keep
-%GNUWIN32%\bin\sed.exe -i "s/\*/\\*/g" Makefile
-%GNUWIN32%\bin\sed.exe -i -e "s/$(LIB)-l/$(LIB) -l/g" Makefile
-%GNUWIN32%\bin\sed.exe -i -e "s/devel\\libcodeblocks.a/devel\\codeblocks.dll/g" Makefile
-%GNUWIN32%\bin\sed.exe -i -e "/^LIB_SDK =/ s/$/ $(LIB)/" Makefile
-for /f %%i in ('echo %MINGW32% ^| %GNUWIN32%\bin\sed.exe "s/\\/\\\\/g"') do set MINGW32PATH=%%i
-%GNUWIN32%\bin\sed.exe -i -e "s/zip -/%MINGW32PATH%\\bin\\zip.exe -/" Makefile
+sed.exe -i "s/\*/\\*/g" Makefile
+sed.exe -i -e "s/$(LIB)-l/$(LIB) -l/g" Makefile
+sed.exe -i -e "s/devel\\libcodeblocks.a/devel\\codeblocks.dll/g" Makefile
+sed.exe -i -e "/^LIB_SDK =/ s/$/ $(LIB)/" Makefile
 mingw32-make clean
 mingw32-make
 if not %errorlevel% 0
