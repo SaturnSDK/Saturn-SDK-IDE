@@ -1,4 +1,5 @@
 @echo off
+
 uname -o >nul
 if %errorlevel% == 0 goto check_cygwin
 goto not_cygwin
@@ -13,23 +14,23 @@ echo PATH set to:
 echo %PATH%
 :not_cygwin
 
-build-ide.bat
+call build-ide.bat
 
-if not %errorlevel% == 0
-{
-	cd %ROOTDIR%
-	echo "Failed building Code::Blocks"
-	exit /b %errorlevel%
-}
+if %errorlevel% == 0 goto build_ide_ok
 
-@cd %ROOTDIR%
+cd %ROOTDIR%
+echo "Failed building Code::Blocks"
+exit /b %errorlevel%
 
-@if "%CREATEINSTALLER%" == "YES" goto installer
-@exit /b 0
+:build_ide_ok
+cd %ROOTDIR%
+
+if "%CREATEINSTALLER%" == "YES" goto installer
+exit /b 0
 
 :installer
-@rmdir /q /s %INSTALLDIR%
-@mkdir %INSTALLDIR%
-@xcopy %ROOTDIR%\src\output %INSTALLDIR% /s /e /i /h /y
-@createinstaller.bat
+rmdir /q /s %INSTALLDIR%
+mkdir %INSTALLDIR%
+xcopy %ROOTDIR%\src\output %INSTALLDIR% /s /e /i /h /y
+call createinstaller.bat
 
