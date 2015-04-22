@@ -316,7 +316,7 @@ bool CodeBlocksApp::LoadConfig()
         return false;
 
 #ifdef __WINDOWS__
-	ConfigManager::SetUserDataFolder( wxString::Format(_T("%s\\SaturnIDE", ConfigManager::GetHomeFolder().c_str())));
+	ConfigManager::SetUserDataFolder( wxString::Format(_T("%s\\SaturnIDE"), ConfigManager::GetHomeFolder().c_str()));
 #else
 	ConfigManager::SetUserDataFolder(wxString::Format(_T("%s/.saturnide"), ConfigManager::GetHomeFolder().c_str()));
 #endif

@@ -11,7 +11,7 @@ mingw32-make
 if %errorlevel% == 0 goto build_ok
 cd %ROOTDIR%
 echo "MinGW make failed"
-exit /b %errorlevel%
+exit /b 1
 :build_ok
 copy /Y %WX_LIB%\gcc_dll\wxmsw28u_gcc_custom.dll devel
 update.bat
