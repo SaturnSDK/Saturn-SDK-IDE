@@ -315,6 +315,12 @@ bool CodeBlocksApp::LoadConfig()
     if (ParseCmdLine(nullptr) == -1) // only abort if '--help' was passed in the command line
         return false;
 
+#ifdef __WINDOWS__
+	ConfigManager::SetUserDataFolder( wxString::Format(_T("%s\\SaturnIDE", ConfigManager::GetHomeFolder().c_str())));
+#else
+	ConfigManager::SetUserDataFolder(wxString::Format(_T("%s/.saturnide"), ConfigManager::GetHomeFolder().c_str()));
+#endif
+
     if (m_UserDataDir!=wxEmptyString)
     {
         // if --user-data-dir=path was specified we tell
