@@ -10,8 +10,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-multi_thread_dynamic <- true; //Default to Multi-thread. For MSVC only.
-SaturnLang <- 1; // default to C++
+SaturnLang <- 0; // default to C++
 WizardType  <- 0; // 0 - Project, 1 - Target
 
 //
@@ -73,22 +72,6 @@ function OnLeave_SaturnLanguagePage(fwd)
 //
 function OnLeave_CompilerPage(fwd)
 {
-    if (fwd)
-    {
-        if (GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvctk"))
-         || GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvc8"))
-         || GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvc10")))
-        {
-            local msg = _T("Wizard will setup the Project in Multi-threaded Dynamic CRT mode by default.\n\n");
-            msg = msg + _T("Click Yes to continue with Multi-threaded Dynamic CRT mode\n\n");
-            msg = msg + _T("Click No to continue with Multi-threaded Static CRT mode");
-            local thread = Message(msg, _T("SEGA Saturn Wizard"), wxICON_QUESTION | wxYES_NO);
-            if (thread == wxID_YES)
-                multi_thread_dynamic = true;
-            else
-                multi_thread_dynamic = false;
-        }
-    }
     return true;
 }
 //
@@ -123,13 +106,6 @@ function SetupProject(project)
     // enable compiler warnings (project-wide)
     WarningsOn(project, Wizard.GetCompilerID());
 
-    // add additional libs for special compilers
-    if (GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("bcc")))
-    {
-        project.AddLinkLib(_T("cw32mt.lib"));
-        project.AddLinkLib(_T("import32.lib"));
-    }
-
     // We setup the targets using SetupTarget() which is conveniently called by Code::Blocks
     // if we register this wizard as wizTarget type :)
     // This means that this very wizard can be used both as wizProject *and* as wizTarget ;)
@@ -147,6 +123,12 @@ function SetupProject(project)
     //Add CPP Exception handling support
     if (SaturnLang == 1)
         CppExceptionsOn(project, Wizard.GetCompilerID());
+
+	project.AddLinkerOption(_T("-Xlinker --format=elf32-sh"));
+	project.AddLinkerOption(_T("-Xlinker -TSaturn.lnk"));
+	project.AddLinkerOption(_T("-Xlinker -Map -Xlinker game.map"));
+	project.AddLinkerOption(_T("-Xlinker -e -Xlinker ___Start -nostartfiles"));
+
     // all done!
     return true;
 }

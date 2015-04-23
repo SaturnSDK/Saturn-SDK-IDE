@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE CodeBlocks_compiler>
+<CodeBlocks_compiler name="GNU GCC Compiler for Hitachi SH-2"
+                     id="sh2-gcc"
+                     weight="0">
+    <Path type="master">
+        <Search envVar="PATH"
+                for="C"/>
+        <if platform="windows">
+            <Fallback path="$SATURN_ROOT\toolchain_elf"/>
+        </if>
+        <else>
+            <Fallback path="$SATURN_ROOT/toolchain_elf"/>
+        </else>
+    </Path>
+</CodeBlocks_compiler>

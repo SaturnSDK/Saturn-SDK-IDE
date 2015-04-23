@@ -5,7 +5,9 @@ dist_pkgdata_DATA = logo.png \
 					wizard.script
 
 cdatadir 		= $(pkgdatadir)/c
-dist_cdata_DATA		= c/main.c
+dist_cdata_DATA		= c/main.c \
+						Saturn.lnk
 
 cppdatadir		= $(pkgdatadir)/cpp
-dist_cppdata_DATA	= cpp/main.cpp
+dist_cppdata_DATA	= cpp/main.cpp \
+						Saturn.lnk
