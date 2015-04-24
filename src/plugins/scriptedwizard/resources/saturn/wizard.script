@@ -23,9 +23,9 @@ function BeginWizard()
     if (wiz_type == wizProject)
     {
         // this is the text that will appear in the start (intro) page
-        local intro_msg = _T("Welcome to the new SEGA Saturn Game wizard!\n" +
-                            "This wizard will guide you to create a new SEGA Saturn game.\n\n" +
-                            "When you 're ready to proceed, please click \"Next\"...");
+        local intro_msg = _T("Welcome to the new SEGA Saturn Base wizard!\n" +
+                            "This wizard will guide you to create a new SEGA Saturn base program.\n\n" +
+                            "When you're ready to proceed, please click \"Next\"...");
 
         // intro
         Wizard.AddInfoPage(_T("SaturnIntro"), intro_msg);
@@ -115,6 +115,7 @@ function SetupProject(project)
     if (!IsNull(target))
         SetupTarget(target, true);
 
+
     // Release build target
     target = project.GetBuildTarget(Wizard.GetReleaseName());
     if (!IsNull(target))
@@ -128,6 +129,7 @@ function SetupProject(project)
 	project.AddLinkerOption(_T("-Xlinker -TSaturn.lnk"));
 	project.AddLinkerOption(_T("-Xlinker -Map -Xlinker game.map"));
 	project.AddLinkerOption(_T("-Xlinker -e -Xlinker ___Start -nostartfiles"));
+
 
     // all done!
     return true;
@@ -206,6 +208,10 @@ function SetupTarget(target,is_debug)
             }
         }
     }
+
+	target.SetAlwaysRunPostBuildSteps(true);
+	target.AddCommandsAfterBuild(_T("${SATURN_ROOT}/toolchain_elf/bin/saturn-sh2-elf-objcopy -O binary ") + target.GetOutputFilename() + _T(" ") +  target.GetOutputFilename() +_T(".bin"));
+
 
     // all done!
     return true;
