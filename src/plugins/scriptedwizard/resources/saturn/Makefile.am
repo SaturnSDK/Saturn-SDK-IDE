@@ -4,10 +4,11 @@ dist_pkgdata_DATA = logo.png \
 					wizard.png \
 					wizard.script
 
-cdatadir 		= $(pkgdatadir)/c
+cdatadir 		= $(pkgdatadir)
 dist_cdata_DATA		= c/main.c \
-						Saturn.lnk
+					Saturn.lnk
 
-cppdatadir		= $(pkgdatadir)/cpp
+cppdatadir		= $(pkgdatadir)
 dist_cppdata_DATA	= cpp/main.cpp \
-						Saturn.lnk
+					Saturn.lnk
+

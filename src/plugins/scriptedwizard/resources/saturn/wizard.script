@@ -126,7 +126,7 @@ function SetupProject(project)
         CppExceptionsOn(project, Wizard.GetCompilerID());
 
 	project.AddLinkerOption(_T("-Xlinker --format=elf32-sh"));
-	project.AddLinkerOption(_T("-Xlinker -TSaturn.lnk"));
+	project.AddLinkerOption(_T("-Xlinker -TSaturn.ld"));
 	project.AddLinkerOption(_T("-Xlinker -Map -Xlinker game.map"));
 	project.AddLinkerOption(_T("-Xlinker -e -Xlinker ___Start -nostartfiles"));
 
@@ -149,68 +149,26 @@ function SetupTarget(target,is_debug)
     if (is_debug)
     {
         local TargetName = (WizardType == 0) ? Wizard.GetDebugOutputDir() : Wizard.GetTargetOutputDir();
-        if (target.GetWorkingDir().Matches(_T("")))
-            target.SetOutputFilename(target.SuggestOutputFilename());
-        else
             //target.SetOutputFilename(Wizard.GetDebugOutputDir() + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE);
-            target.SetOutputFilename(TargetName + ProjectName + DOT_EXT_EXECUTABLE);
+            target.SetOutputFilename(TargetName + ProjectName + _T(".elf"));
 
             // enable debugging symbols for this target
         // DebugSymbolsOn(target, Wizard.GetTargetCompilerID()); // TODO: doesn't seem to work?
         DebugSymbolsOn(target, Wizard.GetCompilerID());
-        //Special consideration for MSVC 7.1
-        if (GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvctk"))
-         || GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvc8"))
-         || GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvc10")))
-        {
-            if (!multi_thread_dynamic)
-            {
-                target.AddCompilerOption(_T("/MTd"));
-                target.AddLinkLib(_T("libcmtd.lib"));
-                target.AddLinkLib(_T("libcpmtd.lib"));
-            }
-            else
-            {
-                target.AddCompilerOption(_T("/MDd"));
-                target.AddLinkLib(_T("msvcrtd.lib"));
-                target.AddLinkLib(_T("msvcprtd.lib"));
-            }
-        }
     }
     else
     {
         local TargetName = (WizardType == 0) ? Wizard.GetReleaseOutputDir() : Wizard.GetTargetOutputDir();
-        if (target.GetWorkingDir().Matches(_T("")))
-            target.SetOutputFilename(target.SuggestOutputFilename());
-        else
             //target.SetOutputFilename(TargetName + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE);
-            target.SetOutputFilename(TargetName + ProjectName + DOT_EXT_EXECUTABLE);
+            target.SetOutputFilename(TargetName + ProjectName + _T(".elf"));
 
         // enable optimizations for this target
         // OptimizationsOn(target, Wizard.GetTargetCompilerID()); // TODO: doesn't seem to work?
         OptimizationsOn(target, Wizard.GetCompilerID());
-        //Special consideration for MSVC 7.1
-        if (GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvctk"))
-         || GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvc8"))
-         || GetCompilerFactory().CompilerInheritsFrom(Wizard.GetCompilerID(), _T("msvc10")))
-        {
-            if (!multi_thread_dynamic)
-            {
-                target.AddCompilerOption(_T("/MT"));
-                target.AddLinkLib(_T("libcmt.lib"));
-                target.AddLinkLib(_T("libcpmt.lib"));
-            }
-            else
-            {
-                target.AddCompilerOption(_T("/MD"));
-                target.AddLinkLib(_T("msvcrt.lib"));
-                target.AddLinkLib(_T("msvcprt.lib"));
-            }
-        }
     }
 
 	target.SetAlwaysRunPostBuildSteps(true);
-	target.AddCommandsAfterBuild(_T("${SATURN_ROOT}/toolchain_elf/bin/saturn-sh2-elf-objcopy -O binary ") + target.GetOutputFilename() + _T(" ") +  target.GetOutputFilename() +_T(".bin"));
+	target.AddCommandsAfterBuild(_T("${SATURN_ROOT}/toolchain_elf/bin/saturn-sh2-elf-objcopy -O binary ") + target.GetOutputFilename() + _T(" ") +  Wizard.GetProjectName() +_T(".bin"));
 
 
     // all done!
