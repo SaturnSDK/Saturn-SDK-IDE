@@ -6,9 +6,9 @@ dist_pkgdata_DATA = logo.png \
 
 cdatadir 		= $(pkgdatadir)/c
 dist_cdata_DATA		= c/main.c \
-					cpp/Saturn.lnk
+					cpp/Saturn.ld
 
 cppdatadir		= $(pkgdatadir)/cpp
 dist_cppdata_DATA	= cpp/main.cpp \
-					cpp/Saturn.lnk
+					cpp/Saturn.ld
 
