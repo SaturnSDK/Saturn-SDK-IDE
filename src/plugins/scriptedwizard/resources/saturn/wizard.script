@@ -126,7 +126,7 @@ function SetupProject(project)
         CppExceptionsOn(project, Wizard.GetCompilerID());
 
 	project.AddLinkerOption(_T("-Xlinker --format=elf32-sh"));
-	project.AddLinkerOption(_T("-Xlinker -TSaturn.ld"));
+	project.AddLinkerOption(_T("-Xlinker -TSaturn.lnk"));
 	project.AddLinkerOption(_T("-Xlinker -Map -Xlinker game.map"));
 	project.AddLinkerOption(_T("-Xlinker -e -Xlinker ___Start -nostartfiles"));
 

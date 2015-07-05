@@ -1,5 +1,6 @@
 @echo off
 cd src
+del cbp2make.cfg
 cbp2make --local --config show
 cbp2make --local -in CodeBlocks.cbp -out Makefile -windows -targets "All" --target-case keep
 sed.exe -i "s/\*/\\*/g" Makefile
