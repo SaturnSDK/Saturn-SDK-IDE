@@ -65,7 +65,7 @@ Component.prototype.createOperations = function( )
 	if( installer.value( "os" ) === "win" )
 	{
 		component.addOperation( "CreateShortcut", "@TargetDir@/ide/codeblocks.exe",
-			"@StartMenuDir@/Saturn SDK IDE.lnk", "iconPath=@TargetDir@/ide/codeblocks.exe"
+			"@StartMenuDir@/Saturn SDK IDE.lnk", "iconPath=@TargetDir@/ide/codeblocks.exe",
 			"iconId=1" );
 	}
 }
