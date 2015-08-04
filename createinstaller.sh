@@ -38,10 +38,46 @@ cat > $ROOTDIR/installerpackage/org.opengamedevelopers.sega.saturn.sdk.ide/meta/
 	<Version>${MAJOR_BUILD_NUM}.${MINOR_BUILD_NUM}.${REVISION_BUILD_NUM}.${BUILD_NUM}</Version>
 	<Name>org.opengamedevelopers.sega.saturn.sdk.ide</Name>
 	<ReleaseDate>`git log --pretty=format:"%ci" -1 | sed -e 's/ [^ ]*$//g'`</ReleaseDate>
+	<Script>installscript.qs</Script>
 	<Licenses>
 		<License name="GNU Public License Ver. 3" file="gplv3.txt" />
 	</Licenses>
 </Package>
+__EOF__
+
+cat > $ROOTDIR/installerpackage/org.opengamedevelopers.sega.saturn.sdk.ide/meta/installscript.qs << __EOF__
+function Component( )
+{
+}
+
+Component.prototype.createOperations = function( )
+{
+	component.createOperations( );
+
+	if( installer.value( "os" ) == "x11" )
+	{
+		component.addOperation( "Move", "@TargetDir@/SaturnIDE.desktop",
+			"@homeDir@/.local/share/applications" );
+		component.addOperation( "Replace", "@homeDir@/.local/share/applications/SaturnIDE.desktop",
+			"SATURN_ROOT", "@TargetDir@" );
+	}
+
+	if( installer.value( "os" ) == "win" )
+	{
+	}
+}
+__EOF__
+
+cat > ${INSTALLDIR}/SaturnIDE.desktop << __EOF__
+[Desktop Entry]
+Name=SEGA Saturn SDK IDE
+GenericName=SEGA Saturn Tool
+Comment=Code::Blocks IDE customised for the SEGA Saturn SDK
+Exec=SATURN_ROOT/ide/bin/codeblocks
+Icon=SATURN_ROOT/ide/share/pixmaps/codeblocks.png
+Terminal=false
+Type=Application
+Categories=Development;
 __EOF__
 
 wget -c -O $ROOTDIR/installerpackage/org.opengamedevelopers.sega.saturn.sdk.ide/meta/gplv3.txt https://www.gnu.org/licenses/gpl-3.0.txt
