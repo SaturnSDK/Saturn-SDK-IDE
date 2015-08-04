@@ -26,7 +26,7 @@ mkdir %ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\data
 mkdir %ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta > nul 2> nul
 
 set PACKAGEXML=%ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta\package.xml
-set PACKAGEQS=%ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta\installscript.qt
+set PACKAGEQS=%ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta\installscript.qs
 
 echo ^<?xml version="1.0" encoding="UTF-8"?^> > %PACKAGEXML%
 echo ^<Package^> >> %PACKAGEXML%
