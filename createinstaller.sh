@@ -54,7 +54,7 @@ Component.prototype.createOperations = function( )
 {
 	component.createOperations( );
 
-	if( installer.value( "os" ) == "x11" )
+	if( installer.value( "os" ) === "x11" )
 	{
 		component.addOperation( "Move", "@TargetDir@/ide/SaturnIDE.desktop",
 			"@homeDir@/.local/share/applications/SaturnIDE.desktop" );
@@ -62,7 +62,7 @@ Component.prototype.createOperations = function( )
 			"SATURN_ROOT", "@TargetDir@" );
 	}
 
-	if( installer.value( "os" ) == "win" )
+	if( installer.value( "os" ) === "win" )
 	{
 		component.addOperation( "CreateShortcut", "@TargetDir@/ide/codeblocks.exe",
 			"@StartMenuDir@/Saturn SDK IDE.lnk" );
