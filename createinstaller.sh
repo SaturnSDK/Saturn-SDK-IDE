@@ -57,7 +57,7 @@ Component.prototype.createOperations = function( )
 	if( installer.value( "os" ) == "x11" )
 	{
 		component.addOperation( "Move", "@TargetDir@/ide/SaturnIDE.desktop",
-			"@homeDir@/.local/share/applications" );
+			"@homeDir@/.local/share/applications/SaturnIDE.desktop" );
 		component.addOperation( "Replace", "@homeDir@/.local/share/applications/SaturnIDE.desktop",
 			"SATURN_ROOT", "@TargetDir@" );
 	}
