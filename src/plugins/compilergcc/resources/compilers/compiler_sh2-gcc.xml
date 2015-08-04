@@ -7,10 +7,10 @@
         <Search envVar="PATH"
                 for="C"/>
         <if platform="windows">
-            <Fallback path="$SATURN_ROOT\toolchain_elf"/>
+            <Fallback path="$SATURN_ROOT\toolchain"/>
         </if>
         <else>
-            <Fallback path="$SATURN_ROOT/toolchain_elf"/>
+            <Fallback path="$SATURN_ROOT/toolchain"/>
         </else>
     </Path>
 </CodeBlocks_compiler>

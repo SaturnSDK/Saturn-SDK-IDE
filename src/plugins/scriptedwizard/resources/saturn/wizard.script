@@ -168,7 +168,7 @@ function SetupTarget(target,is_debug)
     }
 
 	target.SetAlwaysRunPostBuildSteps(true);
-	target.AddCommandsAfterBuild(_T("${SATURN_ROOT}/toolchain_elf/bin/saturn-sh2-elf-objcopy -O binary ") + target.GetOutputFilename() + _T(" ") +  Wizard.GetProjectName() +_T(".bin"));
+	target.AddCommandsAfterBuild(_T("${SATURN_ROOT}/toolchain/bin/saturn-sh2-elf-objcopy -O binary ") + target.GetOutputFilename() + _T(" ") +  Wizard.GetProjectName() +_T(".bin"));
 
 
     // all done!
