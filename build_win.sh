@@ -3,12 +3,11 @@
 rm -rf $INSTALLDIR
 rm -rf build
 ./bootstrap
-rm -rf tmp_build
-mkdir -p tmp_build
-cd tmp_build
+mkdir -p build
+cd build
 ../configure
 cp src/include/autorevision.h ../src/include
-cd ..
+cd ${ROOTDIR}
 ./build_win-ide.sh
 
 if [[ "$CREATEINSTALLER" == "YES" ]]; then
