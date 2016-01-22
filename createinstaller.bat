@@ -26,6 +26,7 @@ mkdir %ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\data
 mkdir %ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta > nul 2> nul
 
 set PACKAGEXML=%ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta\package.xml
+set PACKAGEQS=%ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta\installscript.qs
 
 echo ^<?xml version="1.0" encoding="UTF-8"?^> > %PACKAGEXML%
 echo ^<Package^> >> %PACKAGEXML%
@@ -34,10 +35,22 @@ echo	^<Description^>Code::Blocks IDE customised for the SEGA Saturn^</Descriptio
 echo	^<Version^>%MAJOR_BUILD_NUM%.%MINOR_BUILD_NUM%.%REVISION_BUILD_NUM%.%BUILD_NUM%^</Version^> >> %PACKAGEXML%
 echo	^<Name^>org.opengamedevelopers.sega.saturn.sdk.ide^</Name^> >> %PACKAGEXML%
 echo	^<ReleaseDate^>%GIT_DATE%^</ReleaseDate^> >> %PACKAGEXML%
+echo	^<Script^>installscript.qs^</Script^> >> %PACKAGEXML%
 echo	^<Licenses^> >> %PACKAGEXML%
 echo		^<License name="GNU Public License Ver. 3" file="gplv3.txt" /^> >> %PACKAGEXML%
 echo	^</Licenses^> >> %PACKAGEXML%
 echo ^</Package^> >> %PACKAGEXML%
+
+echo function Component( ) > %PACKAGEQS%
+echo { >> %PACKAGEQS%
+echo } >> %PACKAGEQS%
+echo Component.prototype.createOperations = function( ) >> %PACKAGEQS%
+echo { >> %PACKAGEQS%
+echo 	component.createOperations( ); >> %PACKAGEQS%
+echo 	component.addOperation( "CreateShortcut", "@TargetDir@/ide/codeblocks.exe", >> %PACKAGEQS%
+echo 		"@StartMenuDir@/Saturn SDK IDE.lnk", "iconPath=@TargetDir@/ide/codeblocks.exe", >> %PACKAGEQS%
+echo 		"iconId=1" ); >> %PACKAGEQS%
+echo } >> %PACKAGEQS%
 
 wget -c -O %ROOTDIR%\installerpackage\org.opengamedevelopers.sega.saturn.sdk.ide\meta\gplv3.txt http://www.gnu.org/licenses/gpl-3.0.txt
 

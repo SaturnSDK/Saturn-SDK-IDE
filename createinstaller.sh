@@ -54,20 +54,14 @@ Component.prototype.createOperations = function( )
 {
 	component.createOperations( );
 
-	if( installer.value( "os" ) === "x11" )
-	{
-		component.addOperation( "Move", "@TargetDir@/ide/SaturnIDE.desktop",
-			"@homeDir@/.local/share/applications/SaturnIDE.desktop" );
-		component.addOperation( "Replace", "@homeDir@/.local/share/applications/SaturnIDE.desktop",
-			"SATURN_ROOT", "@TargetDir@" );
-	}
+	component.addOperation( "Move", "@TargetDir@/ide/SaturnIDE.desktop",
+		"@homeDir@/.local/share/applications/SaturnIDE.desktop" );
+	component.addOperation( "Replace", "@homeDir@/.local/share/applications/SaturnIDE.desktop",
+		"SATURN_ROOT", "@TargetDir@" );
 
-	if( installer.value( "os" ) === "win" )
-	{
-		component.addOperation( "CreateShortcut", "@TargetDir@/ide/codeblocks.exe",
-			"@StartMenuDir@/Saturn SDK IDE.lnk", "iconPath=@TargetDir@/ide/codeblocks.exe"
-			"iconId=1" );
-	}
+	component.addOperation( "CreateShortcut", "@TargetDir@/ide/codeblocks.exe",
+		"@StartMenuDir@/Saturn SDK IDE.lnk", "iconPath=@TargetDir@/ide/codeblocks.exe",
+		"iconId=1" );
 }
 __EOF__
 
