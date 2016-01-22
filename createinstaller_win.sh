@@ -6,6 +6,7 @@ mkdir ${INSTALLDIR}
 cp -rv ${ROOTDIR}/src/devel/* ${INSTALLDIR}
 cp ${MINGW_DLL_DIR}/libgcc_s_sjlj-1.dll ${INSTALLDIR}
 cp ${MINGW_DLL_DIR}/libstdc++-6.dll ${INSTALLDIR}
+cp ${WX_LIB}/wxmsw28u_gcc_custom.dll ${INSTALLDIR}
 
 export TAG_NAME=`git describe --tags | sed -e 's/_[0-9].*//'`
 export VERSION_NUM=`git describe --match "${TAG_NAME}_[0-9]*" HEAD | sed -e 's/-g.*//' -e "s/${TAG_NAME}_//"`
