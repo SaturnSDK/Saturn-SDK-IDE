@@ -26,6 +26,4 @@ sed -i -e "s|cmd /c xcopy /D /Y|cp -rv|g" Makefile
 sed -i -e "s|cmd /c||g" Makefile
 sed -i -e 's|	build_tools/autorevision/autorevision +wx +int +t . include/autorevision.h|	#|g' Makefile
 sed -i -e 's/\& zip/\&\& zip/g' Makefile
-#rm -rf .objs
-#rm -rf devel
 make

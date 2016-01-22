@@ -11,3 +11,6 @@ cp src/include/autorevision.h ../src/include
 cd ..
 ./build_win-ide.sh
 
+if [[ "$CREATEINSTALLER" == "YES" ]]; then
+	./createinstaller_win.sh
+fi
