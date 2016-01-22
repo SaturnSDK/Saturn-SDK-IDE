@@ -2,6 +2,12 @@
 
 rm -rf $INSTALLDIR
 rm -rf build
-#./bootstrap
+./bootstrap
+rm -rf tmp_build
+mkdir -p tmp_build
+cd tmp_build
+../configure
+cp src/include/autorevision.h ../src/include
+cd ..
 ./build_win-ide.sh
 
