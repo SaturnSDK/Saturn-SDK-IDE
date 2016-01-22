@@ -59,7 +59,7 @@
 
 // function pointer to DebugBreakProcess under windows (XP+)
 #if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0501)
-#include "Tlhelp32.h"
+#include "tlhelp32.h"
 typedef BOOL WINAPI   (*DebugBreakProcessApiCall)       (HANDLE);
 typedef HANDLE WINAPI (*CreateToolhelp32SnapshotApiCall)(DWORD  dwFlags,   DWORD             th32ProcessID);
 typedef BOOL WINAPI   (*Process32FirstApiCall)          (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);

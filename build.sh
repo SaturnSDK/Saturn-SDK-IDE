@@ -1,3 +1,4 @@
+#!/bin/sh
 export NCPU=`nproc`
 
 rm -rf $INSTALLDIR
