@@ -17,16 +17,16 @@ function RegisterWizards()
     //
     // project wizards
     //
-    RegisterWizard(wizProject,     _T("empty"),        _T("Empty project"),         _T("Console"));
+    /*RegisterWizard(wizProject,     _T("empty"),        _T("Empty project"),         _T("Console"));
     RegisterWizard(wizProject,     _T("fortran/app"),  _T("Fortran application"),   _T("Fortran"));
     RegisterWizard(wizProject,     _T("fortran/lib"),  _T("Fortran library"),       _T("Fortran"));
     RegisterWizard(wizProject,     _T("fortran/dll"),  _T("Fortran DLL"),           _T("Fortran"));
-    RegisterWizard(wizProject,     _T("console"),      _T("Console application"),   _T("Console"));
+    RegisterWizard(wizProject,     _T("console"),      _T("Console application"),   _T("Console"));*/
     RegisterWizard(wizProject,     _T("saturn"),      _T("SEGA Saturn Base"),   _T("SEGA Saturn"));
     //RegisterWizard(wizProject,     _T("saturn/base"),      _T("SEGA Saturn Base"),   _T("SEGA Saturn"));
     //RegisterWizard(wizProject,     _T("saturn/game"),      _T("SEGA Saturn Game"),   _T("SEGA Saturn"));
     //RegisterWizard(wizProject,     _T("saturn/lib"),      _T("SEGA Saturn Library"),   _T("SEGA Saturn"));
-    RegisterWizard(wizProject,     _T("d"),            _T("D application"),         _T("D language"));
+    /*RegisterWizard(wizProject,     _T("d"),            _T("D application"),         _T("D language"));
     if (PLATFORM == PLATFORM_MSW)
     {
         RegisterWizard(wizProject, _T("directx"),      _T("Direct/X project"),      _T("2D/3D Graphics"));
@@ -55,12 +55,12 @@ function RegisterWizards()
     RegisterWizard(wizProject,     _T("sharedlib"),    _T("Shared library"),        _T("Console"));
     if (PLATFORM == PLATFORM_MSW)
         RegisterWizard(wizProject, _T("win32gui"),     _T("Win32 GUI project"),     _T("GUI"));
-    RegisterWizard(wizProject,     _T("wxwidgets"),    _T("wxWidgets project"),     _T("GUI"));
+    RegisterWizard(wizProject,     _T("wxwidgets"),    _T("wxWidgets project"),     _T("GUI"));*/
 
     //
     // build target wizards
     //
-    RegisterWizard(wizTarget,      _T("console"),      _T("Console"),               _T("Console"));
+    /*RegisterWizard(wizTarget,      _T("console"),      _T("Console"),               _T("Console"));
     RegisterWizard(wizTarget,      _T("staticlib"),    _T("Static library"),        _T("Console"));
     if (PLATFORM == PLATFORM_MSW)
         RegisterWizard(wizTarget,  _T("dll"),          _T("Dynamic Link Library"),  _T("Console"));
@@ -70,7 +70,7 @@ function RegisterWizards()
     RegisterWizard(wizProject,     _T("avr"),          _T("AVR Project"),           _T("Embedded Systems"));
     RegisterWizard(wizProject,     _T("tricore"),      _T("TriCore Project"),       _T("Embedded Systems"));
     RegisterWizard(wizProject,     _T("ppc"),          _T("PowerPC Project"),       _T("Embedded Systems"));
-    RegisterWizard(wizProject,     _T("mcs51"),        _T("MCS51 Project"),         _T("Embedded Systems"));
+    RegisterWizard(wizProject,     _T("mcs51"),        _T("MCS51 Project"),         _T("Embedded Systems"));*/
     //
     // file wizards
     //
